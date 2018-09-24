@@ -1,8 +1,0 @@
-pytest
-pytest-cov
-pylint
-mypy
-numpy
-spacy=2.0.12
-pandas
-awscli
