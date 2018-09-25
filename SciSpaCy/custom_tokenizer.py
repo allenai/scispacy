@@ -1,3 +1,11 @@
+def combined_rule_prefixes():
+    # split into function to accomodate spacy tests
+    # add lookahead assertions for brackets (may not work properly for unbalanced brackets)
+    prefix_punct = r'… …… , : ; \! \? ¿ ؟ ¡ \((?![^\(\s]+\)\S+) \) \[(?![^\[\s]+\]\S+) \] \{(?![^\{\s]+\}\S+) \} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ · । ، ؛ ٪'
+    prefixes = (['§', '%', '=', r'\+'] + char_classes.split_chars(prefix_punct) + char_classes.LIST_ELLIPSES + char_classes.LIST_QUOTES +
+             char_classes.LIST_CURRENCY + char_classes.LIST_ICONS)
+    return prefixes
+
 def combined_rule_tokenizer(nlp):
     # removed the first hyphen to prevent tokenization of the normal hyphen
     hyphens = char_classes.merge_chars('– — -- --- —— ~')
@@ -9,10 +17,7 @@ def combined_rule_tokenizer(nlp):
              r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=char_classes.ALPHA, h=hyphens),
              r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=char_classes.ALPHA)]) # removed / to prevent tokenization of /
 
-    # add lookahead assertions for brackets (may not work properly for unbalanced brackets)
-    prefix_punct = r'… …… , : ; \! \? ¿ ؟ ¡ \((?![^\(\s]+\)\S+) \) \[(?![^\[\s]+\]\S+) \] \{(?![^\{\s]+\}\S+) \} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ · । ، ؛ ٪'
-    prefixes = (['§', '%', '=', r'\+'] + char_classes.split_chars(prefix_punct) + char_classes.LIST_ELLIPSES + char_classes.LIST_QUOTES +
-             char_classes.LIST_CURRENCY + char_classes.LIST_ICONS)
+    prefixes = combined_rule_prefixes()
 
     # add the last apostrophe
     quotes = r'\' \'\' " ” “ `` ` ‘ ´ ‘‘ ’’ ‚ , „ » « 「 」 『 』 （ ） 〔 〕 【 】 《 》 〈 〉 ’'

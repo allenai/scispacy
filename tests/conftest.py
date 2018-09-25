@@ -6,7 +6,7 @@ import pytest
 import spacy
 
 from custom_sentence_segmenter import combined_rule_sentence_segmenter
-from custom_tokenizer import combined_rule_tokenizer
+from custom_tokenizer import combined_rule_tokenizer, combined_rule_tokenizer
 
 @pytest.fixture()
 def combined_rule_tokenizer():
@@ -15,11 +15,21 @@ def combined_rule_tokenizer():
     return tokenizer
 
 @pytest.fixture()
+def en_with_combined_rule_tokenizer():
+    nlp = spacy.load('en_core_web_sm')
+    nlp.tokenizer = combined_rule_tokenizer(nlp)
+    return nlp
+
+@pytest.fixture()
 def en_with_combined_tokenizer_and_segmenter():
     nlp = spacy.load('en_core_web_sm')
     nlp.tokenizer = combined_rule_tokenizer(nlp)
     nlp.add_pipe(combined_rule_splitter, first=True)
     return nlp
+
+@pytest.fixture()
+def combined_rule_prefixes():
+    return combined_rule_prefixes()
 
 @pytest.fixture()
 def default_en_tokenizer():

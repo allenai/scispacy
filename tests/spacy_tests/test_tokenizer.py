@@ -1,0 +1,96 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
+import pytest
+import spacy
+from spacy import util
+
+def test_tokenizer_handles_no_word(combined_rule_tokenizer):
+    tokens = tokenizer("")
+    assert len(tokens) == 0
+
+
+@pytest.mark.parametrize('text', ["lorem"])
+def test_tokenizer_handles_single_word(combined_rule_tokenizer, text):
+    tokens = tokenizer(text)
+    assert tokens[0].text == text
+
+
+def test_tokenizer_handles_punct(combined_rule_tokenizer):
+    text = "Lorem, ipsum."
+    tokens = tokenizer(text)
+    assert len(tokens) == 4
+    assert tokens[0].text == "Lorem"
+    assert tokens[1].text == ","
+    assert tokens[2].text == "ipsum"
+    assert tokens[1].text != "Lorem"
+
+
+def test_tokenizer_handles_digits(combined_rule_tokenizer):
+    exceptions = ["hu", "bn"]
+    text = "Lorem ipsum: 1984."
+    tokens = tokenizer(text)
+
+    if tokens[0].lang_ not in exceptions:
+        assert len(tokens) == 5
+        assert tokens[0].text == "Lorem"
+        assert tokens[3].text == "1984"
+
+
+@pytest.mark.parametrize('text', ["google.com", "python.org", "spacy.io", "explosion.ai", "http://www.google.com"])
+def test_tokenizer_keep_urls(combined_rule_tokenizer, text):
+    tokens = tokenizer(text)
+    assert len(tokens) == 1
+
+
+@pytest.mark.parametrize('text', ["NASDAQ:GOOG"])
+def test_tokenizer_colons(combined_rule_tokenizer, text):
+    tokens = tokenizer(text)
+    assert len(tokens) == 3
+
+
+@pytest.mark.parametrize('text', ["hello123@example.com", "hi+there@gmail.it", "matt@explosion.ai"])
+def test_tokenizer_keeps_email(combined_rule_tokenizer, text):
+    tokens = tokenizer(text)
+    assert len(tokens) == 1
+
+
+def test_tokenizer_handles_long_text(combined_rule_tokenizer):
+    text = """Lorem ipsum dolor sit amet, consectetur adipiscing elit
+
+Cras egestas orci non porttitor maximus.
+Maecenas quis odio id dolor rhoncus dignissim. Curabitur sed velit at orci ultrices sagittis. Nulla commodo euismod arcu eget vulputate.
+
+Phasellus tincidunt, augue quis porta finibus, massa sapien consectetur augue, non lacinia enim nibh eget ipsum. Vestibulum in bibendum mauris.
+
+"Nullam porta fringilla enim, a dictum orci consequat in." Mauris nec malesuada justo."""
+
+    tokens = tokenizer(text)
+    assert len(tokens) > 5
+
+
+@pytest.mark.parametrize('file_name', ["sun.txt"])
+def test_tokenizer_handle_text_from_file(combined_rule_tokenizer, file_name):
+    loc = util.ensure_path(__file__).parent / file_name
+    text = loc.open('r', encoding='utf8').read()
+    assert len(text) != 0
+    tokens = tokenizer(text)
+    assert len(tokens) > 100
+
+
+def test_tokenizer_suspected_freeing_strings(combined_rule_tokenizer):
+    text1 = "Lorem dolor sit amet, consectetur adipiscing elit."
+    text2 = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+    tokens1 = tokenizer(text1)
+    tokens2 = tokenizer(text2)
+    assert tokens1[0].text == "Lorem"
+    assert tokens2[0].text == "Lorem"
+
+
+@pytest.mark.parametrize('text,tokens', [
+    ("lorem", [{'orth': 'lo'}, {'orth': 'rem'}])])
+def test_tokenizer_add_special_case(combined_rule_tokenizer, text, tokens):
+    tokenizer.add_special_case(text, tokens)
+    doc = tokenizer(text)
+    assert doc[0].text == tokens[0]['orth']
+    assert doc[1].text == tokens[1]['orth']
