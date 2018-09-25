@@ -31,4 +31,6 @@ COPY .pylintrc .
 # not obvious to me whether we need this, so currently commented out
 #RUN pip3 install --quiet -e
 
+RUN python -m spacy download en_core_web_sm
+
 CMD [ "/bin/bash" ]
