@@ -1,4 +1,4 @@
-def combined_rule_splitter(doc):
+def combined_rule_sentence_segmenter(doc):
     # keep track of the two previous tokens
     prev_tokens = [None, None]
 
