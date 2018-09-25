@@ -116,7 +116,7 @@ TEST_CASES = [
 ]
 
 @pytest.mark.parametrize('text,expected_sents', TEST_CASES)
-def test_en_sbd_prag(en_with_combined_tokenizer_and_segmenter_fixture, text, expected_sents):
+def test_en_sbd_prag(en_with_combined_rule_tokenizer_and_segmenter_fixture, text, expected_sents):
     """SBD tests from Pragmatic Segmenter"""
     doc = en_with_combined_rule_tokenizer_and_segmenter_fixture(text)
     sents = []
