@@ -1,3 +1,12 @@
+import re
+import spacy
+
+from spacy.lang import char_classes
+from spacy.lang.tokenizer_exceptions import URL_PATTERN
+from spacy.symbols import ORTH, NORM
+from spacy.tokenizer import Tokenizer
+from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
+
 def combined_rule_prefixes():
     # split into function to accomodate spacy tests
     # add lookahead assertions for brackets (may not work properly for unbalanced brackets)

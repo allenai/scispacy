@@ -3,11 +3,12 @@ from __future__ import unicode_literals
 
 import pytest
 import spacy
+import sys
 
-def test_tokenizer_handles_emoticons(combined_rule_tokenizer):
+def test_tokenizer_handles_emoticons(combined_rule_tokenizer_fixture):
     # Tweebo challenge (CMU)
     text = """:o :/ :'( >:o (: :) >.< XD -__- o.O ;D :-) @_@ :P 8D :1 >:( :D =| ") :> ...."""
-    tokens = tokenizer(text)
+    tokens = combined_rule_tokenizer_fixture(text)
     assert tokens[0].text == ":o"
     assert tokens[1].text == ":/"
     assert tokens[2].text == ":'("
@@ -33,14 +34,14 @@ def test_tokenizer_handles_emoticons(combined_rule_tokenizer):
 
 
 @pytest.mark.parametrize('text,length', [("example:)", 3), ("108)", 2), ("XDN", 1)])
-def test_tokenizer_excludes_false_pos_emoticons(combined_rule_tokenizer, text, length):
-    tokens = tokenizer(text)
+def test_tokenizer_excludes_false_pos_emoticons(combined_rule_tokenizer_fixture, text, length):
+    tokens = combined_rule_tokenizer_fixture(text)
     assert len(tokens) == length
 
 @pytest.mark.parametrize('text,length', [('can you still dunk?🍕🍔😵LOL', 8),
                                          ('i💙you', 3), ('🤘🤘yay!', 4)])
-def test_tokenizer_handles_emoji(combined_rule_tokenizer, text, length):
+def test_tokenizer_handles_emoji(combined_rule_tokenizer_fixture, text, length):
     # These break on narrow unicode builds, e.g. Windows
     if sys.maxunicode >= 1114111:
-        tokens = tokenizer(text)
+        tokens = combined_rule_tokenizer_fixture(text)
         assert len(tokens) == length
