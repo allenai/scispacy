@@ -7,6 +7,14 @@ from spacy.symbols import ORTH, NORM
 from spacy.tokenizer import Tokenizer
 from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 
+def remove_new_lines(text):
+    # used to preprocess away new lines in the middle of words
+    text = text.replace("-\n\n", "")
+    text = text.replace("- \n\n", "")
+    text = text.replace("-\n", "")
+    text = text.replace("- \n", "")
+    return text
+
 def combined_rule_prefixes():
     # split into function to accomodate spacy tests
     # add lookahead assertions for brackets (may not work properly for unbalanced brackets)
