@@ -21,7 +21,7 @@ def en_with_combined_rule_tokenizer_fixture():
     return nlp
 
 @pytest.fixture()
-def en_with_combined_tokenizer_and_segmenter_fixture():
+def en_with_combined_rule_tokenizer_and_segmenter_fixture():
     nlp = spacy.load('en_core_web_sm')
     nlp.tokenizer = combined_rule_tokenizer(nlp)
     nlp.add_pipe(combined_rule_sentence_segmenter, first=True)

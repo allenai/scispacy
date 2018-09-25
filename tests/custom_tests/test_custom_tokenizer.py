@@ -43,7 +43,7 @@ TEST_CASES = [("using a bag-of-words model", ["using", "a", "bag-of-words", "mod
               ("in the G1/G11 protein", ["in", "the", "G1/G11", "protein"]),
               ("in the G1/11 protein", ["in", "the", "G1/11", "protein"]),
               ("in the Gq/11 protein", ["in", "the", "Gq/11", "protein"]),
-              ]
+             ]
 
 @pytest.mark.parametrize('text,expected_tokens', TEST_CASES)
 def test_custom_tokenization(combined_rule_tokenizer_fixture, remove_new_lines_fixture, text, expected_tokens):
