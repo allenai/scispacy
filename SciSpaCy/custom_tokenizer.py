@@ -1,13 +1,13 @@
 def combined_rule_tokenizer(nlp):
-    # removed the first hyphen
+    # removed the first hyphen to prevent tokenization of the normal hyphen
     hyphens = char_classes.merge_chars('– — -- --- —— ~')
     infixes = (char_classes.LIST_ELLIPSES + char_classes.LIST_ICONS +
-            [r'×', # added this special x character
+            [r'×', # added this special x character to tokenize it separately
              r'(?<=[0-9])[+\-\*^](?=[0-9-])',
              r'(?<=[{}])\.(?=[{}])'.format(char_classes.ALPHA_LOWER, char_classes.ALPHA_UPPER),
              r'(?<=[{a}]),(?=[{a}])'.format(a=char_classes.ALPHA),
              r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=char_classes.ALPHA, h=hyphens),
-             r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=char_classes.ALPHA)]) # removed a slash
+             r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=char_classes.ALPHA)]) # removed / to prevent tokenization of /
 
     # add lookahead assertions for brackets (may not work properly for unbalanced brackets)
     prefix_punct = r'… …… , : ; \! \? ¿ ؟ ¡ \((?![^\(\s]+\)\S+) \) \[(?![^\[\s]+\]\S+) \] \{(?![^\{\s]+\}\S+) \} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ · । ، ؛ ٪'
