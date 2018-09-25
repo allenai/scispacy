@@ -1,9 +1,5 @@
-import re
-import spacy
-
 from spacy.lang import char_classes
-from spacy.lang.tokenizer_exceptions import URL_PATTERN
-from spacy.symbols import ORTH, NORM
+from spacy.symbols import ORTH
 from spacy.tokenizer import Tokenizer
 from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 
