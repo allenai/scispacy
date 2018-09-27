@@ -1,8 +1,12 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../SciSpaCy/")
+
 import pytest
 import spacy
 
-from SciSpaCy.custom_sentence_segmenter import combined_rule_sentence_segmenter # pylint: disable-msg=E0611,E0401
-from SciSpaCy.custom_tokenizer import combined_rule_tokenizer, combined_rule_prefixes, remove_new_lines # pylint: disable-msg=E0611,E0401
+from custom_sentence_segmenter import combined_rule_sentence_segmenter
+from custom_tokenizer import combined_rule_tokenizer, combined_rule_prefixes, remove_new_lines
 
 @pytest.fixture()
 def combined_rule_tokenizer_fixture():
