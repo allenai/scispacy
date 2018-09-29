@@ -12,12 +12,14 @@ def combined_rule_sentence_segmenter(doc):
     open_brackets = []
     for token in doc:
         # handling special quote symbols
+        # for example: 'in word order or syntactic structure (e.g., “cats climb trees” vs. “trees climb cats”).'
         if token.text == '“' or token.text == '”':
             if prev_tokens[-1] and prev_tokens[-1].text != ".":
                 doc[token.i].is_sent_start = False
 
         if token.text[0].isdigit():
             # handling an abbrevation followed by a number
+            # for example: 'LSTM networks, which we review in Sec. 2, have been successfully'
             abbreviations = ["sec.",
                              "secs.",
                              "Sec.",
@@ -38,6 +40,7 @@ def combined_rule_sentence_segmenter(doc):
                 doc[token.i].is_sent_start = False
 
             # handle a bracket followed by a number
+            # for example: 'environments such as Microsoft Robotics Studio [9] and Webots [10] have many'
             if prev_tokens[-1] and prev_tokens[-1].text == '[':
                 doc[token.i].is_sent_start = False
 
@@ -66,6 +69,7 @@ def combined_rule_sentence_segmenter(doc):
                     doc[last_open_bracket.i].is_sent_start = False
 
         # handling the case of a capital letter after a ) unless that was preceeded by a .
+        # for example: 'the support of the Defense Advanced Resarch Projects Agency (DARPA) Deep Exploration'
         first_char = token.text[0]
         if first_char.isupper():
             if prev_tokens[-1] and prev_tokens[-1].text == ')':
@@ -78,6 +82,7 @@ def combined_rule_sentence_segmenter(doc):
 
         # attempt to handle double and quadruple new lines around
         # section headers by making them their own sentences
+        # for example: '\n\n2 Long Short-Term Memory Networks\n\n\n\n2.1 Overview\n\n'
         if prev_tokens[-1] and (prev_tokens[-1].text == "\n\n\n\n" or prev_tokens[-1].text == "\n\n"):
             doc[token.i].is_sent_start = True
             doc[token.i-1].is_sent_start = True
