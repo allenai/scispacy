@@ -1,4 +1,9 @@
 def combined_rule_sentence_segmenter(doc):
+    """Adds sentence boundaries to a Doc. Intended to be used as a pipe in a spaCy pipeline.
+
+    @param doc: the spaCy document to be annotated with sentence boundaries
+    """
+    
     # keep track of the two previous tokens
     prev_tokens = [None, None]
 
