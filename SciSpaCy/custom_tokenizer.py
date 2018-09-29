@@ -22,7 +22,11 @@ def combined_rule_prefixes():
        prefixes.
     """
     # add lookahead assertions for brackets (may not work properly for unbalanced brackets)
-    prefix_punct = r'… …… , : ; \! \? ¿ ؟ ¡ \((?![^\(\s]+\)\S+) \) \[(?![^\[\s]+\]\S+) \] \{(?![^\{\s]+\}\S+) \} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ · । ، ؛ ٪'
+    prefix_punct = char_classes._punct
+    prefix_punct = prefix_punct.replace("\(", "\((?![^\(\s]+\)\S+)")
+    prefix_punct = prefix_punct.replace("\[", "\[(?![^\[\s]+\]\S+)")
+    prefix_punct = prefix_punct.replace("\{", "\{(?![^\{\s]+\}\S+)")
+
     prefixes = (['§', '%', '=', r'\+'] +
                 char_classes.split_chars(prefix_punct) +
                 char_classes.LIST_ELLIPSES +
@@ -41,8 +45,9 @@ def combined_rule_tokenizer(nlp):
 
        @param nlp: a loaded spaCy model
     """
-    # removed the first hyphen to prevent tokenization of the normal hyphen
-    hyphens = char_classes.merge_chars('– — -- --- —— ~')
+    # remove the first hyphen to prevent tokenization of the normal hyphen
+    hyphens = char_classes.merge_chars(char_classes._hyphens.replace("- ", "", 1))
+
     infixes = (char_classes.LIST_ELLIPSES +
                char_classes.LIST_ICONS +
                [r'×', # added this special x character to tokenize it separately
@@ -55,9 +60,14 @@ def combined_rule_tokenizer(nlp):
     prefixes = combined_rule_prefixes()
 
     # add the last apostrophe
-    quotes = r'\' \'\' " ” “ `` ` ‘ ´ ‘‘ ’’ ‚ , „ » « 「 」 『 』 （ ） 〔 〕 【 】 《 》 〈 〉 ’'
+    quotes = char_classes._quotes + " ’"
+
     # add lookbehind assertions for brackets (may not work properly for unbalanced brackets)
-    suffix_punct = r'… …… , : ; \! \? ¿ ؟ ¡ \( (?<!\S+\([^\)\s]+)\) \[ (?<!\S+\[[^\]\s]+)\] \{ (?<!\S+\{[^\}\s]+)\} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ · । ، ؛ ٪'
+    suffix_punct = char_classes._punct
+    suffix_punct = suffix_punct.replace("\)", "(?<!\S+\([^\)\s]+)\)")
+    suffix_punct = suffix_punct.replace("\]", "(?<!\S+\[[^\]\s]+)\]")
+    suffix_punct = suffix_punct.replace("\}", "(?<!\S+\{[^\}\s]+)\}")
+
     suffixes = (char_classes.split_chars(suffix_punct) +
                 char_classes.LIST_ELLIPSES +
                 char_classes.split_chars(quotes) +
