@@ -4,7 +4,12 @@ from spacy.tokenizer import Tokenizer # pylint: disable-msg=E0611,E0401
 from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 
 def remove_new_lines(text):
-    # used to preprocess away new lines in the middle of words
+    """Used to preprocess away new lines in the middle of words. This function
+       is intended to be called on a raw string before it is passed through a
+       spaCy pipeline
+
+    @param text: a string of text to be processed
+    """
     text = text.replace("-\n\n", "")
     text = text.replace("- \n\n", "")
     text = text.replace("-\n", "")
@@ -12,7 +17,10 @@ def remove_new_lines(text):
     return text
 
 def combined_rule_prefixes():
-    # split into function to accomodate spacy tests
+    """Helper function that returns the prefix pattern for the tokenizer.
+       It is a helper function to accomodate spacy tests that only test
+       prefixes.
+    """
     # add lookahead assertions for brackets (may not work properly for unbalanced brackets)
     prefix_punct = r'… …… , : ; \! \? ¿ ؟ ¡ \((?![^\(\s]+\)\S+) \) \[(?![^\[\s]+\]\S+) \] \{(?![^\{\s]+\}\S+) \} < > _ # \* & 。 ？ ！ ， 、 ； ： ～ · । ، ؛ ٪'
     prefixes = (['§', '%', '=', r'\+'] +
@@ -24,6 +32,15 @@ def combined_rule_prefixes():
     return prefixes
 
 def combined_rule_tokenizer(nlp):
+    """Creates a custom tokenizer on top of spaCy's default tokenizer. The
+       intended use of this function is to replace the tokenizer in a spaCy
+       pipeline like so:
+
+            nlp = spacy.load("some_spacy_model")
+            nlp.tokenizer = combined_rule_tokenizer(nlp)
+
+       @param nlp: a loaded spaCy model
+    """
     # removed the first hyphen to prevent tokenization of the normal hyphen
     hyphens = char_classes.merge_chars('– — -- --- —— ~')
     infixes = (char_classes.LIST_ELLIPSES +
