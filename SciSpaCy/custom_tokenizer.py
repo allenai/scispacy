@@ -1,3 +1,5 @@
+import consts
+
 from spacy.lang import char_classes
 from spacy.symbols import ORTH # pylint: disable-msg=E0611,E0401
 from spacy.tokenizer import Tokenizer # pylint: disable-msg=E0611,E0401
@@ -84,23 +86,7 @@ def combined_rule_tokenizer(nlp):
     suffix_re = compile_suffix_regex(suffixes)
 
     # Update exclusions to include these abbreviations so the period is not split off
-    exclusions = {"sec.": [{ORTH: "sec."}],
-                  "secs.": [{ORTH: "secs."}],
-                  "Sec.": [{ORTH: "Sec."}],
-                  "Secs.": [{ORTH: "Secs."}],
-                  "fig.": [{ORTH: "fig."}],
-                  "figs.": [{ORTH: "figs."}],
-                  "Fig.": [{ORTH: "Fig."}],
-                  "Figs.": [{ORTH: "Figs."}],
-                  "eq.": [{ORTH: "eq."}],
-                  "eqs.": [{ORTH: "eqs."}],
-                  "Eq.": [{ORTH: "Eq."}],
-                  "Eqs.": [{ORTH: "Eqs."}],
-                  "no.": [{ORTH: "no."}],
-                  "nos.": [{ORTH: "nos."}],
-                  "No.": [{ORTH: "No."}],
-                  "Nos.": [{ORTH: "Nos."}],
-                  "al.": [{ORTH: "al."}]}
+    exclusions = {abbreviation: [{ORTH: abbreviation}] for abbreviation in consts.ABBREVIATIONS}
     tokenizer_exceptions = nlp.Defaults.tokenizer_exceptions.copy()
     tokenizer_exceptions.update(exclusions)
 

@@ -1,3 +1,5 @@
+import consts
+
 def combined_rule_sentence_segmenter(doc):
     """Adds sentence boundaries to a Doc. Intended to be used as a pipe in a spaCy pipeline.
 
@@ -22,23 +24,7 @@ def combined_rule_sentence_segmenter(doc):
         if token.text[0].isdigit():
             # handling an abbrevation followed by a number
             # for example: 'LSTM networks, which we review in Sec. 2, have been successfully'
-            abbreviations = ["sec.",
-                             "secs.",
-                             "Sec.",
-                             "Secs.",
-                             "fig.",
-                             "figs.",
-                             "Fig.",
-                             "Figs.",
-                             "eq.",
-                             "eqs.",
-                             "Eq.",
-                             "Eqs.",
-                             "no.",
-                             "nos.",
-                             "No.",
-                             "Nos."]
-            if prev_tokens[-1] and prev_tokens[-1].text in abbreviations:
+            if prev_tokens[-1] and prev_tokens[-1].text in consts.ABBREVIATIONS:
                 doc[token.i].is_sent_start = False
 
             # handle a bracket followed by a number
