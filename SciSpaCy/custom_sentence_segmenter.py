@@ -1,4 +1,8 @@
-from SciSpaCy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+
+from consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 
 def combined_rule_sentence_segmenter(doc):
     """Adds sentence boundaries to a Doc. Intended to be used as a pipe in a spaCy pipeline.
