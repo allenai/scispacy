@@ -1,11 +1,11 @@
-import consts
+import consts # pylint: disable-msg=E0611,E0401
 
 def combined_rule_sentence_segmenter(doc):
     """Adds sentence boundaries to a Doc. Intended to be used as a pipe in a spaCy pipeline.
 
     @param doc: the spaCy document to be annotated with sentence boundaries
     """
-    
+
     # keep track of the two previous tokens
     prev_tokens = [None, None]
 
@@ -35,7 +35,7 @@ def combined_rule_sentence_segmenter(doc):
 
         # sentences can only start with ( if there is a complete sentence within the parens
         # here a . is serving as a proxy for being a complete sentence
-        # This isn't quite correct, as a sentence may start with (Bottom left) or [Bottom left] 
+        # This isn't quite correct, as a sentence may start with (Bottom left) or [Bottom left]
         # and this prevents that from being segmented correctly
         open_parens = ["(", "["]
         close_parens = [")", "]"]

@@ -1,9 +1,9 @@
-import consts
-
 from spacy.lang import char_classes
 from spacy.symbols import ORTH # pylint: disable-msg=E0611,E0401
 from spacy.tokenizer import Tokenizer # pylint: disable-msg=E0611,E0401
 from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
+
+import consts # pylint: disable-msg=E0611,E0401
 
 def remove_new_lines(text):
     """Used to preprocess away new lines in the middle of words. This function
@@ -24,10 +24,10 @@ def combined_rule_prefixes():
        prefixes.
     """
     # add lookahead assertions for brackets (may not work properly for unbalanced brackets)
-    prefix_punct = char_classes._punct
-    prefix_punct = prefix_punct.replace("\(", "\((?![^\(\s]+\)\S+)")
-    prefix_punct = prefix_punct.replace("\[", "\[(?![^\[\s]+\]\S+)")
-    prefix_punct = prefix_punct.replace("\{", "\{(?![^\{\s]+\}\S+)")
+    prefix_punct = char_classes.PUNCT.replace('|', ' ')
+    prefix_punct = prefix_punct.replace(r"\(", r"\((?![^\(\s]+\)\S+)")
+    prefix_punct = prefix_punct.replace(r"\[", r"\[(?![^\[\s]+\]\S+)")
+    prefix_punct = prefix_punct.replace(r"\{", r"\{(?![^\{\s]+\}\S+)")
 
     prefixes = (['§', '%', '=', r'\+'] +
                 char_classes.split_chars(prefix_punct) +
@@ -48,7 +48,7 @@ def combined_rule_tokenizer(nlp):
        @param nlp: a loaded spaCy model
     """
     # remove the first hyphen to prevent tokenization of the normal hyphen
-    hyphens = char_classes.merge_chars(char_classes._hyphens.replace("- ", "", 1))
+    hyphens = char_classes.HYPHENS.replace("-|", "", 1)
 
     infixes = (char_classes.LIST_ELLIPSES +
                char_classes.LIST_ICONS +
@@ -57,18 +57,19 @@ def combined_rule_tokenizer(nlp):
                 r'(?<=[{}])\.(?=[{}])'.format(char_classes.ALPHA_LOWER, char_classes.ALPHA_UPPER),
                 r'(?<=[{a}]),(?=[{a}])'.format(a=char_classes.ALPHA),
                 r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=char_classes.ALPHA, h=hyphens),
-                r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=char_classes.ALPHA)]) # removed / to prevent tokenization of /
+                # removed / to prevent tokenization of /
+                r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=char_classes.ALPHA)])
 
     prefixes = combined_rule_prefixes()
 
     # add the last apostrophe
-    quotes = char_classes._quotes + " ’"
+    quotes = char_classes.QUOTES.replace('|', ' ') + " ’"
 
     # add lookbehind assertions for brackets (may not work properly for unbalanced brackets)
-    suffix_punct = char_classes._punct
-    suffix_punct = suffix_punct.replace("\)", "(?<!\S+\([^\)\s]+)\)")
-    suffix_punct = suffix_punct.replace("\]", "(?<!\S+\[[^\]\s]+)\]")
-    suffix_punct = suffix_punct.replace("\}", "(?<!\S+\{[^\}\s]+)\}")
+    suffix_punct = char_classes.PUNCT.replace('|', ' ')
+    suffix_punct = suffix_punct.replace(r"\)", r"(?<!\S+\([^\)\s]+)\)")
+    suffix_punct = suffix_punct.replace(r"\]", r"(?<!\S+\[[^\]\s]+)\]")
+    suffix_punct = suffix_punct.replace(r"\}", r"(?<!\S+\{[^\}\s]+)\}")
 
     suffixes = (char_classes.split_chars(suffix_punct) +
                 char_classes.LIST_ELLIPSES +
@@ -78,9 +79,13 @@ def combined_rule_tokenizer(nlp):
                 [r'(?<=[0-9])\+',
                  r'(?<=°[FfCcKk])\.',
                  r'(?<=[0-9])(?:{})'.format(char_classes.CURRENCY),
-                 r'(?<=(^[0-9]+|\s{p}*[0-9]+))(?:{u})'.format(u=char_classes.UNITS, p=prefixes), # add to look behind to exclude things like h3g from splitting off the g as a unit
-                 r'(?<=[0-9{}{}(?:{})])\.'.format(char_classes.ALPHA_LOWER, r'%²\-\)\]\+', char_classes.merge_chars(quotes)),
-                 r'(?<=[{a}|\d][{a}])\.'.format(a=char_classes.ALPHA_UPPER)]) # add |\d to split off the period of a sentence that ends with 1D.
+                 # add to look behind to exclude things like h3g from splitting off the g as a unit
+                 r'(?<=(^[0-9]+|\s{p}*[0-9]+))(?:{u})'.format(u=char_classes.UNITS, p=prefixes),
+                 r'(?<=[0-9{}{}(?:{})])\.'.format(char_classes.ALPHA_LOWER,
+                                                  r'%²\-\)\]\+',
+                                                  char_classes.merge_chars(quotes)),
+                 # add |\d to split off the period of a sentence that ends with 1D.
+                 r'(?<=[{a}|\d][{a}])\.'.format(a=char_classes.ALPHA_UPPER)])
     infix_re = compile_infix_regex(infixes)
     prefix_re = compile_prefix_regex(prefixes)
     suffix_re = compile_suffix_regex(suffixes)
@@ -90,5 +95,10 @@ def combined_rule_tokenizer(nlp):
     tokenizer_exceptions = nlp.Defaults.tokenizer_exceptions.copy()
     tokenizer_exceptions.update(exclusions)
 
-    tokenizer = Tokenizer(nlp.vocab, tokenizer_exceptions, prefix_search=prefix_re.search, suffix_search=suffix_re.search, infix_finditer=infix_re.finditer, token_match=nlp.tokenizer.token_match)
+    tokenizer = Tokenizer(nlp.vocab,
+                          tokenizer_exceptions,
+                          prefix_search=prefix_re.search,
+                          suffix_search=suffix_re.search,
+                          infix_finditer=infix_re.finditer,
+                          token_match=nlp.tokenizer.token_match)
     return tokenizer
