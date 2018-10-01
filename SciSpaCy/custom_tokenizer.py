@@ -3,7 +3,7 @@ from spacy.symbols import ORTH # pylint: disable-msg=E0611,E0401
 from spacy.tokenizer import Tokenizer # pylint: disable-msg=E0611,E0401
 from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 
-import consts # pylint: disable-msg=E0611,E0401
+from SciSpaCy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 
 def remove_new_lines(text):
     """Used to preprocess away new lines in the middle of words. This function
@@ -91,7 +91,7 @@ def combined_rule_tokenizer(nlp):
     suffix_re = compile_suffix_regex(suffixes)
 
     # Update exclusions to include these abbreviations so the period is not split off
-    exclusions = {abbreviation: [{ORTH: abbreviation}] for abbreviation in consts.ABBREVIATIONS}
+    exclusions = {abbreviation: [{ORTH: abbreviation}] for abbreviation in ABBREVIATIONS}
     tokenizer_exceptions = nlp.Defaults.tokenizer_exceptions.copy()
     tokenizer_exceptions.update(exclusions)
 
