@@ -9,7 +9,7 @@ To use SciSpaCy as is, follow these steps:
 `./scripts/create_model_package.sh ./SciSpaCy/models/combined_rule_tokenizer_and_segmenter`
 1. Run `python setup.py sdist`
 1. Run `pip install --user dist/scispacy-1.0.0.tar.gz`
-1. Run `pip install --user dist/scispacy-1.0.0.tar.gz`
+1. Run `pip install --user dist/en_scispacy_core_web_sm-1.0.0.tar.gz`
 
 Once you have completed the above steps, you can load SciSpaCy as you would any other spaCy model. For example: 
 ```
