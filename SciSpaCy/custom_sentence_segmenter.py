@@ -52,26 +52,6 @@ def combined_rule_sentence_segmenter(doc):
                 if not (last_open_paren.i == (token.i-2) and len(prev_tokens[-1].text) == 1):
                     doc[last_open_paren.i].is_sent_start = False
 
-
-        # if token.text == "(":
-        #     open_parens.append(token)
-        # if token.text == ")" and open_parens != []:
-        #     last_open_paren = open_parens.pop()
-        #     if prev_tokens[-1] and prev_tokens[-1].text != ".":
-        #         # allow things like (A) to start a sentence
-        #         if not (last_open_paren.i == (token.i-2) and len(prev_tokens[-1].text) == 1):
-        #             doc[last_open_paren.i].is_sent_start = False
-
-        # # same logic as above but for brackets instead of parens
-        # if token.text == "[":
-        #     open_brackets.append(token)
-        # if token.text == "]" and open_brackets != []:
-        #     last_open_bracket = open_brackets.pop()
-        #     if prev_tokens[-1] and prev_tokens[-1].text != ".":
-        #         # allow things like [A] to start a sentence
-        #         if not (last_open_bracket.i == (token.i-2) and len(prev_tokens[-1].text) == 1):
-        #             doc[last_open_bracket.i].is_sent_start = False
-
         # handling the case of a capital letter after a ) unless that was preceeded by a .
         # for example: 'the support of the Defense Advanced Resarch Projects Agency (DARPA) Deep Exploration'
         first_char = token.text[0]
