@@ -1,0 +1,32 @@
+{
+  "lang":"en",
+  "pipeline":[
+    "combined_rule_sentence_segmenter",
+    "tagger",
+    "parser"
+  ],
+  "name":"scispacy_core_web_sm",
+  "license":"CC BY-SA 3.0",
+  "author":"Allen Institute for Artificial Intelligence",
+  "url":"allenai.org",
+  "vectors":{
+    "width":0,
+    "vectors":0,
+    "keys":0,
+    "name":null
+  },
+  "sources":[
+    "OntoNotes 5",
+    "Common Crawl"
+  ],
+  "version":"1.0.0",
+  "spacy_version":">=2.0.12",
+  "parent_package":"spacy",
+  "speed":{
+    "gpu":null,
+    "nwords":291344,
+    "cpu":5122.3040471407
+  },
+  "email":"ai2-info@allenai.org",
+  "description":"English multi-task CNN trained on OntoNotes, with GloVe vectors trained on Common Crawl. Assigns word vectors, context-specific token vectors, POS tags, dependency parse and named entities."
+}
