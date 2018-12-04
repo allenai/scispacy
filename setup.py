@@ -8,5 +8,5 @@ setup(
     author_email = 'ai2-info@allenai.org',
     description = 'SciSpaCy Package',
     packages = find_packages(),
-    install_requires = ['spacy==2.0.12'],
+    install_requires = ['spacy==2.0.18'],
 )
