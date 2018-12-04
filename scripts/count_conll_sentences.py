@@ -7,9 +7,7 @@ def main(conll_path):
         while line:
             if line.startswith("\n"):
                 sents += 1
-            line = fp.readline()
-            print(repr(line))
-    print("{} sentences in {}".format(sents, conll_path))
+            line = fp.readline()    print("{} sentences in {}".format(sents, conll_path))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
