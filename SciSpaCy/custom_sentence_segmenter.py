@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
-from consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
+from consts import ABBREVIATIONS # pylint: disable=E0611,E0401
 
 def combined_rule_sentence_segmenter(doc):
     """Adds sentence boundaries to a Doc. Intended to be used as a pipe in a spaCy pipeline.
@@ -29,7 +29,8 @@ def combined_rule_sentence_segmenter(doc):
             doc[token.i].is_sent_start = False
 
         # handling special quote symbols
-        # for example: 'in word order or syntactic structure (e.g., “cats climb trees” vs. “trees climb cats”).'
+        # for example: 'in word order or syntactic structure (e.g., “cats climb trees” vs.
+        # “trees climb cats”).'
         if token.text == '“' or token.text == '”':
             if prev_tokens[-1] and prev_tokens[-1].text != ".":
                 doc[token.i].is_sent_start = False
