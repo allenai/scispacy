@@ -113,27 +113,27 @@ SUFFIXES = [
     '"', ":", ">"]
 
 @pytest.mark.parametrize("url", URLS_SHOULD_MATCH)
-def test_should_match(combined_rule_tokenizer_fixture, url):
-    token_match = combined_rule_tokenizer_fixture.token_match
+def test_should_match(combined_all_model_fixture, url):
+    token_match = combined_all_model_fixture.tokenizer.token_match
     if token_match:
         assert token_match(url)
 
 @pytest.mark.parametrize("url", URLS_SHOULD_NOT_MATCH)
-def test_should_not_match(combined_rule_tokenizer_fixture, url):
-    token_match = combined_rule_tokenizer_fixture.token_match
+def test_should_not_match(combined_all_model_fixture, url):
+    token_match = combined_all_model_fixture.tokenizer.token_match
     if token_match:
         assert not token_match(url)
 
 @pytest.mark.parametrize("url", URLS_BASIC)
-def test_tokenizer_handles_simple_url(combined_rule_tokenizer_fixture, url):
-    tokens = combined_rule_tokenizer_fixture(url)
+def test_tokenizer_handles_simple_url(combined_all_model_fixture, url):
+    tokens = combined_all_model_fixture(url)
     assert len(tokens) == 1
     assert tokens[0].text == url
 
 
 @pytest.mark.parametrize("url", URLS_BASIC)
-def test_tokenizer_handles_simple_surround_url(combined_rule_tokenizer_fixture, url):
-    tokens = combined_rule_tokenizer_fixture("(" + url + ")")
+def test_tokenizer_handles_simple_surround_url(combined_all_model_fixture, url):
+    tokens = combined_all_model_fixture("(" + url + ")")
     assert len(tokens) == 3
     assert tokens[0].text == "("
     assert tokens[1].text == url
@@ -142,8 +142,8 @@ def test_tokenizer_handles_simple_surround_url(combined_rule_tokenizer_fixture, 
 
 @pytest.mark.parametrize("prefix", PREFIXES)
 @pytest.mark.parametrize("url", URLS_FULL)
-def test_tokenizer_handles_prefixed_url(combined_rule_tokenizer_fixture, prefix, url):
-    tokens = combined_rule_tokenizer_fixture(prefix + url)
+def test_tokenizer_handles_prefixed_url(combined_all_model_fixture, prefix, url):
+    tokens = combined_all_model_fixture(prefix + url)
     assert len(tokens) == 2
     assert tokens[0].text == prefix
     assert tokens[1].text == url
@@ -151,8 +151,8 @@ def test_tokenizer_handles_prefixed_url(combined_rule_tokenizer_fixture, prefix,
 
 @pytest.mark.parametrize("suffix", SUFFIXES)
 @pytest.mark.parametrize("url", URLS_FULL)
-def test_tokenizer_handles_suffixed_url(combined_rule_tokenizer_fixture, url, suffix):
-    tokens = combined_rule_tokenizer_fixture(url + suffix)
+def test_tokenizer_handles_suffixed_url(combined_all_model_fixture, url, suffix):
+    tokens = combined_all_model_fixture(url + suffix)
     assert len(tokens) == 2
     assert tokens[0].text == url
     assert tokens[1].text == suffix
@@ -161,8 +161,8 @@ def test_tokenizer_handles_suffixed_url(combined_rule_tokenizer_fixture, url, su
 @pytest.mark.parametrize("prefix", PREFIXES)
 @pytest.mark.parametrize("suffix", SUFFIXES)
 @pytest.mark.parametrize("url", URLS_FULL)
-def test_tokenizer_handles_surround_url(combined_rule_tokenizer_fixture, prefix, suffix, url):
-    tokens = combined_rule_tokenizer_fixture(prefix + url + suffix)
+def test_tokenizer_handles_surround_url(combined_all_model_fixture, prefix, suffix, url):
+    tokens = combined_all_model_fixture(prefix + url + suffix)
     assert len(tokens) == 3
     assert tokens[0].text == prefix
     assert tokens[1].text == url
@@ -172,8 +172,8 @@ def test_tokenizer_handles_surround_url(combined_rule_tokenizer_fixture, prefix,
 @pytest.mark.parametrize("prefix1", PREFIXES)
 @pytest.mark.parametrize("prefix2", PREFIXES)
 @pytest.mark.parametrize("url", URLS_FULL)
-def test_tokenizer_handles_two_prefix_url(combined_rule_tokenizer_fixture, prefix1, prefix2, url):
-    tokens = combined_rule_tokenizer_fixture(prefix1 + prefix2 + url)
+def test_tokenizer_handles_two_prefix_url(combined_all_model_fixture, prefix1, prefix2, url):
+    tokens = combined_all_model_fixture(prefix1 + prefix2 + url)
     assert len(tokens) == 3
     assert tokens[0].text == prefix1
     assert tokens[1].text == prefix2
@@ -183,8 +183,8 @@ def test_tokenizer_handles_two_prefix_url(combined_rule_tokenizer_fixture, prefi
 @pytest.mark.parametrize("suffix1", SUFFIXES)
 @pytest.mark.parametrize("suffix2", SUFFIXES)
 @pytest.mark.parametrize("url", URLS_FULL)
-def test_tokenizer_handles_two_suffix_url(combined_rule_tokenizer_fixture, suffix1, suffix2, url):
-    tokens = combined_rule_tokenizer_fixture(url + suffix1 + suffix2)
+def test_tokenizer_handles_two_suffix_url(combined_all_model_fixture, suffix1, suffix2, url):
+    tokens = combined_all_model_fixture(url + suffix1 + suffix2)
     assert len(tokens) == 3
     assert tokens[0].text == url
     assert tokens[1].text == suffix1

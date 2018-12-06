@@ -16,15 +16,15 @@ PUNCT_PAIRED = [('(', ')'),  ('[', ']'), ('{', '}'), ('*', '*')]
 
 
 @pytest.mark.parametrize('text', ["(", "((", "<"])
-def test_en_tokenizer_handles_only_punct(combined_rule_tokenizer_fixture, text):
-    tokens = combined_rule_tokenizer_fixture(text)
+def test_en_tokenizer_handles_only_punct(combined_all_model_fixture, text):
+    tokens = combined_all_model_fixture(text)
     assert len(tokens) == len(text)
 
 
 @pytest.mark.parametrize('punct', PUNCT_OPEN)
 @pytest.mark.parametrize('text', ["Hello"])
-def test_en_tokenizer_splits_open_punct(combined_rule_tokenizer_fixture, punct, text):
-    tokens = combined_rule_tokenizer_fixture(punct + text)
+def test_en_tokenizer_splits_open_punct(combined_all_model_fixture, punct, text):
+    tokens = combined_all_model_fixture(punct + text)
     assert len(tokens) == 2
     assert tokens[0].text == punct
     assert tokens[1].text == text
@@ -32,8 +32,8 @@ def test_en_tokenizer_splits_open_punct(combined_rule_tokenizer_fixture, punct, 
 
 @pytest.mark.parametrize('punct', PUNCT_CLOSE)
 @pytest.mark.parametrize('text', ["Hello"])
-def test_en_tokenizer_splits_close_punct(combined_rule_tokenizer_fixture, punct, text):
-    tokens = combined_rule_tokenizer_fixture(text + punct)
+def test_en_tokenizer_splits_close_punct(combined_all_model_fixture, punct, text):
+    tokens = combined_all_model_fixture(text + punct)
     assert len(tokens) == 2
     assert tokens[0].text == text
     assert tokens[1].text == punct
@@ -42,8 +42,8 @@ def test_en_tokenizer_splits_close_punct(combined_rule_tokenizer_fixture, punct,
 @pytest.mark.parametrize('punct', PUNCT_OPEN)
 @pytest.mark.parametrize('punct_add', ["`"])
 @pytest.mark.parametrize('text', ["Hello"])
-def test_en_tokenizer_splits_two_diff_open_punct(combined_rule_tokenizer_fixture, punct, punct_add, text):
-    tokens = combined_rule_tokenizer_fixture(punct + punct_add + text)
+def test_en_tokenizer_splits_two_diff_open_punct(combined_all_model_fixture, punct, punct_add, text):
+    tokens = combined_all_model_fixture(punct + punct_add + text)
     assert len(tokens) == 3
     assert tokens[0].text == punct
     assert tokens[1].text == punct_add
@@ -53,8 +53,8 @@ def test_en_tokenizer_splits_two_diff_open_punct(combined_rule_tokenizer_fixture
 @pytest.mark.parametrize('punct', PUNCT_CLOSE)
 @pytest.mark.parametrize('punct_add', ["'"])
 @pytest.mark.parametrize('text', ["Hello"])
-def test_en_tokenizer_splits_two_diff_close_punct(combined_rule_tokenizer_fixture, punct, punct_add, text):
-    tokens = combined_rule_tokenizer_fixture(text + punct + punct_add)
+def test_en_tokenizer_splits_two_diff_close_punct(combined_all_model_fixture, punct, punct_add, text):
+    tokens = combined_all_model_fixture(text + punct + punct_add)
     assert len(tokens) == 3
     assert tokens[0].text == text
     assert tokens[1].text == punct
@@ -63,8 +63,8 @@ def test_en_tokenizer_splits_two_diff_close_punct(combined_rule_tokenizer_fixtur
 
 @pytest.mark.parametrize('punct', PUNCT_OPEN)
 @pytest.mark.parametrize('text', ["Hello"])
-def test_en_tokenizer_splits_same_open_punct(combined_rule_tokenizer_fixture, punct, text):
-    tokens = combined_rule_tokenizer_fixture(punct + punct + punct + text)
+def test_en_tokenizer_splits_same_open_punct(combined_all_model_fixture, punct, text):
+    tokens = combined_all_model_fixture(punct + punct + punct + text)
     assert len(tokens) == 4
     assert tokens[0].text == punct
     assert tokens[3].text == text
@@ -72,33 +72,33 @@ def test_en_tokenizer_splits_same_open_punct(combined_rule_tokenizer_fixture, pu
 
 @pytest.mark.parametrize('punct', PUNCT_CLOSE)
 @pytest.mark.parametrize('text', ["Hello"])
-def test_en_tokenizer_splits_same_close_punct(combined_rule_tokenizer_fixture, punct, text):
-    tokens = combined_rule_tokenizer_fixture(text + punct + punct + punct)
+def test_en_tokenizer_splits_same_close_punct(combined_all_model_fixture, punct, text):
+    tokens = combined_all_model_fixture(text + punct + punct + punct)
     assert len(tokens) == 4
     assert tokens[0].text == text
     assert tokens[1].text == punct
 
 
 @pytest.mark.parametrize('text', ["'The"])
-def test_en_tokenizer_splits_open_appostrophe(combined_rule_tokenizer_fixture, text):
-    tokens = combined_rule_tokenizer_fixture(text)
+def test_en_tokenizer_splits_open_appostrophe(combined_all_model_fixture, text):
+    tokens = combined_all_model_fixture(text)
     assert len(tokens) == 2
     assert tokens[0].text == "'"
 
 
 @pytest.mark.parametrize('text', ["Hello''"])
-def test_en_tokenizer_splits_double_end_quote(combined_rule_tokenizer_fixture, text):
-    tokens = combined_rule_tokenizer_fixture(text)
+def test_en_tokenizer_splits_double_end_quote(combined_all_model_fixture, text):
+    tokens = combined_all_model_fixture(text)
     assert len(tokens) == 2
-    tokens_punct = combined_rule_tokenizer_fixture("''")
+    tokens_punct = combined_all_model_fixture("''")
     assert len(tokens_punct) == 1
 
 
 @pytest.mark.parametrize('punct_open,punct_close', PUNCT_PAIRED)
 @pytest.mark.parametrize('text', ["Hello"])
-def test_en_tokenizer_splits_open_close_punct(combined_rule_tokenizer_fixture, punct_open,
+def test_en_tokenizer_splits_open_close_punct(combined_all_model_fixture, punct_open,
                                            punct_close, text):
-    tokens = combined_rule_tokenizer_fixture(punct_open + text + punct_close)
+    tokens = combined_all_model_fixture(punct_open + text + punct_close)
     assert len(tokens) == 3
     assert tokens[0].text == punct_open
     assert tokens[1].text == text
@@ -108,9 +108,9 @@ def test_en_tokenizer_splits_open_close_punct(combined_rule_tokenizer_fixture, p
 @pytest.mark.parametrize('punct_open,punct_close', PUNCT_PAIRED)
 @pytest.mark.parametrize('punct_open2,punct_close2', [("`", "'")])
 @pytest.mark.parametrize('text', ["Hello"])
-def test_en_tokenizer_two_diff_punct(combined_rule_tokenizer_fixture, punct_open, punct_close,
+def test_en_tokenizer_two_diff_punct(combined_all_model_fixture, punct_open, punct_close,
                                   punct_open2, punct_close2, text):
-    tokens = combined_rule_tokenizer_fixture(punct_open2 + punct_open + text + punct_close + punct_close2)
+    tokens = combined_all_model_fixture(punct_open2 + punct_open + text + punct_close + punct_close2)
     assert len(tokens) == 5
     assert tokens[0].text == punct_open2
     assert tokens[1].text == punct_open
@@ -126,7 +126,7 @@ def test_en_tokenizer_splits_pre_punct_regex(combined_rule_prefixes_fixture, tex
     assert match.group() == punct
 
 
-def test_en_tokenizer_splits_bracket_period(combined_rule_tokenizer_fixture):
+def test_en_tokenizer_splits_bracket_period(combined_all_model_fixture):
     text = "(And a 6a.m. run through Washington Park)."
-    tokens = combined_rule_tokenizer_fixture(text)
+    tokens = combined_all_model_fixture(text)
     assert tokens[len(tokens) - 1].text == "."
