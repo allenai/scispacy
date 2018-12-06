@@ -22,8 +22,8 @@ TEST_CASES = [("LSTM networks, which we preview in Sec. 2, have been successfull
              ]
 
 @pytest.mark.parametrize('text,expected_sents', TEST_CASES)
-def test_custom_segmentation(en_with_combined_rule_tokenizer_and_segmenter_fixture, remove_new_lines_fixture, text, expected_sents):
+def test_custom_segmentation(combined_all_model_fixture, remove_new_lines_fixture, text, expected_sents):
     text = remove_new_lines_fixture(text)
-    doc = en_with_combined_rule_tokenizer_and_segmenter_fixture(text)
+    doc = combined_all_model_fixture(text)
     sents = [s.text for s in doc.sents]
     assert sents == expected_sents
