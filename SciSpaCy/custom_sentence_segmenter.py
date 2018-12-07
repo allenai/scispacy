@@ -100,6 +100,11 @@ def combined_rule_sentence_segmenter(doc):
             if first_char.isupper():
                 doc[token.i].is_sent_start = True
 
+        # don't split up ?! to start a sentence on the !, or vice versa
+        if prev_tokens[-1] and prev_tokens[-1].text in ["?", "!"]:
+            if token.text in ["!", "?"]:
+                doc[token.i].is_sent_start = False
+
         # update the saved previous tokens
         prev_tokens = prev_tokens[1:] + [token]
 
