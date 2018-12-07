@@ -54,6 +54,13 @@ def get_dependency_annotations(path: str):
         yield (words, pos_tags, heads, tags)
 
 def convert_abstracts_to_docs(conll_path, pmids_path, vocab_path):
+    """Converts a conll file of abstracts to a doc and gold parse for
+       each abstract
+
+       @param conll_path: path to the conll formatted abstracts
+       @param pmids_path: path to the pmids of the abstracts (one per conll sentence)
+       @param vocab_path: path to the spacy vocabulary to load
+    """
     vocab = Vocab().from_disk(vocab_path)
     pmids = []
     with open(pmids_path) as pmids_fp:
