@@ -1,3 +1,31 @@
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.join(os.getcwd(), "SciSpaCy")))
+from scripts import retrain_parser
+import spacy
+from spacy.vocab import Vocab
+import shutil
+
+def test_retraining(test_model_dir, test_conll_path, test_pmids_path, test_vocab_dir):
+    if os.path.isdir(test_model_dir):
+        shutil.rmtree(test_model_dir)
+    if not os.path.isdir(test_model_dir):
+        os.mkdir(test_model_dir)
+    retrain_parser.train_parser(test_conll_path,
+                                test_conll_path,
+                                test_conll_path,
+                                test_pmids_path,
+                                test_pmids_path,
+                                test_pmids_path,
+                                test_vocab_dir,
+                                test_model_dir)
+    nlp = spacy.load(os.path.join(test_model_dir, "genia_trained_parser"))
+    text = "Induction of cytokine expression in leukocytes by binding of thrombin-stimulated platelets. BACKGROUND: Activated platelets tether and activate myeloid leukocytes."
+    doc = nlp(text)
+    assert doc.is_parsed
+    assert doc[0].text == "Induction"
+    shutil.rmtree(test_model_dir)
+
 def test_custom_segmentation(combined_all_model_fixture):
     text = "Induction of cytokine expression in leukocytes by binding of thrombin-stimulated platelets. BACKGROUND: Activated platelets tether and activate myeloid leukocytes."
     doc = combined_all_model_fixture(text)

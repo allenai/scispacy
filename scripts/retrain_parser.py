@@ -1,12 +1,14 @@
 import os
 import spacy
+import sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 from tqdm import tqdm
 import random
 from spacy import util
 from timeit import default_timer as timer
 from spacy.cli.train import print_progress
-from spacy.vocab import vocab
+from spacy.vocab import Vocab
 import argparse
 import json
 import spacy_convert
@@ -52,6 +54,19 @@ def train_parser(train_conll_path: str,
                                    util.env_opt('batch_to', 0.2),
                                    util.env_opt('batch_compound', 1.001))
 
+    meta = {}
+    meta["lang"] = "en"
+    meta["pipeline"] = ["parser"]
+    meta["name"] = "scispacy_core_web_sm"
+    meta["license"] = "CC BY-SA 3.0"
+    meta["author"] = "Allen Institute for Artificial Intelligence"
+    meta["url"] = "allenai.org"
+    meta["sources"] = ["OntoNotes 5", "Common Crawl", "GENIA 1.0"]
+    meta["version"] = "1.0.0"
+    meta["spacy_version"] = ">=2.0.18"
+    meta["parent_package"] = "spacy"
+    meta["email"] = "ai2-info@allenai.org"
+
     for doc, gold in train_corpus:
         for label in gold.labels:
             parser.add_label(label)
@@ -73,6 +88,10 @@ def train_parser(train_conll_path: str,
         with nlp.use_params(optimizer.averages):
             epoch_model_path = os.path.join(model_output_dir, "model"+str(i))
             nlp.to_disk(epoch_model_path)
+
+            with open(os.path.join(model_output_dir, "model"+str(i), "meta.json"), "w") as meta_fp:
+                meta_fp.write(json.dumps(meta))
+
             nlp_loaded = util.load_model_from_path(epoch_model_path)
             nwords = sum(len(doc_gold[0]) for doc_gold in dev_corpus)
             start_time = timer()
@@ -83,23 +102,11 @@ def train_parser(train_conll_path: str,
 
         print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
 
-    meta = {}
-    meta["lang"] = "en"
-    meta["pipeline"] = ["parser"]
-    meta["name"] = "scispacy_core_web_sm"
-    meta["license"] = "CC BY-SA 3.0"
-    meta["author"] = "Allen Institute for Artificial Intelligence"
-    meta["url"] = "allenai.org"
-    meta["sources"] = ["OntoNotes 5", "Common Crawl", "GENIA 1.0"]
-    meta["version"] = "1.0.0"
-    meta["spacy_version"] = ">=2.0.18"
-    meta["parent_package"] = "spacy"
-    meta["speed"] = {"gpu": None, "nwords": nwords, "cpu": cpu_wps}
-    meta["email"] = "ai2-info@allenai.org"
-
     # save final model and output results on the test set
     with nlp.use_params(optimizer.averages):
         nlp.to_disk(os.path.join(model_output_dir, "genia_trained_parser"))
+    with open(os.path.join(model_output_dir, "genia_trained_parser", "meta.json"), "w") as meta_fp:
+        meta_fp.write(json.dumps(meta))
     nlp_loaded = util.load_model_from_path(os.path.join(model_output_dir, "genia_trained_parser"))
     nwords = sum(len(doc_gold[0]) for doc_gold in test_corpus)
     start_time = timer()
@@ -107,6 +114,7 @@ def train_parser(train_conll_path: str,
     end_time = timer()
     gpu_wps = None
     cpu_wps = nwords/(end_time-start_time)
+    meta["speed"] = {"gpu": None, "nwords": nwords, "cpu": cpu_wps}
 
     print("Test results:")
     print("UAS:", scorer.unlabelled.fscore)
