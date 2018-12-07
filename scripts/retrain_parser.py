@@ -1,17 +1,14 @@
 import os
 import spacy
 
-from spacy.tokens import Doc
-from spacy.gold import GoldParse, GoldCorpus
-from conllu.parser import parse_line, DEFAULT_FIELDS
 from tqdm import tqdm
 import random
-from spacy.util import minibatch, compounding
 from spacy import util
 from timeit import default_timer as timer
 from spacy.cli.train import print_progress
 import argparse
 import json
+import spacy_convert
 
 def train_parser(train_json_path: str,
                  dev_json_path: str,
@@ -35,9 +32,10 @@ def train_parser(train_json_path: str,
     else:
         parser = nlp.get_pipe('parser')
 
-    corpus = GoldCorpus(train_json_path, dev_json_path, limit=0)
-    test_corpus = GoldCorpus(train_json_path, test_json_path, limit=0)
-    n_train_words = corpus.count_train()
+    train_corpus = spacy_convert.convert_abstracts_to_docs("../data/daniel_data/train.conllu", "../data/daniel_data/train_new.pmids", "../SciSpaCy/models/combined_all_model/vocab")
+    dev_corpus = spacy_convert.convert_abstracts_to_docs("../data/daniel_data/dev.conllu", "../data/daniel_data/dev_new.pmids", "../SciSpaCy/models/combined_all_model/vocab")
+    test_corpus = spacy_convert.convert_abstracts_to_docs("../data/daniel_data/test.conllu", "../data/daniel_data/test_new.pmids", "../SciSpaCy/models/combined_all_model/vocab")
+    n_train_words = sum(len(doc_gold[0]) for doc_gold in train_corpus)
 
     dropout_rates = util.decaying(util.env_opt('dropout_from', 0.2),
                                   util.env_opt('dropout_to', 0.2),
@@ -46,16 +44,17 @@ def train_parser(train_json_path: str,
                                    util.env_opt('batch_to', 0.2),
                                    util.env_opt('batch_compound', 1.001))
 
-    optimizer = nlp.begin_training(lambda: corpus.train_tuples)
+    for doc, gold in train_corpus:
+        for label in gold.labels:
+            parser.add_label(label)
+
+    optimizer = nlp.begin_training()
     nlp._optimizer = None
     print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
-    train_docs = corpus.train_docs(nlp, projectivize=True, noise_level=0.0,
-                                   gold_preproc=False, max_length=0)
-    train_docs = list(train_docs)
     for i in range(8):
         with tqdm(total=n_train_words, leave=False) as pbar:
             losses = {}
-            minibatches = list(minibatch(train_docs, size=batch_sizes))
+            minibatches = list(util.minibatch(train_corpus, size=batch_sizes))
             for batch in minibatches:
                 docs, golds = zip(*batch)
                 nlp.update(docs, golds, sgd=optimizer,
@@ -67,12 +66,9 @@ def train_parser(train_json_path: str,
             epoch_model_path = '../SciSpaCy/models/manual-model'+str(i)
             nlp.to_disk(epoch_model_path)
             nlp_loaded = util.load_model_from_path(epoch_model_path)
-            dev_docs = list(corpus.dev_docs(
-                                nlp_loaded,
-                                gold_preproc=False))
-            nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
+            nwords = sum(len(doc_gold[0]) for doc_gold in dev_corpus)
             start_time = timer()
-            scorer = nlp_loaded.evaluate(dev_docs)
+            scorer = nlp_loaded.evaluate(dev_corpus)
             end_time = timer()
             gpu_wps = None
             cpu_wps = nwords/(end_time-start_time)
@@ -93,25 +89,22 @@ def train_parser(train_json_path: str,
     meta["speed"] = {"gpu": None, "nwords": nwords, "cpu": cpu_wps}
     meta["email"] = "ai2-info@allenai.org"
 
-    save final model and output results on the test set
+    # save final model and output results on the test set
     with nlp.use_params(optimizer.averages):
         nlp.to_disk(os.path.join("../SciSpaCy/models/", "genia_trained_parser"))
-        nlp_loaded = util.load_model_from_path(os.path.join("../SciSpaCy/models/", "genia_trained_parser"))
-        test_docs = list(test_corpus.dev_docs(
-                                nlp_loaded,
-                                gold_preproc=False))
-        nwords = sum(len(doc_gold[0]) for doc_gold in test_docs)
-        start_time = timer()
-        scorer = nlp_loaded.evaluate(test_docs)
-        end_time = timer()
-        gpu_wps = None
-        cpu_wps = nwords/(end_time-start_time)
+    nlp_loaded = util.load_model_from_path(os.path.join("../SciSpaCy/models/", "genia_trained_parser"))
+    nwords = sum(len(doc_gold[0]) for doc_gold in test_corpus)
+    start_time = timer()
+    scorer = nlp_loaded.evaluate(test_corpus)
+    end_time = timer()
+    gpu_wps = None
+    cpu_wps = nwords/(end_time-start_time)
 
-        print("Test results:")
-        print("UAS:", scorer.unlabelled.fscore)
-        print("LAS:", scorer.labelled.fscore)
-        with open(os.path.join(output_dir, "genia_trained_parser", "meta.json"), "w") as meta_fp:
-            meta_fp.write(json.dumps(meta))
+    print("Test results:")
+    print("UAS:", scorer.unlabelled.fscore)
+    print("LAS:", scorer.labelled.fscore)
+    with open(os.path.join(output_dir, "genia_trained_parser", "meta.json"), "w") as meta_fp:
+        meta_fp.write(json.dumps(meta))
 
 def main(train_json_path,
          dev_json_path,
