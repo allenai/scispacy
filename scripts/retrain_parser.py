@@ -4,7 +4,6 @@ import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 from tqdm import tqdm
-import random
 from spacy import util
 from timeit import default_timer as timer
 from spacy.cli.train import print_progress
