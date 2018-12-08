@@ -1,9 +1,6 @@
 import spacy
-import numpy as np
-import json
 from spacy.tokens import Doc
-from spacy.gold import GoldParse, GoldCorpus
-from spacy.attrs import ORTH, HEAD, TAG, DEP, POS
+from spacy.gold import GoldParse
 from spacy.vocab import Vocab
 from conllu.parser import parse_line, DEFAULT_FIELDS
 
