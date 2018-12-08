@@ -74,7 +74,7 @@ def train_parser(train_conll_path: str,
     optimizer = nlp.begin_training()
     nlp._optimizer = None
     print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
-    for i in range(8):
+    for i in range(10):
         with tqdm(total=n_train_words, leave=False) as pbar:
             losses = {}
             minibatches = list(util.minibatch(train_corpus, size=batch_sizes))
