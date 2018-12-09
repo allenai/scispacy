@@ -1,13 +1,12 @@
+import sys
+import os
+
 from spacy.lang import char_classes
 from spacy.symbols import ORTH # pylint: disable-msg=E0611,E0401
 from spacy.tokenizer import Tokenizer # pylint: disable-msg=E0611,E0401
 from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.realpath(__file__)))
-
-from consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
+from SciSpaCy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 
 def remove_new_lines(text):
     """Used to preprocess away new lines in the middle of words. This function
