@@ -46,8 +46,8 @@ TEST_CASES = [("using a bag-of-words model", ["using", "a", "bag-of-words", "mod
              ]
 
 @pytest.mark.parametrize('text,expected_tokens', TEST_CASES)
-def test_custom_tokenization(combined_rule_tokenizer_fixture, remove_new_lines_fixture, text, expected_tokens):
+def test_custom_tokenization(combined_all_model_fixture, remove_new_lines_fixture, text, expected_tokens):
     text = remove_new_lines_fixture(text)
-    doc = combined_rule_tokenizer_fixture(text)
+    doc = combined_all_model_fixture(text)
     tokens = [t.text for t in doc]
     assert tokens == expected_tokens

@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
-from consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
+from consts import ABBREVIATIONS # pylint: disable=E0611,E0401
 
 def combined_rule_sentence_segmenter(doc):
     """Adds sentence boundaries to a Doc. Intended to be used as a pipe in a spaCy pipeline.
@@ -16,11 +16,21 @@ def combined_rule_sentence_segmenter(doc):
     # keep stacks for determining when we are inside parenthesis or brackets
     parens_stack = []
     brackets_stack = []
+    double_quotes_stack = []
     open_paren_to_stack = {"(": parens_stack, "[": brackets_stack}
     close_paren_to_stack = {")": parens_stack, "]": brackets_stack}
     for token in doc:
+        # can't end a sentence on a comma or semicolon
+        if prev_tokens[-1] and (prev_tokens[-1].text == "," or prev_tokens[-1].text == ";"):
+            doc[token.i].is_sent_start = False
+
+        # can't start a sentence on a close bracket
+        if token.text in [")", "]", "}"]:
+            doc[token.i].is_sent_start = False
+
         # handling special quote symbols
-        # for example: 'in word order or syntactic structure (e.g., “cats climb trees” vs. “trees climb cats”).'
+        # for example: 'in word order or syntactic structure (e.g., “cats climb trees” vs.
+        # “trees climb cats”).'
         if token.text == '“' or token.text == '”':
             if prev_tokens[-1] and prev_tokens[-1].text != ".":
                 doc[token.i].is_sent_start = False
@@ -52,6 +62,16 @@ def combined_rule_sentence_segmenter(doc):
                 if not (last_open_paren.i == (token.i-2) and len(prev_tokens[-1].text) == 1):
                     doc[last_open_paren.i].is_sent_start = False
 
+        # can't start a sentence on a matched "
+        # for example: She turned to him, "This is great." She held the book out to show him.
+        # The second quote cannot start a sentence
+        if token.text == '"':
+            if double_quotes_stack != []:
+                double_quotes_stack.pop()
+                doc[token.i].is_sent_start = False
+            else:
+                double_quotes_stack.append(token)
+
         # handling the case of a capital letter after a ) unless that was preceeded by a .
         # for example: 'the support of the Defense Advanced Resarch Projects Agency (DARPA) Deep Exploration'
         first_char = token.text[0]
@@ -59,6 +79,10 @@ def combined_rule_sentence_segmenter(doc):
             if prev_tokens[-1] and prev_tokens[-1].text == ')':
                 if prev_tokens[-2] and prev_tokens[-2].text != ".":
                     doc[token.i].is_sent_start = False
+
+        # can't start a new sentence immediately after a token ending in a digit or character
+        if prev_tokens[-1] and (prev_tokens[-1].text[-1].isalpha() or prev_tokens[-1].text[-1].isdigit()):
+            doc[token.i].is_sent_start = False
 
         # sentences cannot start with .
         if token.text == ".":
@@ -70,6 +94,16 @@ def combined_rule_sentence_segmenter(doc):
         if prev_tokens[-1] and (prev_tokens[-1].text == "\n\n\n\n" or prev_tokens[-1].text == "\n\n"):
             doc[token.i].is_sent_start = True
             doc[token.i-1].is_sent_start = True
+
+        # An ! or ? followed by a capital letter should start a sentence
+        if prev_tokens[-1] and prev_tokens[-1].text in ["!", "?"]:
+            if first_char.isupper():
+                doc[token.i].is_sent_start = True
+
+        # don't split up ?! to start a sentence on the !, or vice versa
+        if prev_tokens[-1] and prev_tokens[-1].text in ["?", "!"]:
+            if token.text in ["!", "?"]:
+                doc[token.i].is_sent_start = False
 
         # update the saved previous tokens
         prev_tokens = prev_tokens[1:] + [token]

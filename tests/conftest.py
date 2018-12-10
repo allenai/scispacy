@@ -4,27 +4,31 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../SciSpaCy/")
 
 import pytest
 import spacy
+from spacy.language import Language
 
 from custom_sentence_segmenter import combined_rule_sentence_segmenter
 from custom_tokenizer import combined_rule_tokenizer, combined_rule_prefixes, remove_new_lines
 
 @pytest.fixture()
-def combined_rule_tokenizer_fixture():
-    nlp = spacy.load('en_core_web_sm')
-    tokenizer = combined_rule_tokenizer(nlp)
-    return tokenizer
+def test_pmids_path():
+    return os.path.join("tests", "custom_tests", "data_fixtures", "test.pmids")
 
 @pytest.fixture()
-def en_with_combined_rule_tokenizer_fixture():
-    nlp = spacy.load('en_core_web_sm')
-    nlp.tokenizer = combined_rule_tokenizer(nlp)
-    return nlp
+def test_conll_path():
+    return os.path.join("tests", "custom_tests", "data_fixtures", "test.conllu")
 
 @pytest.fixture()
-def en_with_combined_rule_tokenizer_and_segmenter_fixture():
-    nlp = spacy.load('en_core_web_sm')
-    nlp.tokenizer = combined_rule_tokenizer(nlp)
-    nlp.add_pipe(combined_rule_sentence_segmenter, first=True)
+def test_model_dir():
+    return os.path.join("tests", "custom_tests", "data_fixtures", "tmp_model_dir")
+
+@pytest.fixture()
+def test_vocab_dir():
+    return os.path.join("SciSpaCy", "models", "combined_all_model", "vocab")
+
+@pytest.fixture()
+def combined_all_model_fixture():
+    Language.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter
+    nlp = spacy.load('SciSpaCy/models/combined_all_model')
     return nlp
 
 @pytest.fixture()

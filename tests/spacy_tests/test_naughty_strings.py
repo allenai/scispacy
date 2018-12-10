@@ -136,6 +136,6 @@ NAUGHTY_STRINGS = [
 ]
 
 @pytest.mark.parametrize('text', NAUGHTY_STRINGS)
-def test_tokenizer_naughty_strings(combined_rule_tokenizer_fixture, text):
-    tokens = combined_rule_tokenizer_fixture(text)
+def test_tokenizer_naughty_strings(combined_all_model_fixture, text):
+    tokens = combined_all_model_fixture(text)
     assert tokens.text_with_ws == text
