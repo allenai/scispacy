@@ -61,7 +61,7 @@ def read_med_mentions(filename: str):
     """
     examples = []
     for example in med_mentions_example_iterator(filename):
-        spacy_format_entities = [(x.start, x.end, "E") for x in example.entities]
+        spacy_format_entities = [(x.start, x.end, x.mention_type) for x in example.entities]
         examples.append((example.text, {"entities": spacy_format_entities}))
 
     return examples
