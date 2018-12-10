@@ -6,3 +6,4 @@ numpy
 spacy==2.0.18
 pandas
 awscli
+connlu
