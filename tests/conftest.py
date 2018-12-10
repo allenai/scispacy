@@ -64,7 +64,9 @@ def en_with_combined_rule_tokenizer_and_segmenter_fixture():
     nlp = get_spacy_model('en_core_web_sm', True, True, True,
                           with_custom_tokenizer=True,
                           with_sentence_segmenter=True)
+    return nlp
 
+@pytest.fixture()
 def test_pmids_path():
     return os.path.join("tests", "custom_tests", "data_fixtures", "test.pmids")
 
@@ -83,7 +85,8 @@ def test_vocab_dir():
 @pytest.fixture()
 def combined_all_model_fixture():
     SpacyModelType.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter # pylint: disable=line-too-long
-    nlp = spacy.load('SciSpaCy/models/combined_all_model')
+    nlp = get_spacy_model('SciSpaCy/models/combined_all_model', True, True, True,
+                          with_custom_tokenizer=True)
     return nlp
 
 @pytest.fixture()

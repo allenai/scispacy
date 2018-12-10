@@ -1,6 +1,5 @@
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.join(os.getcwd(), "SciSpaCy")))
 from scripts import retrain_parser
 import spacy
 from spacy.vocab import Vocab

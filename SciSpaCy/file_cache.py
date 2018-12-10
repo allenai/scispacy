@@ -16,7 +16,7 @@ import requests
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
-CACHE_ROOT = Path(os.getenv('SCISPACY_CACHE', Path.home() / '.scispacy'))
+CACHE_ROOT = Path(os.getenv('SCISPACY_CACHE', str(Path.home() / '.scispacy')))
 DATASET_CACHE = str(CACHE_ROOT / "datasets")
 
 

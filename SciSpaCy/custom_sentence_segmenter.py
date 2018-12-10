@@ -1,5 +1,3 @@
-import sys
-import os
 
 from SciSpaCy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 
