@@ -1,4 +1,5 @@
 from typing import Dict, Tuple
+import os
 
 import pytest
 import spacy
@@ -47,7 +48,6 @@ def get_spacy_model(spacy_model_name: str,
         LOADED_SPACY_MODELS[options] = spacy_model
     return LOADED_SPACY_MODELS[options]
 
-
 @pytest.fixture()
 def combined_rule_tokenizer_fixture():
     nlp = get_spacy_model('en_core_web_sm', True, True, True)
@@ -64,6 +64,26 @@ def en_with_combined_rule_tokenizer_and_segmenter_fixture():
     nlp = get_spacy_model('en_core_web_sm', True, True, True,
                           with_custom_tokenizer=True,
                           with_sentence_segmenter=True)
+
+def test_pmids_path():
+    return os.path.join("tests", "custom_tests", "data_fixtures", "test.pmids")
+
+@pytest.fixture()
+def test_conll_path():
+    return os.path.join("tests", "custom_tests", "data_fixtures", "test.conllu")
+
+@pytest.fixture()
+def test_model_dir():
+    return os.path.join("tests", "custom_tests", "data_fixtures", "tmp_model_dir")
+
+@pytest.fixture()
+def test_vocab_dir():
+    return os.path.join("SciSpaCy", "models", "combined_all_model", "vocab")
+
+@pytest.fixture()
+def combined_all_model_fixture():
+    SpacyModelType.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter # pylint: disable=line-too-long
+    nlp = spacy.load('SciSpaCy/models/combined_all_model')
     return nlp
 
 @pytest.fixture()

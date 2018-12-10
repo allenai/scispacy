@@ -1,6 +1,3 @@
-import sys
-import os
-
 from spacy.lang import char_classes
 from spacy.symbols import ORTH # pylint: disable-msg=E0611,E0401
 from spacy.tokenizer import Tokenizer # pylint: disable-msg=E0611,E0401
