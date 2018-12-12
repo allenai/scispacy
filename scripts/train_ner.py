@@ -119,13 +119,13 @@ def evaluate(nlp, eval_data):
         # parse dev data with trained model
         doc = nlp(text)
         predicted_spans = [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents]
-        scorer(predicted_spans, gold_spans)
+        scorer(predicted_spans, gold_spans["entities"])
 
         if i % 1000 == 0 and i > 0:
-            for name, metric in scorer.get_metric():
-                print(f"{name}: \t\t {metric}")
+            for name, metric in scorer.get_metric().items():
+                print(f"{name}: {metric}")
 
-    for name, metric in scorer.get_metric():
+    for name, metric in scorer.get_metric().items():
         print(f"{name}: \t\t {metric}")
 
 plac.call(main, sys.argv[1:])
