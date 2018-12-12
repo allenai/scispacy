@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 
 from SciSpaCy.data_util import read_med_mentions
+from SciSpaCy.per_class_scorer import PerClassScorer
 
 @plac.annotations(
         output_dir=("output directory to store model in", "positional", None, str),
@@ -105,42 +106,21 @@ def train(model, train_data, dev_data, output_dir, batch_size, n_iter):
 
 
 def evaluate(nlp, eval_data):
-    print("eval %d rows" % len(eval_data))
-    num_correct = 0
-    num_predicted = 0  # for precision
-    num_relevant = 0  # for recall
-    total = 0
 
-    count = 0
-    for text, gold in tqdm.tqdm(eval_data):
-        # gold entity mentions
-        # gold_ents = [(text[start_ind:end_ind], label) for start_ind, end_ind, label in gold['entities']]
-        gold_ents = [text[start_ind:end_ind] for start_ind, end_ind, label in gold['entities']]
+    scorer = PerClassScorer()
+    print("Evaluating %d rows" % len(eval_data))
+    for i, (text, gold_spans) in enumerate(tqdm.tqdm(eval_data)):
 
         # parse dev data with trained model
         doc = nlp(text)
-        # identified_ents = [(ent.text, ent.label_) for ent in doc.ents]
-        identified_ents = [ent.text for ent in doc.ents]
+        predicted_spans = [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents]
+        scorer(predicted_spans, gold_spans)
 
-        # compute correct matches
-        num_correct += len(set(gold_ents).intersection(set(identified_ents)))
-        num_predicted += len(set(identified_ents))
-        num_relevant += len(set(gold_ents))
-        total += len(set(gold_ents).union(set(identified_ents)))
+        if i % 1000 == 0 and i > 0:
+            for name, metric in scorer.get_metric():
+                print(f"{name}: \t\t {metric}")
 
-        if count % 1000 == 0 and count > 0:
-
-            p = num_correct/num_predicted if num_predicted else 0
-            r = num_correct/num_relevant if num_relevant else 0
-            f1 = 2 * p * r / (p + r) if (p + r) else 0
-            print('Acc: %0.4f (%d/%d), p: %0.4f (%d/%d), r: %0.4f (%d/%d), f1: %0.4f' % (num_correct/total, num_correct, total,
-                   p, num_correct, num_predicted, r, num_correct, num_relevant, f1))
-
-        count += 1
-    p = num_correct/num_predicted if num_predicted else 0
-    r = num_correct/num_relevant if num_relevant else 0
-    f1 = 2 * p * r / (p + r) if (p + r) else 0
-    print('Acc: %0.4f (%d/%d), p: %0.4f (%d/%d), r: %0.4f (%d/%d), f1: %0.4f' % (num_correct/total, num_correct, total,
-           p, num_correct, num_predicted, r, num_correct, num_relevant, f1))
+    for name, metric in scorer.get_metric():
+        print(f"{name}: \t\t {metric}")
 
 plac.call(main, sys.argv[1:])
