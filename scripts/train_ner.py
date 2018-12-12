@@ -21,7 +21,13 @@ from SciSpaCy.per_class_scorer import PerClassScorer
         model=("location of base model", "option", "model", str),
         n_iter=("number of iterations", "option", "n", int),
         batch_size=("batch size", "option", "b", int))
-def main(output_dir, train_path, dev_path, test_path=None, model=None, n_iter=100, batch_size=32):
+def main(output_dir: str,
+         train_path: str,
+         dev_path: str=None,
+         test_path: str=None,
+         model: str=None,
+         n_iter: int=100,
+         batch_size: int=32):
 
     os.makedirs(output_dir, exist_ok=True)
     if test_path is not None:
@@ -70,7 +76,6 @@ def train(model, train_data, dev_data, output_dir, batch_size, n_iter):
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
 
-
     with nlp.disable_pipes(*other_pipes):  # only train NER
         optimizer = nlp.begin_training()
         for i in range(n_iter):
@@ -102,7 +107,7 @@ def train(model, train_data, dev_data, output_dir, batch_size, n_iter):
                 print("Loading from", output_dir_path)
                 nlp2 = spacy.load(output_dir_path)
 
-            evaluate(nlp, dev_data)
+            evaluate(nlp2, dev_data)
 
 
 def evaluate(nlp, eval_data):
