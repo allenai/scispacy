@@ -1,0 +1,128 @@
+UnknownType	UnknownType	0
+Event	T051	1
+  Activity	T052	2
+    Behavior	T053	3
+      Social Behavior	T054	4
+      Individual Behavior	T055	4
+    Daily or Recreational Activity	T056	3
+    Occupational Activity	T057	3
+      Health Care Activity	T058	4
+        Laboratory Procedure	T059	5
+        Diagnostic Procedure	T060	5
+        Therapeutic or Preventive Procedure	T061	5
+      Research Activity	T062	4
+        Molecular Biology Research Technique	T063	5
+      Governmental or Regulatory Activity	T064	4
+      Educational Activity	T065	4
+    Machine Activity	T066	3
+  Phenomenon or Process	T067	2
+    Injury or Poisoning	T037	3
+    Human-caused Phenomenon or Process	T068	3
+      Environmental Effect of Humans	T069	4
+    Natural Phenomenon or Process	T070	3
+      Biologic Function	T038	4
+        Physiologic Function	T039	5
+          Organism Function	T040	6
+            Mental Process	T041	7
+          Organ or Tissue Function	T042	6
+          Cell Function	T043	6
+          Molecular Function	T044	6
+            Genetic Function	T045	7
+        Pathologic Function	T046	5
+          Disease or Syndrome	T047	6
+            Mental or Behavioral Dysfunction	T048	7
+            Neoplastic Process	T191	7
+          Cell or Molecular Dysfunction	T049	6
+          Experimental Model of Disease	T050	6
+Entity	T071	1
+  Physical Object	T072	2
+    Organism	T001	3
+      Virus	T005	4
+      Bacterium	T007	4
+      Archaeon	T194	4
+      Eukaryote	T204	4
+        Plant	T002	5
+        Fungus	T004	5
+        Animal	T008	5
+          Vertebrate	T010	6
+            Amphibian	T011	7
+            Bird	T012	7
+            Fish	T013	7
+            Reptile	T014	7
+            Mammal	T015	7
+              Human	T016	8
+    Anatomical Structure	T017	3
+      Embryonic Structure	T018	4
+      Fully Formed Anatomical Structure	T021	4
+        Body Part, Organ, or Organ Component	T023	5
+        Tissue	T024	5
+        Cell	T025	5
+        Cell Component	T026	5
+        Gene or Genome	T028	5
+      Anatomical Abnormality	T190	4
+        Congenital Abnormality	T019	5
+        Acquired Abnormality	T020	5
+    Manufactured Object	T073	3
+      Medical Device	T074	4
+        Drug Delivery Device	T203	5
+      Research Device	T075	4
+      Clinical Drug	T200	4
+    Substance	T167	3
+      Body Substance	T031	4
+      Chemical	T103	4
+        Chemical Viewed Structurally	T104	5
+          Organic Chemical	T109	6
+            Nucleic Acid, Nucleoside, or Nucleotide	T114	7
+            Amino Acid, Peptide, or Protein	T116	7
+          Element, Ion, or Isotope	T196	6
+          Inorganic Chemical	T197	6
+        Chemical Viewed Functionally	T120	5
+          Pharmacologic Substance	T121	6
+            Antibiotic	T195	7
+          Biomedical or Dental Material	T122	6
+          Biologically Active Substance	T123	6
+            Hormone	T125	7
+            Enzyme	T126	7
+            Vitamin	T127	7
+            Immunologic Factor	T129	7
+            Receptor	T192	7
+          Indicator, Reagent, or Diagnostic Aid	T130	6
+          Hazardous or Poisonous Substance	T131	6
+      Food	T168	4
+  Conceptual Entity	T077	2
+    Organism Attribute	T032	3
+      Clinical Attribute	T201	4
+    Finding	T033	3
+      Laboratory or Test Result	T034	4
+      Sign or Symptom	T184	4
+    Idea or Concept	T078	3
+      Temporal Concept	T079	4
+      Qualitative Concept	T080	4
+      Quantitative Concept	T081	4
+      Spatial Concept	T082	4
+        Body Location or Region	T029	5
+        Body Space or Junction	T030	5
+        Geographic Area	T083	5
+        Molecular Sequence	T085	5
+          Nucleotide Sequence	T086	6
+          Amino Acid Sequence	T087	6
+          Carbohydrate Sequence	T088	6
+      Functional Concept	T169	4
+        Body System	T022	5
+    Occupation or Discipline	T090	3
+      Biomedical Occupation or Discipline	T091	4
+    Organization	T092	3
+      Health Care Related Organization	T093	4
+      Professional Society	T094	4
+      Self-help or Relief Organization	T095	4
+    Group	T096	3
+      Professional or Occupational Group	T097	4
+      Population Group	T098	4
+      Family Group	T099	4
+      Age Group	T100	4
+      Patient or Disabled Group	T101	4
+    Group Attribute	T102	3
+    Intellectual Product	T170	3
+      Regulation or Law	T089	4
+      Classification	T185	4
+    ILanguage	T171	3
