@@ -10,14 +10,14 @@ def test_retraining(test_model_dir, test_conll_path, test_pmids_path, test_vocab
         shutil.rmtree(test_model_dir)
     if not os.path.isdir(test_model_dir):
         os.mkdir(test_model_dir)
-    retrain_parser.train_parser(test_conll_path,
-                                test_conll_path,
-                                test_conll_path,
-                                test_pmids_path,
-                                test_pmids_path,
-                                test_pmids_path,
-                                test_vocab_dir,
-                                test_model_dir)
+    retrain_parser_and_tagger.train_parser_and_tagger(test_conll_path,
+                                                      test_conll_path,
+                                                      test_conll_path,
+                                                      test_pmids_path,
+                                                      test_pmids_path,
+                                                      test_pmids_path,
+                                                      test_vocab_dir,
+                                                      test_model_dir)
     nlp = spacy.load(os.path.join(test_model_dir, "genia_trained_parser"))
     text = "Induction of cytokine expression in leukocytes by binding of thrombin-stimulated platelets. BACKGROUND: Activated platelets tether and activate myeloid leukocytes."
     doc = nlp(text)

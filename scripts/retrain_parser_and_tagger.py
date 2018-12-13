@@ -12,15 +12,15 @@ import argparse
 import json
 import spacy_convert
 
-def train_parser(train_conll_path: str,
-                 dev_conll_path: str,
-                 test_conll_path: str,
-                 train_pmids_path: str,
-                 dev_pmids_path: str,
-                 test_pmids_path: str,
-                 vocab_path: str,
-                 model_output_dir: str):
-    """Function to train the spacy parser from a blank model, with the default, en_core_web_sm vocab.
+def train_parser_and_tagger(train_conll_path: str,
+                            dev_conll_path: str,
+                            test_conll_path: str,
+                            train_pmids_path: str,
+                            dev_pmids_path: str,
+                            test_pmids_path: str,
+                            vocab_path: str,
+                            model_output_dir: str):
+    """Function to train the spacy parser and tagger from a blank model, with the default, en_core_web_sm vocab.
        Training setup is mostly copied from the spacy cli train command.
 
        @param train_conll_path: path to the conll formatted training data
@@ -143,14 +143,14 @@ def main(train_conll_path,
          vocab_path,
          model_output_dir):
 
-    train_parser(train_conll_path,
-                 dev_conll_path,
-                 test_conll_path,
-                 train_pmids_path,
-                 dev_pmids_path,
-                 test_pmids_path,
-                 vocab_path,
-                 model_output_dir)
+    train_parser_and_tagger(train_conll_path,
+                            dev_conll_path,
+                            test_conll_path,
+                            train_pmids_path,
+                            dev_pmids_path,
+                            test_pmids_path,
+                            vocab_path,
+                            model_output_dir)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
