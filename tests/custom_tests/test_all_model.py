@@ -1,6 +1,6 @@
 import os
 import sys
-from scripts import retrain_parser
+from scripts import retrain_parser_and_tagger
 import spacy
 from spacy.vocab import Vocab
 import shutil
