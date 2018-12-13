@@ -8,9 +8,11 @@ from spacy import util
 from timeit import default_timer as timer
 from spacy.cli.train import print_progress
 from spacy.vocab import Vocab
+from spacy.gold import GoldCorpus
 import argparse
 import json
 import spacy_convert
+import random
 
 def train_parser_and_tagger(train_conll_path: str,
                             dev_conll_path: str,
@@ -19,7 +21,8 @@ def train_parser_and_tagger(train_conll_path: str,
                             dev_pmids_path: str,
                             test_pmids_path: str,
                             vocab_path: str,
-                            model_output_dir: str):
+                            model_output_dir: str,
+                            ontonotes_path):
     """Function to train the spacy parser and tagger from a blank model, with the default, en_core_web_sm vocab.
        Training setup is mostly copied from the spacy cli train command.
 
@@ -31,6 +34,7 @@ def train_parser_and_tagger(train_conll_path: str,
        @param test_pmids_path: path to the test pmids, one per conll sentence
        @param vocab_path: path to the vocab to load
        @param model_output_dir: path to the output directory for the trained models
+       @param ontonotes_path: path to the directory containnig ontonotes in spacy format (optional)
     """
     nlp = spacy.blank('en')
     nlp.vocab = Vocab().from_disk(vocab_path)
@@ -52,12 +56,12 @@ def train_parser_and_tagger(train_conll_path: str,
     test_corpus = spacy_convert.convert_abstracts_to_docs(test_conll_path, test_pmids_path, vocab_path)
     n_train_words = sum(len(doc_gold[0]) for doc_gold in train_corpus)
 
-    dropout_rates = util.decaying(util.env_opt('dropout_from', 0.2),
-                                  util.env_opt('dropout_to', 0.2),
-                                  util.env_opt('dropout_decay', 0.0))
-    batch_sizes = util.compounding(util.env_opt('batch_from', 1),
-                                   util.env_opt('batch_to', 0.2),
-                                   util.env_opt('batch_compound', 1.001))
+    if ontonotes_path:
+        onto_train_corpus = GoldCorpus("data/en-core-web/train", "data/en-core-web/dev")
+        onto_test_corpus = GoldCorpus("data/en-core-web/train", "data/en-core-web/test")
+
+    dropout_rates = util.decaying(0.3, 0.3, 0.0)
+    batch_sizes = util.compounding(1., 32., 1.001)
 
     meta = {}
     meta["lang"] = "en"
@@ -85,6 +89,7 @@ def train_parser_and_tagger(train_conll_path: str,
     nlp._optimizer = None
     print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
     for i in range(10):
+        random.shuffle(train_corpus)
         with tqdm(total=n_train_words, leave=False) as pbar:
             losses = {}
             minibatches = list(util.minibatch(train_corpus, size=batch_sizes))
@@ -126,6 +131,7 @@ def train_parser_and_tagger(train_conll_path: str,
     cpu_wps = nwords/(end_time-start_time)
     meta["speed"] = {"gpu": None, "nwords": nwords, "cpu": cpu_wps}
 
+    print("Retrained genia evaluation")
     print("Test results:")
     print("UAS:", scorer.uas)
     print("LAS:", scorer.las)
@@ -133,6 +139,16 @@ def train_parser_and_tagger(train_conll_path: str,
     print("Token acc:", scorer.token_acc)
     with open(os.path.join(model_output_dir, "genia_trained_parser_tagger", "meta.json"), "w") as meta_fp:
         meta_fp.write(json.dumps(meta))
+
+    if ontonotes_path:
+        test_docs = list(onto_test_corpus.dev_docs(nlp_loaded))
+        print("Retrained ontonotes evaluation")
+        scorer_onto_retrained = nlp_loaded.evaluate(test_docs)
+        print("Test results:")
+        print("UAS:", scorer_onto_retrained.uas)
+        print("LAS:", scorer_onto_retrained.las)
+        print("Tag %:", scorer_onto_retrained.tags_acc)
+        print("Token acc:", scorer_onto_retrained.token_acc)
 
 def main(train_conll_path,
          dev_conll_path,
@@ -195,6 +211,11 @@ if __name__ == "__main__":
         help="Path to the directory to output the trained models to"
     )
 
+    parser.add_argument(
+        '--ontonotes_path',
+        default=None,
+        help="Path to the ontonotes folder in spacy format")
+
     args = parser.parse_args()
     main(args.train_conll_path,
          args.dev_conll_path,
@@ -203,4 +224,5 @@ if __name__ == "__main__":
          args.dev_pmids_path,
          args.test_pmids_path,
          args.vocab_path,
-         args.model_output_dir)
+         args.model_output_dir,
+         args.ontonotes_path)
