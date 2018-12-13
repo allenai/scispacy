@@ -22,7 +22,7 @@ def train_parser_and_tagger(train_conll_path: str,
                             test_pmids_path: str,
                             vocab_path: str,
                             model_output_dir: str,
-                            ontonotes_path):
+                            ontonotes_path: str = None):
     """Function to train the spacy parser and tagger from a blank model, with the default, en_core_web_sm vocab.
        Training setup is mostly copied from the spacy cli train command.
 
@@ -57,8 +57,11 @@ def train_parser_and_tagger(train_conll_path: str,
     n_train_words = sum(len(doc_gold[0]) for doc_gold in train_corpus)
 
     if ontonotes_path:
-        onto_train_corpus = GoldCorpus("data/en-core-web/train", "data/en-core-web/dev")
-        onto_test_corpus = GoldCorpus("data/en-core-web/train", "data/en-core-web/test")
+        onto_train_path = os.path.join(ontonotes_path, "train")
+        onto_dev_path = os.path.join(ontonotes_path, "dev")
+        onto_test_path = os.path.join(ontonotes_path, "test")
+        onto_train_corpus = GoldCorpus(onto_train_path, onto_dev_path)
+        onto_test_corpus = GoldCorpus(onto_train_path, onto_test_path)
 
     dropout_rates = util.decaying(0.3, 0.3, 0.0)
     batch_sizes = util.compounding(1., 32., 1.001)
@@ -117,7 +120,7 @@ def train_parser_and_tagger(train_conll_path: str,
 
         print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
 
-    # save final model and output results on the test set
+    save final model and output results on the test set
     with nlp.use_params(optimizer.averages):
         nlp.to_disk(os.path.join(model_output_dir, "genia_trained_parser_tagger"))
     with open(os.path.join(model_output_dir, "genia_trained_parser_tagger", "meta.json"), "w") as meta_fp:
@@ -157,7 +160,8 @@ def main(train_conll_path,
          dev_pmids_path,
          test_pmids_path,
          vocab_path,
-         model_output_dir):
+         model_output_dir,
+         ontonotes_path):
 
     train_parser_and_tagger(train_conll_path,
                             dev_conll_path,
@@ -166,7 +170,8 @@ def main(train_conll_path,
                             dev_pmids_path,
                             test_pmids_path,
                             vocab_path,
-                            model_output_dir)
+                            model_output_dir,
+                            ontonotes_path)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
