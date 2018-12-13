@@ -1,12 +1,12 @@
 
 
-from typing import NamedTuple, List, Dict, Deque
+from typing import NamedTuple, List, Dict, Deque, Any
 
 class SemanticTypeNode(NamedTuple):
 
     type_id: str
     full_name: str
-    children: List["SemanticTypeNode"]
+    children: List[Any] # Mypy does not support nested types yet :(
     level: int
 
 class UmlsSemanticTypeTree:
@@ -54,7 +54,7 @@ class UmlsSemanticTypeTree:
         still present in the new fixed depth tree. This is effectively mapping to a _coarser_
         label space.
         """
-        new_type_id_map: Dict[str] = {k:k for k in self.type_id_to_node.keys()}
+        new_type_id_map: Dict[str, str] = {k:k for k in self.type_id_to_node.keys()}
         for node in self.get_nodes_at_depth(level):
             for child in self.get_children(node):
                 new_type_id_map[child.type_id] = node.type_id
@@ -78,12 +78,12 @@ def construct_umls_tree_from_tsv(filepath: str) -> UmlsSemanticTypeTree:
         Daily or Recreational Activity	T056	3
     """
     from collections import deque
-    node_stack = deque()
+    node_stack: Deque[SemanticTypeNode] = deque()
     for line in open(filepath, "r"):
         name, type_id, level = line.split("\t")
         name = name.strip()
-        level = int(level.strip())
-        node = SemanticTypeNode(type_id, name, [], level)
+        int_level = int(level.strip())
+        node = SemanticTypeNode(type_id, name, [], int_level)
 
         node_stack.append(node)
 
