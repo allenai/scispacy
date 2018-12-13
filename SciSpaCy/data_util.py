@@ -1,6 +1,6 @@
 
-from typing import NamedTuple, List, Iterator
-
+from typing import NamedTuple, List, Iterator, Dict
+import os
 
 class MedMentionEntity(NamedTuple):
     start: int
@@ -65,3 +65,43 @@ def read_med_mentions(filename: str):
         examples.append((example.text, {"entities": spacy_format_entities}))
 
     return examples
+
+
+def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str]=None):
+
+    expected_names = ["corpus_pubtator.txt",
+                      "corpus_pubtator_pmids_all.txt",
+                      "corpus_pubtator_pmids_dev.txt",
+                      "corpus_pubtator_pmids_test.txt",
+                      "corpus_pubtator_pmids_trng.txt"]
+
+    corpus = os.path.join(directory_path, expected_names[0])
+    examples = med_mentions_example_iterator(corpus)
+
+    train_ids = set([x.strip() for x in open(os.path.join(directory_path, expected_names[4]))])
+    dev_ids = set([x.strip() for x in open(os.path.join(directory_path, expected_names[2]))])
+    test_ids = set([x.strip() for x in open(os.path.join(directory_path, expected_names[3]))])
+
+    train_examples = []
+    dev_examples = []
+    test_examples = []
+
+    def label_function(label):
+        if label_mapping is None:
+            return label
+        else:
+            return label_mapping["label"]
+
+    for example in examples:
+        spacy_format_entities = [(x.start, x.end, label_function(x.mention_type)) for x in example.entities]
+        spacy_example = (example.text, {"entities", spacy_format_entities})
+        if example.pubmed_id in train_ids:
+            train_examples.append(spacy_example)
+
+        elif example.pubmed_id in dev_ids:
+            dev_examples.append(spacy_example)
+
+        elif example.pubmed_id in test_ids:
+            test_examples.append(spacy_example)
+
+    return train_examples, dev_examples, test_examples

@@ -1,49 +1,45 @@
 import sys
 import random
 import os
+from pathlib import Path
 
 import plac
 import tqdm
 import spacy
 from spacy.gold import minibatch
 from spacy import util
-from pathlib import Path
 
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 
-from SciSpaCy.data_util import read_med_mentions
+from SciSpaCy.data_util import read_med_mentions, read_full_med_mentions
 from SciSpaCy.per_class_scorer import PerClassScorer
+from SciSpaCy.umls_semantic_type_tree import construct_umls_tree_from_tsv
 
 @plac.annotations(
         output_dir=("output directory to store model in", "positional", None, str),
-        train_path=("location of training data", "positional", None, str),
-        dev_path=("location of development data", "option", None, str),
-        test_path=("location of test data", "option", "test", str),
+        data_path=("location of training data", "positional", None, str),
+        run_test=("Whether or not to run on the test data.", "option", "test", bool),
         model=("location of base model", "option", "model", str),
         n_iter=("number of iterations", "option", "n", int),
-        batch_size=("batch size", "option", "b", int))
+        label_granularity=("granularity of the labels, between 1-7", "option", "granularity", int))
 def main(output_dir: str,
-         train_path: str,
-         dev_path: str=None,
-         test_path: str=None,
+         data_path: str,
+         run_test: bool=None,
          model: str=None,
-         n_iter: int=100):
+         n_iter: int=100,
+         label_granularity: int=None):
 
+    if label_granularity is not None:
+        umls_tree = construct_umls_tree_from_tsv("data/umls_semantic_type_tree.tsv")
+        label_mapping = umls_tree.get_collapsed_type_id_map_at_level(label_granularity)
+    else:
+        label_mapping = None
+    train_data, dev_data, test_data = read_full_med_mentions(data_path, label_mapping)
     os.makedirs(output_dir, exist_ok=True)
-    if test_path is not None:
-        test_data = read_med_mentions(test_path)
+    if run_test:
         test(model, test_data)
     else:
-        train_data = read_med_mentions(train_path)
-        if dev_path is None:
-            train_examples = len(train_data)
-            split = int(train_examples * 0.2)
-            dev_data = train_data[:split]
-            train_data = train_data[split:]
-        else:
-            dev_data = read_med_mentions(dev_path)
-
         train(model, train_data, dev_data, output_dir, n_iter)
 
 def test(model, test_data):
