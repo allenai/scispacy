@@ -6,7 +6,9 @@ import plac
 import tqdm
 import spacy
 from spacy.gold import minibatch
+from spacy import util
 from pathlib import Path
+
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 
@@ -26,8 +28,7 @@ def main(output_dir: str,
          dev_path: str=None,
          test_path: str=None,
          model: str=None,
-         n_iter: int=100,
-         batch_size: int=32):
+         n_iter: int=100):
 
     os.makedirs(output_dir, exist_ok=True)
     if test_path is not None:
@@ -43,14 +44,14 @@ def main(output_dir: str,
         else:
             dev_data = read_med_mentions(dev_path)
 
-        train(model, train_data, dev_data, output_dir, batch_size, n_iter)
+        train(model, train_data, dev_data, output_dir, n_iter)
 
 def test(model, test_data):
     nlp = spacy.load(model)
     print("Loaded model '%s'" % model)
     evaluate(nlp, test_data)
 
-def train(model, train_data, dev_data, output_dir, batch_size, n_iter):
+def train(model, train_data, dev_data, output_dir, n_iter):
     """Load the model, set up the pipeline and train the entity recognizer."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
@@ -76,6 +77,13 @@ def train(model, train_data, dev_data, output_dir, batch_size, n_iter):
     # get names of other pipes to disable them during training
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
 
+    dropout_rates = util.decaying(util.env_opt('dropout_from', 0.2),
+                                  util.env_opt('dropout_to', 0.2),
+                                  util.env_opt('dropout_decay', 0.0))
+    batch_sizes = util.compounding(util.env_opt('batch_from', 1),
+                                   util.env_opt('batch_to', 0.2),
+                                   util.env_opt('batch_compound', 1.001))
+
     with nlp.disable_pipes(*other_pipes):  # only train NER
         optimizer = nlp.begin_training()
         for i in range(n_iter):
@@ -86,9 +94,10 @@ def train(model, train_data, dev_data, output_dir, batch_size, n_iter):
             total = len(train_data)
 
             with tqdm.tqdm(total=total, leave=True) as pbar:
-                for batch in minibatch(train_data, size=batch_size):
+                for batch in minibatch(train_data, size=batch_sizes):
                     docs, golds = zip(*batch)
-                    nlp.update(docs, golds, sgd=optimizer, losses=losses, drop=0.01)
+                    nlp.update(docs, golds, sgd=optimizer,
+                               losses=losses, drop=next(dropout_rates))
                     pbar.update(len(batch))
                     if count % 100 == 0 and count > 0:
                         print('sum loss: %s' % losses['ner'])
@@ -100,8 +109,9 @@ def train(model, train_data, dev_data, output_dir, batch_size, n_iter):
                 if not output_dir_path.exists():
                     output_dir_path.mkdir()
 
-                nlp.to_disk(output_dir_path)
-                print("Saved model to", output_dir_path)
+                with nlp.use_params(optimizer.averages):
+                    nlp.to_disk(output_dir_path)
+                    print("Saved model to", output_dir_path)
 
                 # test the saved model
                 print("Loading from", output_dir_path)
