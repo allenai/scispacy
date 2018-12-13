@@ -120,7 +120,7 @@ def train_parser_and_tagger(train_conll_path: str,
 
         print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
 
-    save final model and output results on the test set
+    # save final model and output results on the test set
     with nlp.use_params(optimizer.averages):
         nlp.to_disk(os.path.join(model_output_dir, "genia_trained_parser_tagger"))
     with open(os.path.join(model_output_dir, "genia_trained_parser_tagger", "meta.json"), "w") as meta_fp:
