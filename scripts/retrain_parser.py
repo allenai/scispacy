@@ -41,6 +41,12 @@ def train_parser(train_conll_path: str,
     else:
         parser = nlp.get_pipe('parser')
 
+    if 'tagger' not in nlp.pipe_names:
+        tagger = nlp.create_pipe('tagger')
+        nlp.add_pipe(tagger)
+    else:
+        tagger = nlp.get_pipe('tagger')
+
     train_corpus = spacy_convert.convert_abstracts_to_docs(train_conll_path, train_pmids_path, vocab_path)
     dev_corpus = spacy_convert.convert_abstracts_to_docs(dev_conll_path, dev_pmids_path, vocab_path)
     test_corpus = spacy_convert.convert_abstracts_to_docs(test_conll_path, test_pmids_path, vocab_path)
@@ -55,7 +61,7 @@ def train_parser(train_conll_path: str,
 
     meta = {}
     meta["lang"] = "en"
-    meta["pipeline"] = ["parser"]
+    meta["pipeline"] = ["parser", "tagger"]
     meta["name"] = "scispacy_core_web_sm"
     meta["license"] = "CC BY-SA 3.0"
     meta["author"] = "Allen Institute for Artificial Intelligence"
@@ -66,9 +72,14 @@ def train_parser(train_conll_path: str,
     meta["parent_package"] = "spacy"
     meta["email"] = "ai2-info@allenai.org"
 
+    # this is the set of tags that is in spacy's english pos scheme but not in GENIA train
+    # {'GW', 'XX', '_SP', 'UH', '#', '""', 'HYPH', 'NFP', '$', 'BES', 'HVS', 'NIL', 'ADD', 'AFX'}
     for doc, gold in train_corpus:
         for label in gold.labels:
             parser.add_label(label)
+
+        for tag in gold.tags:
+            tagger.add_label(tag)
 
     optimizer = nlp.begin_training()
     nlp._optimizer = None
@@ -103,10 +114,10 @@ def train_parser(train_conll_path: str,
 
     # save final model and output results on the test set
     with nlp.use_params(optimizer.averages):
-        nlp.to_disk(os.path.join(model_output_dir, "genia_trained_parser"))
-    with open(os.path.join(model_output_dir, "genia_trained_parser", "meta.json"), "w") as meta_fp:
+        nlp.to_disk(os.path.join(model_output_dir, "genia_trained_parser_tagger"))
+    with open(os.path.join(model_output_dir, "genia_trained_parser_tagger", "meta.json"), "w") as meta_fp:
         meta_fp.write(json.dumps(meta))
-    nlp_loaded = util.load_model_from_path(os.path.join(model_output_dir, "genia_trained_parser"))
+    nlp_loaded = util.load_model_from_path(os.path.join(model_output_dir, "genia_trained_parser_tagger"))
     nwords = sum(len(doc_gold[0]) for doc_gold in test_corpus)
     start_time = timer()
     scorer = nlp_loaded.evaluate(test_corpus)
@@ -116,9 +127,11 @@ def train_parser(train_conll_path: str,
     meta["speed"] = {"gpu": None, "nwords": nwords, "cpu": cpu_wps}
 
     print("Test results:")
-    print("UAS:", scorer.unlabelled.fscore)
-    print("LAS:", scorer.labelled.fscore)
-    with open(os.path.join(model_output_dir, "genia_trained_parser", "meta.json"), "w") as meta_fp:
+    print("UAS:", scorer.uas)
+    print("LAS:", scorer.las)
+    print("Tag %:", scorer.tags_acc)
+    print("Token acc:", scorer.token_acc)
+    with open(os.path.join(model_output_dir, "genia_trained_parser_tagger", "meta.json"), "w") as meta_fp:
         meta_fp.write(json.dumps(meta))
 
 def main(train_conll_path,
