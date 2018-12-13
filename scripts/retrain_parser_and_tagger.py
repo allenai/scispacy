@@ -39,17 +39,17 @@ def train_parser_and_tagger(train_conll_path: str,
     nlp = spacy.blank('en')
     nlp.vocab = Vocab().from_disk(vocab_path)
 
+    if 'tagger' not in nlp.pipe_names:
+        tagger = nlp.create_pipe('tagger')
+        nlp.add_pipe(tagger, first=True)
+    else:
+        tagger = nlp.get_pipe('tagger')
+
     if 'parser' not in nlp.pipe_names:
         parser = nlp.create_pipe('parser')
         nlp.add_pipe(parser)
     else:
         parser = nlp.get_pipe('parser')
-
-    if 'tagger' not in nlp.pipe_names:
-        tagger = nlp.create_pipe('tagger')
-        nlp.add_pipe(tagger)
-    else:
-        tagger = nlp.get_pipe('tagger')
 
     train_corpus = spacy_convert.convert_abstracts_to_docs(train_conll_path, train_pmids_path, vocab_path)
     dev_corpus = spacy_convert.convert_abstracts_to_docs(dev_conll_path, dev_pmids_path, vocab_path)
@@ -68,7 +68,7 @@ def train_parser_and_tagger(train_conll_path: str,
 
     meta = {}
     meta["lang"] = "en"
-    meta["pipeline"] = ["parser", "tagger"]
+    meta["pipeline"] = ["tagger", "parser"]
     meta["name"] = "scispacy_core_web_sm"
     meta["license"] = "CC BY-SA 3.0"
     meta["author"] = "Allen Institute for Artificial Intelligence"
