@@ -33,6 +33,7 @@ def process_example(lines: List[str]) -> MedMentionExample:
     entities = []
     for entity_line in lines[2:]:
         _, start, end, mention, mention_type, umls_id = entity_line.split("\t")
+        mention_type = mention_type.split(",")[0]
         entities.append(MedMentionEntity(int(start), int(end),
                                          mention, mention_type, umls_id))
     return MedMentionExample(title, abstract, title + " " + abstract, pubmed_id, entities)
@@ -90,11 +91,11 @@ def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str]=No
         if label_mapping is None:
             return label
         else:
-            return label_mapping["label"]
+            return label_mapping[label]
 
     for example in examples:
         spacy_format_entities = [(x.start, x.end, label_function(x.mention_type)) for x in example.entities]
-        spacy_example = (example.text, {"entities", spacy_format_entities})
+        spacy_example = (example.text, {"entities": spacy_format_entities})
         if example.pubmed_id in train_ids:
             train_examples.append(spacy_example)
 

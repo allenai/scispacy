@@ -75,9 +75,9 @@ def train(model, train_data, dev_data, output_dir, n_iter):
 
     dropout_rates = util.decaying(util.env_opt('dropout_from', 0.2),
                                   util.env_opt('dropout_to', 0.2),
-                                  util.env_opt('dropout_decay', 0.0))
+                                  util.env_opt('dropout_decay', 0.005))
     batch_sizes = util.compounding(util.env_opt('batch_from', 1),
-                                   util.env_opt('batch_to', 0.2),
+                                   util.env_opt('batch_to', 32),
                                    util.env_opt('batch_compound', 1.001))
 
     with nlp.disable_pipes(*other_pipes):  # only train NER
