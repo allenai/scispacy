@@ -27,4 +27,4 @@ class TestUmlsSemanticTypeTree(unittest.TestCase):
                                'T055': 'T052',
                                'T056': 'T052',
                                'T051': 'T051'}
-        assert ["T052"] == self.tree.get_nodes_at_depth(2)
+        assert ["T052"] == [node.type_id for node in self.tree.get_nodes_at_depth(2)]
