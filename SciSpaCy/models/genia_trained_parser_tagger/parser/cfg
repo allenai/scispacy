@@ -2,7 +2,7 @@
   "beam_width":1,
   "beam_density":0.0,
   "cnn_maxout_pieces":3,
-  "nr_class":67,
+  "nr_class":125,
   "hidden_depth":1,
   "token_vector_width":128,
   "hidden_width":200,
