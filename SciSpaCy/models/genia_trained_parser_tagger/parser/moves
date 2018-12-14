@@ -1,4 +1,4 @@
-«transitionsÚ?&[
+«transitionsÚ>×[
   {
     "clas":0,
     "move":0,
@@ -92,32 +92,32 @@
   {
     "clas":15,
     "move":0,
-    "label":"root",
-    "name":"S-root"
+    "label":"ROOT",
+    "name":"S-ROOT"
   },
   {
     "clas":16,
     "move":1,
-    "label":"root",
-    "name":"D-root"
+    "label":"ROOT",
+    "name":"D-ROOT"
   },
   {
     "clas":17,
     "move":2,
-    "label":"root",
-    "name":"L-root"
+    "label":"ROOT",
+    "name":"L-ROOT"
   },
   {
     "clas":18,
     "move":3,
-    "label":"root",
-    "name":"R-root"
+    "label":"ROOT",
+    "name":"R-ROOT"
   },
   {
     "clas":19,
     "move":4,
-    "label":"root",
-    "name":"B-root"
+    "label":"ROOT",
+    "name":"B-ROOT"
   },
   {
     "clas":20,
@@ -1180,11 +1180,5 @@
     "move":1,
     "label":"",
     "name":"D"
-  },
-  {
-    "clas":197,
-    "move":4,
-    "label":"ROOT",
-    "name":"B-ROOT"
   }
 ]
