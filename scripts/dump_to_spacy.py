@@ -36,17 +36,19 @@ def generate_sentence(sentence):
     return sentence
 
 
-def create_doc(sentences, sentence_id: str):
+def create_doc(sentences, raw_text: str, sentence_id: str):
     doc = {}
     paragraph = {}
     doc["id"] = sentence_id
     doc["paragraphs"] = []
     paragraph["sentences"] = sentences
+    paragraph["raw"] = raw_text
     doc["paragraphs"].append(paragraph)
+    
     return doc
 
 
-def main(input_path: str, pmids_path: str, output_path: str):
+def main(input_path: str, pmids_path: str, output_path: str, raw_path: str):
 
     pmids = []
     with open(pmids_path) as pmids_fp:
@@ -62,8 +64,12 @@ def main(input_path: str, pmids_path: str, output_path: str):
     
     formatted_docs = []
     for pubmed_id, sentences in docs.items():
+
+        raw_sentences = open(os.path.join(raw_path, str(pubmed_id) + ".txt")).readlines()
+        raw_sentences = [sent.strip() for sent in raw_sentences]
+        document_text = " ".join(raw_sentences)
         formatted_sentences = [generate_sentence(sent) for sent in sentences]
-        formatted_docs.append(create_doc(formatted_sentences, pubmed_id))
+        formatted_docs.append(create_doc(formatted_sentences, document_text, pubmed_id))
 
     input_path = Path(input_path)
     output_filename = input_path.parts[-1].replace(".conll", ".json")
@@ -80,6 +86,10 @@ if __name__ == "__main__":
         help="Path to the conll formatted data"
     )
     parser.add_argument(
+    '--raw_path',
+    help="Path to the directory containing the raw abstracts."
+    )
+    parser.add_argument(
         '--output_path',
         help="Path to the output directory"
     )
@@ -88,4 +98,4 @@ if __name__ == "__main__":
         help="Path to the pubmed_ids"
     )
     args = parser.parse_args()
-    main(args.conll_path, args.pubmed_ids, args.output_path)
+    main(args.conll_path, args.pubmed_ids, args.output_path, args.raw_path)
