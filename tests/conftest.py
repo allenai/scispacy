@@ -67,6 +67,14 @@ def en_with_combined_rule_tokenizer_and_segmenter_fixture():
     return nlp
 
 @pytest.fixture()
+def test_data_fixtures_path():
+    return os.path.join("tests", "custom_tests", "data_fixtures")
+
+@pytest.fixture()
+def test_raw_path():
+    return os.path.join("tests", "custom_tests", "data_fixtures", "raw")
+
+@pytest.fixture()
 def test_pmids_path():
     return os.path.join("tests", "custom_tests", "data_fixtures", "test.pmids")
 

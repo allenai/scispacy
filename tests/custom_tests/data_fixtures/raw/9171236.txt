@@ -1,0 +1,10 @@
+Defective survival and activation of thymocytes in transgenic mice expressing a catalytically inactive form of Ca2+/calmodulin-dependent protein kinase IV.
+We have generated transgenic mice that express a catalytically inactive form of Ca2+/calmodulin-dependent protein kinase IV (CaMKIV) specifically in thymic T cells.
+The presence of this protein results in a markedly reduced thymic cellularity, although the distribution of the remaining cells is normal based on evaluation of the CD4 and CD8 cell surface antigens that are used to gauge T cell development.
+Isolated thymic T cells from the transgenic mice also show a dramatically decreased survival rate when evaluated in culture under conditions that do not favor activation.
+When challenged with an activating stimulus such as alpha-CD3 or a combination of phorbol ester plus ionophore, the cells are severely compromised in their ability to produce the cytokine interleukin-2 (IL-2).
+Reduction of IL-2 production is secondary to the inability to phosphorylate the cAMP response element binding protein, CREB, and induce expression of the immediate early genes such as Fos B that are required to transactivate the IL-2 promoter.
+Because transgene expression was regulated by the proximal promoter of the murine lck gene and this promoter is inactivated in T cells that exit the thymus, the mutant hCaMKIV is not present in peripheral T cells.
+Consequently, T lymphocytes present in the spleen can be activated normally in response to either stimulus mentioned above, demonstrating that the effects of the inactive CaMKIV on activation are reversible.
+Our results suggest that CaMKIV may represent a physiologically relevant CREB kinase in T cells and that the enzyme is also required to ensure normal expansion of T cells in the thymus.
+Whereas the pathway responsible for this latter role is yet to be elucidated, it is unlikely to include CREB phosphorylation.

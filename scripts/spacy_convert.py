@@ -43,12 +43,13 @@ def get_dependency_annotations(path: str):
         # annotations, because they do confusing stuff like not
         # attaching to anything.
         annotation = [x for x in annotation if x["head"] is not None]
+        ids = [x["id"] for x in annotation]
         heads = [x["head"] for x in annotation]
         tags = [x["deprel"] for x in annotation]
         words = [x["form"] for x in annotation]
         pos_tags = [x["upostag"] for x in annotation]
 
-        yield (words, pos_tags, heads, tags)
+        yield (ids, words, pos_tags, heads, tags)
 
 def convert_abstracts_to_docs(conll_path, pmids_path, vocab_path):
     """Converts a conll file of abstracts to a doc and gold parse for
@@ -74,10 +75,10 @@ def convert_abstracts_to_docs(conll_path, pmids_path, vocab_path):
     curr_deps = []
     curr_offset = 0
     for sentence_parse, pmid in zip(get_dependency_annotations(conll_path), pmids):
-        words = sentence_parse[0]
-        pos_tags = sentence_parse[1]
-        heads = [head if head != "root" else "ROOT" for head in sentence_parse[2]]
-        deps = sentence_parse[3]
+        words = sentence_parse[1]
+        pos_tags = sentence_parse[2]
+        heads = sentence_parse[3]
+        deps = [head if head != "root" else "ROOT" for head in sentence_parse[4]]
         if curr_pmid != None and curr_pmid != pmid:
             doc = Doc(vocab, words=curr_words)
             gold = GoldParse(doc, heads=curr_heads, tags=curr_pos_tags, deps=curr_deps)

@@ -1,0 +1,13 @@
+Induction of cytokine expression in leukocytes by binding of thrombin-stimulated platelets.
+BACKGROUND: Activated platelets tether and activate myeloid leukocytes.
+To investigate the potential relevance of this mechanism in acute myocardial infarction (AMI), we examined cytokine induction by leukocyte-platelet adhesion and the occurrence of leukocyte-platelet conjugates in patients with AMI.
+METHODS AND RESULTS: We obtained peripheral venous blood samples in 20 patients with AMI before and daily for 5 days after direct percutaneous transluminal coronary angioplasty (PTCA) and in 20 patients undergoing elective PTCA.
+Throughout the study period, CD41 immunofluorescence of leukocytes (flow cytometry) revealed increased leukocyte-platelet adhesion in patients with AMI compared with control patients (mean +/- SE of fluorescence [channels] before PTCA: 77 +/- 16 versus 35 +/- 9; P = .003).
+In vitro, thrombin-stimulated fixed platelets bound to neutrophils and monocytes.
+Within 2 hours, this resulted in increased mRNA for interleukin (IL),1 beta, IL-8, and monocyte chemoattractant protein (MCP)-1 in unfractionated leukocytes.
+After 4 hours, IL-1 beta and IL-8 concentration of the cell-free supernatant had increased by 268 +/- 36% and 210 +/- 7%, respectively, and cellular MCP-1 content had increased by 170 +/- 8%.
+Addition of activated platelets to adherent monocytes had a similar effect and was associated with nuclear factor-kappa B activation.
+Inhibition of binding by anti-P selectin antibodies reduced the effect of activated platelets on cytokine production.
+CONCLUSIONS: In patients with AMI, leukocyte-platelet adhesion is increased.
+Binding of activated platelets induces IL-1 beta, IL-8, and MCP-1 in leukocytes.
+Our findings suggest that leukocyte-platelet adhesion contributes to the regulation of inflammatory responses in AMI.
