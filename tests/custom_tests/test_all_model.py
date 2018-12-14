@@ -15,7 +15,6 @@ def test_retraining(test_model_dir, test_conll_path, test_pmids_path, test_vocab
                                                                                                                       test_data_fixtures_path,
                                                                                                                       test_pmids_path,
                                                                                                                       test_raw_path))
-    print(os.system("ls tests/custom_tests/data_fixtures"))
     test_json_path = os.path.join(test_data_fixtures_path, "test.json")
     retrain_parser_and_tagger.train_parser_and_tagger(test_json_path,
                                                       test_json_path,
@@ -28,6 +27,7 @@ def test_retraining(test_model_dir, test_conll_path, test_pmids_path, test_vocab
     assert doc.is_parsed
     assert doc[0].text == "Induction"
     shutil.rmtree(test_model_dir)
+    os.remove(test_json_path)
 
 def test_custom_segmentation(combined_all_model_fixture):
     text = "Induction of cytokine expression in leukocytes by binding of thrombin-stimulated platelets. BACKGROUND: Activated platelets tether and activate myeloid leukocytes."
