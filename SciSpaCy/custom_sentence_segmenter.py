@@ -1,5 +1,5 @@
 
-from typing import List, Optional, Any
+from typing import List, Any
 from SciSpaCy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 from spacy.tokens import Doc, Token
 
