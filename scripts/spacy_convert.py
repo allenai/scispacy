@@ -76,8 +76,8 @@ def convert_abstracts_to_docs(conll_path, pmids_path, vocab_path):
     for sentence_parse, pmid in zip(get_dependency_annotations(conll_path), pmids):
         words = sentence_parse[0]
         pos_tags = sentence_parse[1]
-        heads = [head if head != "root" else "ROOT" for head in sentence_parse[2]]
-        deps = sentence_parse[3]
+        heads = sentence_parse[2]
+        deps = [head if head != "root" else "ROOT" for head in sentence_parse[3]]
         if curr_pmid != None and curr_pmid != pmid:
             doc = Doc(vocab, words=curr_words)
             gold = GoldParse(doc, heads=curr_heads, tags=curr_pos_tags, deps=curr_deps)
