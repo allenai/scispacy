@@ -124,11 +124,13 @@ def train_parser_and_tagger(train_json_path: str,
                 gpu_wps = None
                 cpu_wps = nwords/(end_time-start_time)
 
-                onto_dev_docs = list(onto_train_corpus.dev_docs(nlp_loaded))
-                onto_scorer = nlp_loaded.evaluate(onto_dev_docs)
+                if ontonotes_path:
+                    onto_dev_docs = list(onto_train_corpus.dev_docs(nlp_loaded))
+                    onto_scorer = nlp_loaded.evaluate(onto_dev_docs)
 
             print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
-            print_progress(i, losses, onto_scorer.scores, cpu_wps=0, gpu_wps=0)
+            if ontonotes_path:
+                print_progress(i, losses, onto_scorer.scores, cpu_wps=0, gpu_wps=0)
 
     # save final model and output results on the test set
     with nlp.use_params(optimizer.averages):
