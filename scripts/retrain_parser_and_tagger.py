@@ -167,13 +167,13 @@ def train_parser_and_tagger(train_json_path: str,
         print("Tag %:", scorer_onto_retrained.tags_acc)
         print("Token acc:", scorer_onto_retrained.token_acc)
 
-def main(train_json_path,
-         dev_json_path,
-         test_json_path,
-         vocab_path,
-         model_output_dir,
-         ontonotes_path,
-         ontonotes_train_percent):
+def main(train_json_path: str,
+         dev_json_path: str,
+         test_json_path: str,
+         vocab_path: str,
+         model_output_dir: str,
+         ontonotes_path: str,
+         ontonotes_train_percent: str):
 
     train_parser_and_tagger(train_json_path,
                             dev_json_path,

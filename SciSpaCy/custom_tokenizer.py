@@ -1,11 +1,14 @@
+from typing import List
+
 from spacy.lang import char_classes
 from spacy.symbols import ORTH # pylint: disable-msg=E0611,E0401
 from spacy.tokenizer import Tokenizer # pylint: disable-msg=E0611,E0401
 from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
+from spacy.language import Language
 
 from SciSpaCy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 
-def remove_new_lines(text):
+def remove_new_lines(text: str) -> str:
     """Used to preprocess away new lines in the middle of words. This function
        is intended to be called on a raw string before it is passed through a
        spaCy pipeline
@@ -18,7 +21,7 @@ def remove_new_lines(text):
     text = text.replace("- \n", "")
     return text
 
-def combined_rule_prefixes():
+def combined_rule_prefixes() -> List[str]:
     """Helper function that returns the prefix pattern for the tokenizer.
        It is a helper function to accomodate spacy tests that only test
        prefixes.
@@ -37,7 +40,7 @@ def combined_rule_prefixes():
                 char_classes.LIST_ICONS)
     return prefixes
 
-def combined_rule_tokenizer(nlp):
+def combined_rule_tokenizer(nlp: Language) -> Tokenizer:
     """Creates a custom tokenizer on top of spaCy's default tokenizer. The
        intended use of this function is to replace the tokenizer in a spaCy
        pipeline like so:

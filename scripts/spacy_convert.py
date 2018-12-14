@@ -51,7 +51,7 @@ def get_dependency_annotations(path: str):
 
         yield (ids, words, pos_tags, heads, tags)
 
-def convert_abstracts_to_docs(conll_path, pmids_path, vocab_path):
+def convert_abstracts_to_docs(conll_path: str, pmids_path: str, vocab_path: str) -> List[Tuple[Doc, GoldParse]]:
     """Converts a conll file of abstracts to a doc and gold parse for
        each abstract
 
