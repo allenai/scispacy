@@ -76,8 +76,10 @@ def train_parser_and_tagger(train_json_path: str,
     n_train_words = train_corpus.count_train()
 
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in  ['tagger', 'parser']]
-
-    optimizer = nlp.begin_training(lambda: itertools.chain(train_corpus.train_tuples, onto_train_corpus.train_tuples))
+    if ontonotes_path:
+        optimizer = nlp.begin_training(lambda: itertools.chain(train_corpus.train_tuples, onto_train_corpus.train_tuples))
+    else:
+        optimizer = nlp.begin_training(lambda: train_corpus.train_tuples)
     nlp._optimizer = None
     print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
     with nlp.disable_pipes(*other_pipes):
