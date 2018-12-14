@@ -28,6 +28,7 @@ COPY SciSpaCy/ SciSpaCy
 COPY scripts/ scripts/
 COPY tests/ tests/
 COPY .pylintrc .
+COPY Makefile Makefile
 # not obvious to me whether we need this, so currently commented out
 #RUN pip3 install --quiet -e
 
