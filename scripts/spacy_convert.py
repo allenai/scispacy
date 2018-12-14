@@ -1,4 +1,4 @@
-from typing impost List, Tuple
+from typing import List, Tuple
 
 import spacy
 from spacy.tokens import Doc

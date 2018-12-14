@@ -173,7 +173,7 @@ def main(train_json_path: str,
          vocab_path: str,
          model_output_dir: str,
          ontonotes_path: str,
-         ontonotes_train_percent: str):
+         ontonotes_train_percent: float):
 
     train_parser_and_tagger(train_json_path,
                             dev_json_path,
