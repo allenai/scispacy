@@ -13,13 +13,15 @@ import argparse
 import json
 import spacy_convert
 import random
+import itertools
 
 def train_parser_and_tagger(train_json_path: str,
                             dev_json_path: str,
                             test_json_path: str,
                             vocab_path: str,
                             model_output_dir: str,
-                            ontonotes_path: str = None):
+                            ontonotes_path: str = None,
+                            ontonotes_train_pct: float = 0.0):
     """Function to train the spacy parser and tagger from a blank model, with the default, en_core_web_sm vocab.
        Training setup is mostly copied from the spacy cli train command.
 
@@ -75,14 +77,22 @@ def train_parser_and_tagger(train_json_path: str,
 
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in  ['tagger', 'parser']]
 
-    optimizer = nlp.begin_training(lambda: train_corpus.train_tuples)
+    optimizer = nlp.begin_training(lambda: itertools.chain(train_corpus.train_tuples, onto_train_corpus.train_tuples))
     nlp._optimizer = None
     print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
     with nlp.disable_pipes(*other_pipes):
         train_docs = train_corpus.train_docs(nlp, projectivize=True)
         train_docs = list(train_docs)
+
+        train_mixture = train_docs
+        if ontonotes_path:
+            onto_train_docs = onto_train_corpus.train_docs(nlp, projectivize=True)
+            onto_train_docs = list(onto_train_docs)
+            num_onto_docs = int(ontonotes_train_pct*len(onto_train_docs))
+            randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
+            train_mixture += randomly_sampled_onto
         for i in range(10):
-            random.shuffle(train_docs)
+            random.shuffle(train_mixture)
             with tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
                 minibatches = list(util.minibatch(train_docs, size=batch_sizes))
@@ -111,7 +121,11 @@ def train_parser_and_tagger(train_json_path: str,
                 gpu_wps = None
                 cpu_wps = nwords/(end_time-start_time)
 
+                onto_dev_docs = list(onto_train_corpus.dev_docs(nlp_loaded))
+                onto_scorer = nlp_loaded.evaluate(onto_dev_docs)
+
             print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
+            print_progress(i, losses, onto_scorer.scores, cpu_wps=0, gpu_wps=0)
 
     # save final model and output results on the test set
     with nlp.use_params(optimizer.averages):
@@ -153,14 +167,16 @@ def main(train_json_path,
          test_json_path,
          vocab_path,
          model_output_dir,
-         ontonotes_path):
+         ontonotes_path,
+         ontonotes_train_pct):
 
     train_parser_and_tagger(train_json_path,
                             dev_json_path,
                             test_json_path,
                             vocab_path,
                             model_output_dir,
-                            ontonotes_path)
+                            ontonotes_path,
+                            ontonotes_train_pct)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -196,10 +212,16 @@ if __name__ == "__main__":
         help="Path to the ontonotes folder in spacy format"
     )
 
+    parser.add_argument(
+        '--ontonotes_train_pct',
+        default=0.0,
+        help="Percentage of ontonotes training data to mix in with the genia data")
+
     args = parser.parse_args()
     main(args.train_json_path,
          args.dev_json_path,
          args.test_json_path,
          args.vocab_path,
          args.model_output_dir,
-         args.ontonotes_path)
+         args.ontonotes_path,
+         args.ontonotes_train_pct)
