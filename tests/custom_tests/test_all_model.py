@@ -5,17 +5,21 @@ import spacy
 from spacy.vocab import Vocab
 import shutil
 
-def test_retraining(test_model_dir, test_conll_path, test_pmids_path, test_vocab_dir):
+def test_retraining(test_model_dir, test_conll_path, test_pmids_path, test_vocab_dir, test_data_fixtures_path, test_raw_path):
     if os.path.isdir(test_model_dir):
         shutil.rmtree(test_model_dir)
     if not os.path.isdir(test_model_dir):
         os.mkdir(test_model_dir)
-    retrain_parser_and_tagger.train_parser_and_tagger(test_conll_path,
-                                                      test_conll_path,
-                                                      test_conll_path,
-                                                      test_pmids_path,
-                                                      test_pmids_path,
-                                                      test_pmids_path,
+
+    os.system("python scripts/dump_to_spacy.py --conll_path {} --output_path {} --pubmed_ids {} --raw_path {}".format(test_conll_path,
+                                                                                                                      test_data_fixtures_path,
+                                                                                                                      test_pmids_path,
+                                                                                                                      test_raw_path))
+    print(os.system("ls tests/custom_tests/data_fixtures"))
+    test_json_path = os.path.join(test_data_fixtures_path, "test.json")
+    retrain_parser_and_tagger.train_parser_and_tagger(test_json_path,
+                                                      test_json_path,
+                                                      test_json_path,
                                                       test_vocab_dir,
                                                       test_model_dir)
     nlp = spacy.load(os.path.join(test_model_dir, "genia_trained_parser_tagger"))

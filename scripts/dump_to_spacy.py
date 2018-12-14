@@ -75,6 +75,7 @@ def main(input_path: str, pmids_path: str, output_path: str, raw_path: str):
     output_filename = input_path.parts[-1].replace(".conll", ".json")
     output_filename = input_path.parts[-1].replace(".conllu", ".json")
     output_file = Path(output_path) / output_filename
+    print(output_file)
     with output_file.open('w', encoding='utf-8') as f:
         f.write(json.dumps(formatted_docs, indent=4))
 
@@ -86,8 +87,8 @@ if __name__ == "__main__":
         help="Path to the conll formatted data"
     )
     parser.add_argument(
-    '--raw_path',
-    help="Path to the directory containing the raw abstracts."
+        '--raw_path',
+        help="Path to the directory containing the raw abstracts."
     )
     parser.add_argument(
         '--output_path',
