@@ -20,3 +20,8 @@ package:
 	bash scripts/create_model_package.sh ${BUILD_DIR}
 
 all: init parser ner package
+
+install:
+	pip install -r requirements.in
+	python -m spacy download en_core_web_sm
+	python -m spacy download en_core_web_md
