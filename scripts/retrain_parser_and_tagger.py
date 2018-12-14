@@ -56,6 +56,12 @@ def train_parser_and_tagger(train_conll_path: str,
     test_corpus = spacy_convert.convert_abstracts_to_docs(test_conll_path, test_pmids_path, vocab_path)
     n_train_words = sum(len(doc_gold[0]) for doc_gold in train_corpus)
 
+    nlp = spacy.load("SciSpaCy/models/cl/model0")
+    test_corpus = spacy_convert.convert_abstracts_to_docs(test_conll_path, test_pmids_path, vocab_path)
+    scorer = nlp.evaluate(test_corpus)
+    print(scorer.uas, scorer.las, scorer.tags_acc)
+    asdf
+
     if ontonotes_path:
         onto_train_path = os.path.join(ontonotes_path, "train")
         onto_dev_path = os.path.join(ontonotes_path, "dev")
@@ -63,8 +69,8 @@ def train_parser_and_tagger(train_conll_path: str,
         onto_train_corpus = GoldCorpus(onto_train_path, onto_dev_path)
         onto_test_corpus = GoldCorpus(onto_train_path, onto_test_path)
 
-    dropout_rates = util.decaying(0.3, 0.3, 0.0)
-    batch_sizes = util.compounding(1., 32., 1.001)
+    dropout_rates = util.decaying(0.2, 0.2, 0.0)
+    batch_sizes = util.compounding(1., 16., 1.001)
 
     meta = {}
     meta["lang"] = "en"
@@ -88,37 +94,43 @@ def train_parser_and_tagger(train_conll_path: str,
         for tag in gold.tags:
             tagger.add_label(tag)
 
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in  ['tagger', 'parser']]
+
     optimizer = nlp.begin_training()
     nlp._optimizer = None
     print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
-    for i in range(10):
-        random.shuffle(train_corpus)
-        with tqdm(total=n_train_words, leave=False) as pbar:
-            losses = {}
-            minibatches = list(util.minibatch(train_corpus, size=batch_sizes))
-            for batch in minibatches:
-                docs, golds = zip(*batch)
-                nlp.update(docs, golds, sgd=optimizer,
-                           drop=next(dropout_rates), losses=losses)
-                pbar.update(sum(len(doc) for doc in docs))
+    with nlp.disable_pipes(*other_pipes):
+        for i in range(10):
+            train_corpus = spacy_convert.convert_abstracts_to_docs(train_conll_path, train_pmids_path, vocab_path)
+            random.shuffle(train_corpus)
+            with tqdm(total=n_train_words, leave=False) as pbar:
+                losses = {}
+                minibatches = list(util.minibatch(train_corpus, size=batch_sizes))
+                for batch in minibatches:
+                    docs, golds = zip(*batch)
+                    nlp.update(docs, golds, sgd=optimizer,
+                               drop=next(dropout_rates), losses=losses)
+                    pbar.update(sum(len(doc) for doc in docs))
 
-        # save intermediate model and output results on the dev set
-        with nlp.use_params(optimizer.averages):
-            epoch_model_path = os.path.join(model_output_dir, "model"+str(i))
-            nlp.to_disk(epoch_model_path)
+            # save intermediate model and output results on the dev set
+            with nlp.use_params(optimizer.averages):
+                epoch_model_path = os.path.join(model_output_dir, "model"+str(i))
+                nlp.to_disk(epoch_model_path)
 
-            with open(os.path.join(model_output_dir, "model"+str(i), "meta.json"), "w") as meta_fp:
-                meta_fp.write(json.dumps(meta))
+                with open(os.path.join(model_output_dir, "model"+str(i), "meta.json"), "w") as meta_fp:
+                    meta["version"] = str(i)
+                    meta_fp.write(json.dumps(meta))
 
-            nlp_loaded = util.load_model_from_path(epoch_model_path)
-            nwords = sum(len(doc_gold[0]) for doc_gold in dev_corpus)
-            start_time = timer()
-            scorer = nlp_loaded.evaluate(dev_corpus)
-            end_time = timer()
-            gpu_wps = None
-            cpu_wps = nwords/(end_time-start_time)
+                dev_corpus = spacy_convert.convert_abstracts_to_docs(dev_conll_path, dev_pmids_path, vocab_path)
+                nlp_loaded = util.load_model_from_path(epoch_model_path)
+                nwords = sum(len(doc_gold[0]) for doc_gold in dev_corpus)
+                start_time = timer()
+                scorer = nlp_loaded.evaluate(dev_corpus)
+                end_time = timer()
+                gpu_wps = None
+                cpu_wps = nwords/(end_time-start_time)
 
-        print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
+            print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
 
     # save final model and output results on the test set
     with nlp.use_params(optimizer.averages):
@@ -128,6 +140,7 @@ def train_parser_and_tagger(train_conll_path: str,
     nlp_loaded = util.load_model_from_path(os.path.join(model_output_dir, "genia_trained_parser_tagger"))
     nwords = sum(len(doc_gold[0]) for doc_gold in test_corpus)
     start_time = timer()
+    test_corpus = spacy_convert.convert_abstracts_to_docs(test_conll_path, test_pmids_path, vocab_path)
     scorer = nlp_loaded.evaluate(test_corpus)
     end_time = timer()
     gpu_wps = None
