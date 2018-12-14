@@ -21,7 +21,7 @@ def train_parser_and_tagger(train_json_path: str,
                             vocab_path: str,
                             model_output_dir: str,
                             ontonotes_path: str = None,
-                            ontonotes_train_pct: float = 0.0):
+                            ontonotes_train_percent: float = 0.0):
     """Function to train the spacy parser and tagger from a blank model, with the default, en_core_web_sm vocab.
        Training setup is mostly copied from the spacy cli train command.
 
@@ -31,6 +31,7 @@ def train_parser_and_tagger(train_json_path: str,
        @param vocab_path: path to the vocab to load
        @param model_output_dir: path to the output directory for the trained models
        @param ontonotes_path: path to the directory containnig ontonotes in spacy format (optional)
+       @param ontonotes_train_percent: percentage of the ontonotes training data to use (optional)
     """
     lang_class = util.get_lang_class('en')
     nlp = lang_class()
@@ -90,7 +91,7 @@ def train_parser_and_tagger(train_json_path: str,
         if ontonotes_path:
             onto_train_docs = onto_train_corpus.train_docs(nlp, projectivize=True)
             onto_train_docs = list(onto_train_docs)
-            num_onto_docs = int(ontonotes_train_pct*len(onto_train_docs))
+            num_onto_docs = int(ontonotes_train_percent*len(onto_train_docs))
             randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
             train_mixture += randomly_sampled_onto
         for i in range(10):
@@ -170,7 +171,7 @@ def main(train_json_path,
          vocab_path,
          model_output_dir,
          ontonotes_path,
-         ontonotes_train_pct):
+         ontonotes_train_percent):
 
     train_parser_and_tagger(train_json_path,
                             dev_json_path,
@@ -178,7 +179,7 @@ def main(train_json_path,
                             vocab_path,
                             model_output_dir,
                             ontonotes_path,
-                            ontonotes_train_pct)
+                            ontonotes_train_percent)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -215,7 +216,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        '--ontonotes_train_pct',
+        '--ontonotes_train_percent',
         default=0.0,
         help="Percentage of ontonotes training data to mix in with the genia data")
 
@@ -226,4 +227,4 @@ if __name__ == "__main__":
          args.vocab_path,
          args.model_output_dir,
          args.ontonotes_path,
-         args.ontonotes_train_pct)
+         args.ontonotes_train_percent)
