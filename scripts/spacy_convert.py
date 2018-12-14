@@ -1,3 +1,5 @@
+from typing impost List, Tuple
+
 import spacy
 from spacy.tokens import Doc
 from spacy.gold import GoldParse
