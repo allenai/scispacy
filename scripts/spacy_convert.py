@@ -43,12 +43,12 @@ def get_dependency_annotations(path: str):
         # annotations, because they do confusing stuff like not
         # attaching to anything.
         annotation = [x for x in annotation if x["head"] is not None]
+        ids = [x["id"] for x in annotation]
         heads = [x["head"] for x in annotation]
         tags = [x["deprel"] for x in annotation]
         words = [x["form"] for x in annotation]
         pos_tags = [x["upostag"] for x in annotation]
-
-        yield (words, pos_tags, heads, tags)
+        yield (ids, words, pos_tags, heads, tags)
 
 def convert_abstracts_to_docs(conll_path, pmids_path, vocab_path):
     """Converts a conll file of abstracts to a doc and gold parse for
