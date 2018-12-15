@@ -14,15 +14,26 @@ class PerClassScorer:
                  predicted_spans: List[Tuple[int, int, str]],
                  gold_spans: List[Tuple[int, int, str]]) -> None:
 
-        for span in predicted_spans:
+
+        untyped_gold_spans = [(x[0], x[1]) for x in gold_spans]
+        untyped_predicted_spans = [(x[0], x[1]) for x in predicted_spans]
+
+        for untyped_span, span in zip(untyped_predicted_spans, predicted_spans):
             if span in gold_spans:
                 self._true_positives[span[2]] += 1
                 gold_spans.remove(span)
             else:
                 self._false_positives[span[2]] += 1
+
+            if untyped_span in untyped_gold_spans:
+                self._true_positives["untyped"] += 1
+            else:
+                self._false_positives["untyped"] += 1
         # These spans weren't predicted.
         for span in gold_spans:
             self._false_negatives[span[2]] += 1
+        for span in untyped_gold_spans:
+            self._false_negatives["untyped"] += 1
 
     def get_metric(self, reset: bool = False):
         """
@@ -52,9 +63,9 @@ class PerClassScorer:
             all_metrics[f1_key] = f1_measure
 
         # Compute the precision, recall and f1 for all spans jointly.
-        precision, recall, f1_measure = self._compute_metrics(sum(self._true_positives.values()),
-                                                              sum(self._false_positives.values()),
-                                                              sum(self._false_negatives.values()))
+        precision, recall, f1_measure = self._compute_metrics(sum([v for k, v  in self._true_positives.items() if k != "untyped"]),
+                                                              sum([v for k, v in self._false_positives.items() if k != "untyped"]),
+                                                              sum([v for k, v in self._false_negatives.items() if k != "untyped"]))
         all_metrics["precision-overall"] = precision
         all_metrics["recall-overall"] = recall
         all_metrics["f1-measure-overall"] = f1_measure
