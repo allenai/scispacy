@@ -31,7 +31,6 @@ class TestPerClassScorer(unittest.TestCase):
                            'recall-overall': 0.5,
                            'f1-measure-overall': 0.5}
         metrics = scorer.get_metric()
-        print(metrics)
         assert set(metrics.keys()) == set(correct_metrics.keys())
         for metric, value in metrics.items():
             self.assertAlmostEqual(value, correct_metrics[metric])
