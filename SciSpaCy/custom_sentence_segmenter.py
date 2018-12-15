@@ -10,7 +10,9 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     """
 
     # keep track of the two previous tokens
-    prev_tokens: List[Any] = [None, None]
+    prev_token_1: Token = None
+    prev_token_2: Token = None
+    prev_tokens: List[Any] = [prev_token_1, prev_token_2]
 
     # keep stacks for determining when we are inside parenthesis or brackets
     parens_stack: List[Token] = []
