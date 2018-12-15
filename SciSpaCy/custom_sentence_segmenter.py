@@ -1,19 +1,23 @@
 
+from typing import List, Any
 from SciSpaCy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
+from spacy.tokens import Doc, Token
 
-def combined_rule_sentence_segmenter(doc):
+def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     """Adds sentence boundaries to a Doc. Intended to be used as a pipe in a spaCy pipeline.
 
     @param doc: the spaCy document to be annotated with sentence boundaries
     """
 
     # keep track of the two previous tokens
-    prev_tokens = [None, None]
+    prev_token_1: Token = None
+    prev_token_2: Token = None
+    prev_tokens: List[Any] = [prev_token_1, prev_token_2]
 
     # keep stacks for determining when we are inside parenthesis or brackets
-    parens_stack = []
-    brackets_stack = []
-    double_quotes_stack = []
+    parens_stack: List[Token] = []
+    brackets_stack: List[Token] = []
+    double_quotes_stack: List[Token] = []
     open_paren_to_stack = {"(": parens_stack, "[": brackets_stack}
     close_paren_to_stack = {")": parens_stack, "]": brackets_stack}
     for token in doc:
