@@ -1,7 +1,9 @@
 
 from typing import List, Any
-from scispacy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
+
 from spacy.tokens import Doc, Token
+
+from scispacy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 
 def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     """Adds sentence boundaries to a Doc. Intended to be used as a pipe in a spaCy pipeline.
