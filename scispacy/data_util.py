@@ -79,9 +79,9 @@ def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = 
     corpus = os.path.join(directory_path, expected_names[0])
     examples = med_mentions_example_iterator(corpus)
 
-    train_ids = set([x.strip() for x in open(os.path.join(directory_path, expected_names[4]))])
-    dev_ids = set([x.strip() for x in open(os.path.join(directory_path, expected_names[2]))])
-    test_ids = set([x.strip() for x in open(os.path.join(directory_path, expected_names[3]))])
+    train_ids = {x.strip() for x in open(os.path.join(directory_path, expected_names[4]))}
+    dev_ids = {x.strip() for x in open(os.path.join(directory_path, expected_names[2]))}
+    test_ids = {x.strip() for x in open(os.path.join(directory_path, expected_names[3]))}
 
     train_examples = []
     dev_examples = []

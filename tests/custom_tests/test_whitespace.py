@@ -9,13 +9,13 @@ import pytest
 import spacy
 from spacy.language import Language as SpacyModelType
 
-from SciSpaCy.custom_sentence_segmenter import combined_rule_sentence_segmenter
+from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
 
 class TestWhitespace:
 
     if SpacyModelType.factories.get('combined_rule_sentence_segmenter', None) is None:
         SpacyModelType.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter # pylint: disable=line-too-long
-    nlp = spacy.load("SciSpaCy/models/combined_all_model")
+    nlp = spacy.load("scispacy/models/combined_all_model")
 
     @pytest.mark.parametrize('text', ["lorem ipsum"])
     def test_tokenizer_splits_single_space(self, text):

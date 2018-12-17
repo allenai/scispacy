@@ -2,7 +2,7 @@
 
 import unittest
 
-from SciSpaCy.per_class_scorer import PerClassScorer
+from scispacy.per_class_scorer import PerClassScorer
 
 class TestPerClassScorer(unittest.TestCase):
 

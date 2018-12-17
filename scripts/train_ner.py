@@ -12,9 +12,9 @@ from spacy import util
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 
-from SciSpaCy.data_util import read_med_mentions, read_full_med_mentions
-from SciSpaCy.per_class_scorer import PerClassScorer
-from SciSpaCy.umls_semantic_type_tree import construct_umls_tree_from_tsv
+from scispacy.data_util import read_med_mentions, read_full_med_mentions
+from scispacy.per_class_scorer import PerClassScorer
+from scispacy.umls_semantic_type_tree import construct_umls_tree_from_tsv
 
 @plac.annotations(
         output_dir=("output directory to store model in", "positional", None, str),
