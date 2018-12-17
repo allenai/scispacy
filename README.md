@@ -6,7 +6,7 @@ This repository contains custom pipes and models related to using spaCy for scie
 To use SciSpaCy as is, follow these steps:
 1. Clone this repository
 1. From within this repository, run
-`./scripts/create_model_package.sh ./SciSpaCy/models/combined_rule_tokenizer_and_segmenter`
+`./scripts/create_model_package.sh ./scispacy/models/combined_rule_tokenizer_and_segmenter`
 1. Run `python setup.py sdist`
 1. Run `pip install --user dist/scispacy-1.0.0.tar.gz`
 1. Run `pip install --user dist/en_scispacy_core_web_sm-1.0.0.tar.gz`
@@ -23,8 +23,8 @@ To make full use of this package, you will also need to preprocess the text that
 ### Changing the tokenizer or segmenter
 To change the tokenizer or segmenter, all you need to do is change the tokenization or segmentation function, rebuild the model folder, and then follow the above steps for using SciSpaCy as is. In detail:
 
-1. Change the tokenizer (`combined_rule_tokenizer()` in `SciSpaCy/custom_tokenizer.py`) and/or segmenter(`combined_rule_sentence_segmenter()` in `SciSpaCy/custom_sentence_segmenter.py`)
-1. Rebuild the model folder by running `save_model(create_combined_rule_model, /path/to/model/folder)` in `SciSpaCy/util.py`
+1. Change the tokenizer (`combined_rule_tokenizer()` in `scispacy/custom_tokenizer.py`) and/or segmenter(`combined_rule_sentence_segmenter()` in `scispacy/custom_sentence_segmenter.py`)
+1. Rebuild the model folder by running `save_model(create_combined_rule_model, /path/to/model/folder)` in `scispacy/util.py`
 1. Edit the newly create `meta.json` as you see fit
 1. Go through the steps above for using SciSpaCy as is
 
