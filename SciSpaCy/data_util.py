@@ -68,7 +68,7 @@ def read_med_mentions(filename: str):
     return examples
 
 
-def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str]=None):
+def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = None):
 
     expected_names = ["corpus_pubtator.txt",
                       "corpus_pubtator_pmids_all.txt",

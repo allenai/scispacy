@@ -10,7 +10,7 @@ class TestPerClassScorer(unittest.TestCase):
 
         scorer = PerClassScorer()
 
-        predicted = [(1, 3, "PER"), (5, 7, "ORG")]
+        predicted = [(1, 3, "PER"), (10, 12, "LOC")]
         gold = [(1, 3, "PER"), (10, 12, "ORG")]
 
         scorer(predicted, gold)
@@ -18,6 +18,12 @@ class TestPerClassScorer(unittest.TestCase):
         correct_metrics = {'precision-PER': 1.0,
                            'recall-PER': 1.0,
                            'f1-measure-PER': 1.0,
+                           'precision-LOC': 0.0,
+                           'recall-LOC': 0.0,
+                           'f1-measure-LOC': 0.0,
+                           'precision-untyped': 1.0,
+                           'recall-untyped': 1.0,
+                           'f1-measure-untyped': 1.0,
                            'precision-ORG': 0.0,
                            'recall-ORG': 0.0,
                            'f1-measure-ORG': 0.0,
@@ -25,7 +31,6 @@ class TestPerClassScorer(unittest.TestCase):
                            'recall-overall': 0.5,
                            'f1-measure-overall': 0.5}
         metrics = scorer.get_metric()
-
         assert set(metrics.keys()) == set(correct_metrics.keys())
         for metric, value in metrics.items():
             self.assertAlmostEqual(value, correct_metrics[metric])
