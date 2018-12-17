@@ -1,6 +1,6 @@
 
 from typing import List, Any
-from SciSpaCy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
+from scispacy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 from spacy.tokens import Doc, Token
 
 def combined_rule_sentence_segmenter(doc: Doc) -> Doc:

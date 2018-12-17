@@ -1,8 +1,8 @@
 import spacy
 from spacy.language import Language
 
-from SciSpaCy.custom_sentence_segmenter import combined_rule_sentence_segmenter # pylint: disable-msg=E0611,E0401
-from SciSpaCy.custom_tokenizer import combined_rule_tokenizer # pylint: disable-msg=E0611,E0401
+from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter # pylint: disable-msg=E0611,E0401
+from scispacy.custom_tokenizer import combined_rule_tokenizer # pylint: disable-msg=E0611,E0401
 
 def save_model(nlp: Language, output_path: str):
     nlp.to_disk(output_path)

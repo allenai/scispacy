@@ -2,7 +2,7 @@
 
 import unittest
 
-from SciSpaCy.umls_semantic_type_tree import construct_umls_tree_from_tsv
+from scispacy.umls_semantic_type_tree import construct_umls_tree_from_tsv
 
 class TestUmlsSemanticTypeTree(unittest.TestCase):
 

@@ -22,7 +22,7 @@ COPY requirements.in .
 # add the code as the final step so that when we modify the code
 # we don't bust the cached layers holding the dependencies and
 # system packages.
-COPY SciSpaCy/ SciSpaCy
+COPY scispacy/ scispacy
 COPY scripts/ scripts/
 COPY tests/ tests/
 COPY .pylintrc .

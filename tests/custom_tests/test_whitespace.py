@@ -9,7 +9,7 @@ import pytest
 import spacy
 from spacy.language import Language as SpacyModelType
 
-from SciSpaCy.custom_sentence_segmenter import combined_rule_sentence_segmenter
+from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
 
 class TestWhitespace:
 

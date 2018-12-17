@@ -1,13 +1,10 @@
 # pylint: disable=no-self-use,invalid-name
 import os
-import pathlib
-import json
 import unittest
 import shutil
 
-import pytest
 
-from SciSpaCy.data_util import read_med_mentions, med_mentions_example_iterator
+from scispacy.data_util import read_med_mentions, med_mentions_example_iterator
 
 class TestDataUtil(unittest.TestCase):
     def setUp(self):

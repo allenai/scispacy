@@ -7,7 +7,7 @@ import shutil
 
 import pytest
 
-from SciSpaCy.file_cache import filename_to_url, url_to_filename
+from scispacy.file_cache import filename_to_url, url_to_filename
 
 class TestFileUtils(unittest.TestCase):
     def setUp(self):

@@ -6,8 +6,8 @@ import spacy
 from spacy.language import Language as SpacyModelType
 from spacy.cli.download import download as spacy_download
 
-from SciSpaCy.custom_sentence_segmenter import combined_rule_sentence_segmenter
-from SciSpaCy.custom_tokenizer import combined_rule_tokenizer, combined_rule_prefixes, remove_new_lines
+from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
+from scispacy.custom_tokenizer import combined_rule_tokenizer, combined_rule_prefixes, remove_new_lines
 
 LOADED_SPACY_MODELS: Dict[Tuple[str, bool, bool, bool], SpacyModelType] = {}
 
