@@ -4,7 +4,7 @@ from pathlib import Path
 from spacy.language import Language
 from spacy.util import load_model_from_init_py, get_model_meta
 
-from SciSpaCy.custom_sentence_segmenter import combined_rule_sentence_segmenter
+from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
 
 __version__ = get_model_meta(Path(__file__).parent)['version']
 
