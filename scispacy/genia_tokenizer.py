@@ -71,7 +71,8 @@ __initial.append((re.compile(r'\&'), r' & '))
 # separate punctuation followed by space even if there's closing
 # brackets or quotes in between, but only sentence-final for
 # periods (don't break e.g. "E. coli").
-__initial.append((re.compile(r'([,:;])([\[\]\)\}\>\"\']* +)'), r' \1\2'))
+# \u2019 is a alternate apostrophe that crops up in some papers.
+__initial.append((re.compile(r'([\u2019,:;])([\[\]\)\}\>\"\']* +)', re.UNICODE), r' \1\2'))
 __initial.append((re.compile(r'(\.+)([\[\]\)\}\>\"\']* +)$'), r' \1\2'))
 
 # these always
@@ -107,7 +108,10 @@ __initial.append((re.compile(r'(<?--+\>?)'), r' \1 '))
 # paranthesized expressions that cannot be abbreviations to avoid
 # breaking up e.g. "(+)-pentazocine". Here, "cannot be abbreviations"
 # is taken as "contains no uppercase charater".)
-__initial.append((re.compile(r'\(([^ A-Z()\[\]{}]+)\)-'), r'-LRB-\1-RRB--'))
+#__initial.append((re.compile(r'\(([^ A-Z()\[\]{}]+)\)-'), r'-LRB-\1-RRB--'))
+__initial.append((re.compile(r'\(([^ ()\[\]{}]+)\)-'), r'-LRB-\1-RRB--'))
+__initial.append((re.compile(r'\{([^ ()\[\]{}]+)\}-'), r'-LCB-\1-RCB--'))
+__initial.append((re.compile(r'\[([^ ()\[\]{}]+)\]-'), r'-LSB-\1-RSB--'))
 
 # These are repeated until there's no more change (per above comment)
 __repeated.append((re.compile(r'(?<![ (\[{])\(([^ ()\[\]{}]*)\)'), r'-LRB-\1-RRB-'))
@@ -152,6 +156,10 @@ __final.append((re.compile(r'\'RE '), ' \'RE '))
 __final.append((re.compile(r'\'VE '), ' \'VE '))
 __final.append((re.compile(r'N\'T '), ' N\'T '))
 
+
+# New custom additions
+__final.append((re.compile(r'×'), ' × '))
+
 # clean up possible extra space
 __final.append((re.compile(r'  +'), r' '))
 
@@ -182,7 +190,7 @@ def _tokenize(sentence: str):
 def tokenize(sentence: str):
     """
     Tokenizes the given string with a GTB-like tokenization. Input
-    will adjusted by removing surrounding space, if any. 
+    will adjusted by removing surrounding space, if any.
     """
 
     if DEBUG_GTB_TOKENIZATION:
@@ -236,8 +244,6 @@ def tokenize(sentence: str):
             sentence = orig
 
     return (sentence + s_end).split()
-
-
 
 
 class GeniaTokenizer:

@@ -1,5 +1,6 @@
 import pytest
 
+from scispacy.genia_tokenizer import GeniaTokenizer
 TEST_CASES = [("using a bag-of-words model", ["using", "a", "bag-of-words", "model"]),
               ("activators of cAMP- and cGMP-dependent protein", ["activators", "of", "cAMP-", "and", "cGMP-dependent", "protein"]),
               ("phorbol 12-myristate 13-acetate, caused almost", ["phorbol", "12-myristate", "13-acetate", ",", "caused", "almost"]),
@@ -30,15 +31,14 @@ TEST_CASES = [("using a bag-of-words model", ["using", "a", "bag-of-words", "mod
               ("h36g 1Y6", ["h36g", "1Y6"]),
               ("h3gh 1Y6", ["h3gh", "1Y6"]),
               ("h3g3 1Y6", ["h3g3", "1Y6"]),
-              ("3g", ["3", "g"]),
-              ("(3g)", ["(", "3", "g", ")"]),
+              ("interleukin (IL)-mediated", ["interleukin", "(IL)-mediated"]),
               ("This can be seen in Figure 1D. Therefore", ["This", "can", "be", "seen", "in", "Figure", "1D", ".", "Therefore"]),
               ("This can be seen in Figure 1d. Therefore", ["This", "can", "be", "seen", "in", "Figure", "1d", ".", "Therefore"]),
               ("This is a sentence.", ["This", "is", "a", "sentence", "."]),
               ("result of 1.345 is good", ["result", "of", "1.345", "is", "good"]),
               ("This sentence ends with a single 1.", ["This", "sentence", "ends", "with", "a", "single", "1", "."]),
               ("This sentence ends with a single 1. This is the next sentence.", ["This", "sentence", "ends", "with", "a", "single", "1", ".", "This", "is", "the", "next", "sentence", "."]),
-              ("sec. secs. Sec. Secs. fig. figs. Fig. Figs. eq. eqs. Eq. Eqs. no. nos. No. Nos. al.", ["sec.", "secs.", "Sec.", "Secs.", "fig.", "figs.", "Fig.", "Figs.", "eq.", "eqs.", "Eq.", "Eqs.", "no.", "nos.", "No.", "Nos.", "al."]),
+              ("sec. secs. Sec. Secs. fig. figs. Fig. Figs. eq. eqs. Eq. Eqs. no. nos. No. Nos. al. .", ["sec.", "secs.", "Sec.", "Secs.", "fig.", "figs.", "Fig.", "Figs.", "eq.", "eqs.", "Eq.", "Eqs.", "no.", "nos.", "No.", "Nos.", "al.", "."]),
               ("in the Gq/G11 protein", ["in", "the", "Gq/G11", "protein"]),
               ("in the G1/G11 protein", ["in", "the", "G1/G11", "protein"]),
               ("in the G1/11 protein", ["in", "the", "G1/11", "protein"]),
@@ -49,5 +49,13 @@ TEST_CASES = [("using a bag-of-words model", ["using", "a", "bag-of-words", "mod
 def test_custom_tokenization(combined_all_model_fixture, remove_new_lines_fixture, text, expected_tokens):
     text = remove_new_lines_fixture(text)
     doc = combined_all_model_fixture(text)
+    tokens = [t.text for t in doc]
+    assert tokens == expected_tokens
+
+@pytest.mark.parametrize('text,expected_tokens', TEST_CASES)
+def test_genia_custom_tokenization(combined_all_model_fixture, remove_new_lines_fixture, text, expected_tokens):
+    text = remove_new_lines_fixture(text)
+    tokenizer = GeniaTokenizer(combined_all_model_fixture.vocab)
+    doc = tokenizer(text)
     tokens = [t.text for t in doc]
     assert tokens == expected_tokens
