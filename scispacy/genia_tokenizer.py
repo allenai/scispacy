@@ -251,7 +251,7 @@ class GeniaTokenizer:
     A custom tokenizer which uses heuristics to split biomedical text.
     nlp = spacy.load("en_core_web_md")
     # hack to replace tokenizer with a whitespace tokenizer
-    nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
+    nlp.tokenizer = GeniaTokenizer(nlp.vocab)
     ... use nlp("here is some text") as normal.
     """
     def __init__(self, vocab):
