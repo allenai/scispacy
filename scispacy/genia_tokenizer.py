@@ -18,6 +18,7 @@
 # NOTE: intended differences to GTB tokenization:
 # - Does not break "protein(s)" -> "protein ( s )"
 
+from typing import List
 import re
 from collections import deque
 from spacy.tokens import Doc
@@ -50,43 +51,43 @@ def ptb_unescape(sentence: str):
 # run. As the tokenize() function itself is trivial, comments relating
 # to regexes given with the re.compiles.
 
-__initial = []
-__repeated = []
-__final = []
+_INITIAL = []
+_REPEATED = []
+_FINAL = []
 
 # separate but do not break ellipsis
-__initial.append((re.compile(r'\.\.\.'), r' ... '))
+_INITIAL.append((re.compile(r'\.\.\.'), r' ... '))
 #__initial.append((re.compile(r'(\n+)'), r' \1 '))
 
 # To avoid breaking names of chemicals, protein complexes and similar,
 # only add space to related special chars if there's already space on
 # at least one side.
-__initial.append((re.compile(r'([,;:@#]) '), r' \1 '))
-__initial.append((re.compile(r' ([,;:@#])'), r' \1 '))
+_INITIAL.append((re.compile(r'([,;:@#]) '), r' \1 '))
+_INITIAL.append((re.compile(r' ([,;:@#])'), r' \1 '))
 
 # always separated
-__initial.append((re.compile(r'\$'), r' $ '))
-__initial.append((re.compile(r'\%'), r' % '))
-__initial.append((re.compile(r'\&'), r' & '))
+_INITIAL.append((re.compile(r'\$'), r' $ '))
+_INITIAL.append((re.compile(r'\%'), r' % '))
+_INITIAL.append((re.compile(r'\&'), r' & '))
 
 # separate punctuation followed by space even if there's closing
 # brackets or quotes in between, but only sentence-final for
 # periods (don't break e.g. "E. coli").
 # \u2019 is a alternate apostrophe that crops up in some papers.
-__initial.append((re.compile(r'([\u2019,:;])([\[\]\)\}\>\"\']* +)', re.UNICODE), r' \1\2'))
-__initial.append((re.compile(r'(\.+)([\[\]\)\}\>\"\']* +)$'), r' \1\2'))
+_INITIAL.append((re.compile(r'([\u2019,:;])([\[\]\)\}\>\"\']* +)', re.UNICODE), r' \1\2'))
+_INITIAL.append((re.compile(r'(\.+)([\[\]\)\}\>\"\']* +)$'), r' \1\2'))
 
 # these always
-__initial.append((re.compile(r'\?'), ' ? '))
-__initial.append((re.compile(r'\!'), ' ! '))
+_INITIAL.append((re.compile(r'\?'), ' ? '))
+_INITIAL.append((re.compile(r'\!'), ' ! '))
 
 # separate greater than and less than signs, avoiding breaking
 # "arrows" (e.g. "-->", ">>") and compound operators (e.g. "</=")
-__initial.append((re.compile(r'((?:=\/)?<+(?:\/=|--+>?)?)'), r' \1 '))
-__initial.append((re.compile(r'((?:<?--+|=\/)?>+(?:\/=)?)'), r' \1 '))
+_INITIAL.append((re.compile(r'((?:=\/)?<+(?:\/=|--+>?)?)'), r' \1 '))
+_INITIAL.append((re.compile(r'((?:<?--+|=\/)?>+(?:\/=)?)'), r' \1 '))
 
 # separate dashes, not breaking up "arrows"
-__initial.append((re.compile(r'(<?--+\>?)'), r' \1 '))
+_INITIAL.append((re.compile(r'(<?--+\>?)'), r' \1 '))
 
 # Parens only separated when there's space around a balanced
 # bracketing. This aims to avoid splitting e.g. beta-(1,3)-glucan,
@@ -110,31 +111,31 @@ __initial.append((re.compile(r'(<?--+\>?)'), r' \1 '))
 # breaking up e.g. "(+)-pentazocine". Here, "cannot be abbreviations"
 # is taken as "contains no uppercase charater".)
 #__initial.append((re.compile(r'\(([^ A-Z()\[\]{}]+)\)-'), r'-LRB-\1-RRB--'))
-__initial.append((re.compile(r'\(([^ ()\[\]{}]+)\)-'), r'-LRB-\1-RRB--'))
-__initial.append((re.compile(r'\{([^ ()\[\]{}]+)\}-'), r'-LCB-\1-RCB--'))
-__initial.append((re.compile(r'\[([^ ()\[\]{}]+)\]-'), r'-LSB-\1-RSB--'))
+_INITIAL.append((re.compile(r'\(([^ ()\[\]{}]+)\)-'), r'-LRB-\1-RRB--'))
+_INITIAL.append((re.compile(r'\{([^ ()\[\]{}]+)\}-'), r'-LCB-\1-RCB--'))
+_INITIAL.append((re.compile(r'\[([^ ()\[\]{}]+)\]-'), r'-LSB-\1-RSB--'))
 
 # These are repeated until there's no more change (per above comment)
-__repeated.append((re.compile(r'(?<![ (\[{])\(([^ ()\[\]{}]*)\)'), r'-LRB-\1-RRB-'))
-__repeated.append((re.compile(r'\(([^ ()\[\]{}]*)\)(?![ )\]}\/-])'), r'-LRB-\1-RRB-'))
-__repeated.append((re.compile(r'(?<![ (\[{])\[([^ ()\[\]{}]*)\]'), r'-LSB-\1-RSB-'))
-__repeated.append((re.compile(r'\[([^ ()\[\]{}]*)\](?![ )\]}\/-])'), r'-LSB-\1-RSB-'))
-__repeated.append((re.compile(r'(?<![ (\[{])\{([^ ()\[\]{}]*)\}'), r'-LCB-\1-RCB-'))
-__repeated.append((re.compile(r'\{([^ ()\[\]{}]*)\}(?![ )\]}\/-])'), r'-LCB-\1-RCB-'))
+_REPEATED.append((re.compile(r'(?<![ (\[{])\(([^ ()\[\]{}]*)\)'), r'-LRB-\1-RRB-'))
+_REPEATED.append((re.compile(r'\(([^ ()\[\]{}]*)\)(?![ )\]}\/-])'), r'-LRB-\1-RRB-'))
+_REPEATED.append((re.compile(r'(?<![ (\[{])\[([^ ()\[\]{}]*)\]'), r'-LSB-\1-RSB-'))
+_REPEATED.append((re.compile(r'\[([^ ()\[\]{}]*)\](?![ )\]}\/-])'), r'-LSB-\1-RSB-'))
+_REPEATED.append((re.compile(r'(?<![ (\[{])\{([^ ()\[\]{}]*)\}'), r'-LCB-\1-RCB-'))
+_REPEATED.append((re.compile(r'\{([^ ()\[\]{}]*)\}(?![ )\]}\/-])'), r'-LCB-\1-RCB-'))
 
 # Remaining brackets are not token-internal and should be
 # separated.
-__final.append((re.compile(r'\('), r' -LRB- '))
-__final.append((re.compile(r'\)'), r' -RRB- '))
-__final.append((re.compile(r'\['), r' -LSB- '))
-__final.append((re.compile(r'\]'), r' -RSB- '))
-__final.append((re.compile(r'\{'), r' -LCB- '))
-__final.append((re.compile(r'\}'), r' -RCB- '))
+_FINAL.append((re.compile(r'\('), r' -LRB- '))
+_FINAL.append((re.compile(r'\)'), r' -RRB- '))
+_FINAL.append((re.compile(r'\['), r' -LSB- '))
+_FINAL.append((re.compile(r'\]'), r' -RSB- '))
+_FINAL.append((re.compile(r'\{'), r' -LCB- '))
+_FINAL.append((re.compile(r'\}'), r' -RCB- '))
 
 # initial single quotes always separated
-__final.append((re.compile(r' (\'+)'), r' \1 '))
+_FINAL.append((re.compile(r' (\'+)'), r' \1 '))
 # final with the exception of 3' and 5' (rough heuristic)
-__final.append((re.compile(r'(?<![35\'])(\'+) '), r' \1 '))
+_FINAL.append((re.compile(r'(?<![35\'])(\'+) '), r' \1 '))
 
 # This more frequently disagreed than agreed with GTB
 #     # Separate slashes preceded by space (can arise from
@@ -142,24 +143,24 @@ __final.append((re.compile(r'(?<![35\'])(\'+) '), r' \1 '))
 #     __final.append((re.compile(r' \/'), r' \/ '))
 
 # Standard from PTB (TODO: pack)
-__final.append((re.compile(r'\'s '), ' \'s '))
-__final.append((re.compile(r'\'S '), ' \'S '))
-__final.append((re.compile(r'\'m '), ' \'m '))
-__final.append((re.compile(r'\'M '), ' \'M '))
-__final.append((re.compile(r'\'d '), ' \'d '))
-__final.append((re.compile(r'\'D '), ' \'D '))
-__final.append((re.compile(r'\'ll '), ' \'ll '))
-__final.append((re.compile(r'\'re '), ' \'re '))
-__final.append((re.compile(r'\'ve '), ' \'ve '))
-__final.append((re.compile(r'n\'t '), ' n\'t '))
-__final.append((re.compile(r'\'LL '), ' \'LL '))
-__final.append((re.compile(r'\'RE '), ' \'RE '))
-__final.append((re.compile(r'\'VE '), ' \'VE '))
-__final.append((re.compile(r'N\'T '), ' N\'T '))
+_FINAL.append((re.compile(r'\'s '), ' \'s '))
+_FINAL.append((re.compile(r'\'S '), ' \'S '))
+_FINAL.append((re.compile(r'\'m '), ' \'m '))
+_FINAL.append((re.compile(r'\'M '), ' \'M '))
+_FINAL.append((re.compile(r'\'d '), ' \'d '))
+_FINAL.append((re.compile(r'\'D '), ' \'D '))
+_FINAL.append((re.compile(r'\'ll '), ' \'ll '))
+_FINAL.append((re.compile(r'\'re '), ' \'re '))
+_FINAL.append((re.compile(r'\'ve '), ' \'ve '))
+_FINAL.append((re.compile(r'n\'t '), ' n\'t '))
+_FINAL.append((re.compile(r'\'LL '), ' \'LL '))
+_FINAL.append((re.compile(r'\'RE '), ' \'RE '))
+_FINAL.append((re.compile(r'\'VE '), ' \'VE '))
+_FINAL.append((re.compile(r'N\'T '), ' N\'T '))
 
 
 # New custom additions
-__final.append((re.compile(r'×'), ' × '))
+_FINAL.append((re.compile(r'×'), ' × '))
 
 # clean up possible extra space
 #__final.append((re.compile(r'  +'), r' '))
@@ -173,17 +174,17 @@ def _tokenize(sentence: str):
     """
 
     # see re.complies for comments
-    for regex, text in __initial:
+    for regex, text in _INITIAL:
         sentence = regex.sub(text, sentence)
 
     while True:
         original = sentence
-        for regex, text in __repeated:
+        for regex, text in _REPEATED:
             sentence = regex.sub(text, sentence)
         if original == sentence:
             break
 
-    for regex, text in __final:
+    for regex, text in _FINAL:
         sentence = regex.sub(text, sentence)
 
     return sentence
@@ -266,7 +267,7 @@ def split_whitespace_tokenized_string(original_sentence: str, sentence_with_spac
 
     tokens = []
     whitespace_ownership = []
-    current_word = []
+    current_word: List[str] = []
 
     while True:
 
