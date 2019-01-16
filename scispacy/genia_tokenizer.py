@@ -25,7 +25,6 @@ from spacy.tokens import Doc
 
 INPUT_ENCODING = "UTF-8"
 OUTPUT_ENCODING = "UTF-8"
-DEBUG_GTB_TOKENIZATION = False
 
 # Penn treebank bracket escapes (others excluded)
 PTB_ESCAPES = [('(', '-LRB-'),
@@ -110,7 +109,6 @@ _INITIAL.append((re.compile(r'(<?--+\>?)'), r' \1 '))
 # paranthesized expressions that cannot be abbreviations to avoid
 # breaking up e.g. "(+)-pentazocine". Here, "cannot be abbreviations"
 # is taken as "contains no uppercase charater".)
-#__initial.append((re.compile(r'\(([^ A-Z()\[\]{}]+)\)-'), r'-LRB-\1-RRB--'))
 _INITIAL.append((re.compile(r'\(([^ ()\[\]{}]+)\)-'), r'-LRB-\1-RRB--'))
 _INITIAL.append((re.compile(r'\{([^ ()\[\]{}]+)\}-'), r'-LCB-\1-RCB--'))
 _INITIAL.append((re.compile(r'\[([^ ()\[\]{}]+)\]-'), r'-LSB-\1-RSB--'))
@@ -134,15 +132,9 @@ _FINAL.append((re.compile(r'\}'), r' -RCB- '))
 
 # initial single quotes always separated
 _FINAL.append((re.compile(r' (\'+)'), r' \1 '))
-# final with the exception of 3' and 5' (rough heuristic)
-_FINAL.append((re.compile(r'(?<![35\'])(\'+) '), r' \1 '))
+_FINAL.append((re.compile(r'(\'+) '), r' \1 '))
 
-# This more frequently disagreed than agreed with GTB
-#     # Separate slashes preceded by space (can arise from
-#     # e.g. splitting "p65(RelA)/p50"
-#     __final.append((re.compile(r' \/'), r' \/ '))
-
-# Standard from PTB (TODO: pack)
+# Standard from PTB
 _FINAL.append((re.compile(r'\'s '), ' \'s '))
 _FINAL.append((re.compile(r'\'S '), ' \'S '))
 _FINAL.append((re.compile(r'\'m '), ' \'m '))
@@ -159,21 +151,17 @@ _FINAL.append((re.compile(r'\'VE '), ' \'VE '))
 _FINAL.append((re.compile(r'N\'T '), ' N\'T '))
 
 
-# New custom additions
+# New custom additions - lots of papers have this character in.
 _FINAL.append((re.compile(r'×'), ' × '))
 
-# clean up possible extra space
-#_FINAL.append((re.compile(r'  +'), r' '))
-
-def _tokenize(sentence: str):
+def _tokenize(sentence: str) -> str:
     """
     Tokenizer core. Performs GTP-like tokenization, using PTB escapes
     for brackets (but not quotes). Assumes given string has initial
-    and terminating space. You probably want to use tokenize() instead
-    of this function.
+    and terminating space.
     """
 
-    # see re.complies for comments
+    # see re.complies above for comments
     for regex, text in _INITIAL:
         sentence = regex.sub(text, sentence)
 
@@ -189,18 +177,12 @@ def _tokenize(sentence: str):
 
     return sentence
 
-def tokenize(sentence: str):
+def create_text_with_whitespace(sentence: str) -> str:
     """
-    Tokenizes the given string with a GTB-like tokenization. Input
-    will adjusted by removing surrounding space, if any.
+    Tokenizes the given string with a GTB-like tokenization.
     """
-
-    if DEBUG_GTB_TOKENIZATION:
-        orig = sentence
-
     # Core tokenization needs starting and ending space and no newline;
     # store to return string ending similarly
-    # TODO: this isn't this difficult ... rewrite nicely
     sentence = re.sub(r'^', ' ', sentence)
     match = re.match(r'^((?:.+|\n)*?) *(\n*)$', sentence)
     assert match, "INTERNAL ERROR on '%s'" % sentence # should always match
@@ -211,46 +193,20 @@ def tokenize(sentence: str):
     sentence = re.sub(r'([ \(\[\{\<])\"', r'\1 " ', sentence)
 
     sentence = _tokenize(sentence)
-
-    # as above (not quite sure why this is after primary tokenization...)
     sentence = sentence.replace('"', ' " ')
 
     # standard unescape for PTB escapes introduced in core tokenization
     sentence = ptb_unescape(sentence)
 
-    # Clean up added space (well, maybe other also)
-    #sentence = re.sub(r'  +', ' ', sentence)
+    # Clean up added space at the beginning and end of the sentence.
     sentence = re.sub(r'^ ', '', sentence)
     sentence = re.sub(r' $', '', sentence)
-
-    # Only do final comparison in debug mode.
-    if DEBUG_GTB_TOKENIZATION:
-        # revised must match original when whitespace, quotes (etc.)
-        # and escapes are ignored
-        # TODO: clean this up
-        escaped_original = ptb_unescape(orig
-                                        .replace(' ', '')
-                                        .replace('\n', '')
-                                        .replace("'", '')
-                                        .replace('"', '')
-                                        .replace('``', ''))
-        escaped_sentence = ptb_unescape(sentence
-                                        .replace(' ', '')
-                                        .replace('\n', '')
-                                        .replace("'", '')
-                                        .replace('"', '')
-                                        .replace('``', ''))
-
-        if escaped_original != escaped_sentence:
-            print(f"tokenize(): error: text mismatch (returning original):\nORIG: {orig}\nNEW: {sentence}")
-            sentence = orig
 
     return sentence + s_end
 
 
 
 def split_whitespace_tokenized_string(original_sentence: str, sentence_with_spaces: str):
-
     """
     This function is designed to mirror the SpaCy non-destructive tokenisation.
     It respects the following rules:
@@ -268,24 +224,30 @@ def split_whitespace_tokenized_string(original_sentence: str, sentence_with_spac
     tokens = []
     whitespace_ownership = []
     current_word: List[str] = []
+    contiguous_original_whitespace = 0
+    contiguous_tokenized_whitespace = 0
+
+    def create_word(word: List[str], with_whitespace: bool):
+        if with_whitespace:
+            tokens.append("".join(word))
+            whitespace_ownership.append(True)
+        else:
+            tokens.append("".join(word))
+            whitespace_ownership.append(False)
 
     while True:
-
         if len(original) == 0:
             if all([t.isspace() for t in current_word]):
                 # We started a new token and the previous token was completely
                 # whitespace, so it doesn't 'own' whitespace.
-                tokens.append("".join(current_word))
-                whitespace_ownership.append(False)
+                create_word(current_word, with_whitespace=False)
                 break
             elif current_word[-1].isspace():
                 # We started a new token and the previous token owned whitespace.
-                tokens.append("".join(current_word[:-1]))
-                whitespace_ownership.append(True)
+                create_word(current_word[:-1], with_whitespace=True)
                 break
             else:
-                tokens.append("".join(current_word))
-                whitespace_ownership.append(False)
+                create_word(current_word, with_whitespace=False)
                 break
 
         original_char = original.popleft()
@@ -301,12 +263,10 @@ def split_whitespace_tokenized_string(original_sentence: str, sentence_with_spac
                 if all([t.isspace() for t in current_word]):
                     # We started a new token and the previous token was completely
                     # whitespace, so it doesn't 'own' whitespace.
-                    tokens.append("".join(current_word))
-                    whitespace_ownership.append(False)
+                    create_word(current_word, with_whitespace=False)
                 else:
                     # We started a new token and the previous token owned whitespace.
-                    tokens.append("".join(current_word[:-1]))
-                    whitespace_ownership.append(True)
+                    create_word(current_word[:-1], with_whitespace=True)
                 # reset stack with current character
                 current_word = [tokenized_char]
 
@@ -318,8 +278,7 @@ def split_whitespace_tokenized_string(original_sentence: str, sentence_with_spac
                 else:
                     # Otherwise we have a non-actual space char,
                     # which we always split on.
-                    tokens.append("".join(current_word))
-                    whitespace_ownership.append(False)
+                    create_word(current_word, with_whitespace=False)
                     current_word = [tokenized_char]
 
             elif tokenized_char.isspace() and empty_or_last_char_space:
@@ -332,35 +291,53 @@ def split_whitespace_tokenized_string(original_sentence: str, sentence_with_spac
                     # We have a word followed by multiple spaces.
                     # The previous word owns a whitespace and we start
                     # a new only whitespace word.
-                    tokens.append("".join(current_word[:-1]))
-                    whitespace_ownership.append(True)
+                    create_word(current_word[:-1], with_whitespace=True)
                     current_word = [tokenized_char]
 
-        elif tokenized_char.isspace():
+        elif tokenized_char == " ":
             # This happens if the tokenization has _inserted_ a space.
             # E.g "word." "word ."
 
-            print(current_word)
-            print(tokenized)
-            # TODO: Count until next token that is not a space. Then
-            # correct distance is difference between how long it takes
-            # the original to get there. 
+            # The added whitespaces might have inserted more whitespace than there should be.
+            # This is a function of the fact that some of the regexes insert spaces on either side of their tokens,
+            # so if two are applied to a contiguous sequence of characters, double spaces will appear.
+            # However we can fix this, because we know that _only_ whitespace will have been inserted,
+            # and we still have access to the original number of whitespace tokens in the original string.
 
             if not current_word:
                 pass
             elif all([t.isspace() for t in current_word]):
-                pass
-            elif current_word[-1].isspace():
-
-                tokens.append("".join(current_word[:-1]))
+                # In this case, we have seen multiple space tokens
+                # which need to be appended.
+                tokens.append("".join(current_word))
                 whitespace_ownership.append(False)
+
+            elif current_word[-1].isspace():
+                tokens.append("".join(current_word[:-1]))
+                whitespace_ownership.append(True)
             else:
                 tokens.append("".join(current_word))
                 whitespace_ownership.append(False)
 
             if len(original) == 0:
-                break
-            current_word = [tokenized.popleft()]
+                # If the original has ended, all whitespace _must_ have been
+                # added by us. So we can just ignore it, extracting only actual words.
+                final_chars = [x for x in tokenized if not x.isspace()]
+                if not final_chars:
+                    break
+                else:
+                    tokens.append("".join(final_chars))
+                    whitespace_ownership.append(False)
+                    break
+
+            tokenized_char = tokenized.popleft()
+            # Fast forward to current token, as we have
+            # correctly processed all up until this point.
+            while tokenized_char != original_char:
+                tokenized_char = tokenized.popleft()
+            current_word = [tokenized_char]
+        else:
+            raise RuntimeError("Broken tokenization")
 
     return tokens, whitespace_ownership
 
@@ -376,12 +353,7 @@ class GeniaTokenizer:
     def __init__(self, vocab):
         self.vocab = vocab
 
-    def __call__(self, text):
-        text_with_ws = tokenize(text)
-
-        print(repr(text))
-        print(repr(text_with_ws))
+    def __call__(self, text: str):
+        text_with_ws = create_text_with_whitespace(text)
         words, spaces = split_whitespace_tokenized_string(text, text_with_ws)
-        print([repr(x) for x in words])
-        print(spaces)
         return Doc(self.vocab, words=words, spaces=spaces)

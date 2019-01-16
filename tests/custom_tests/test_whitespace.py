@@ -10,7 +10,7 @@ import spacy
 from spacy.language import Language as SpacyModelType
 
 from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
-from scispacy.genia_tokenizer import GeniaTokenizer, tokenize
+from scispacy.genia_tokenizer import GeniaTokenizer
 
 class TestWhitespace:
 
