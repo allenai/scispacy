@@ -224,8 +224,6 @@ def split_whitespace_tokenized_string(original_sentence: str, sentence_with_spac
     tokens = []
     whitespace_ownership = []
     current_word: List[str] = []
-    contiguous_original_whitespace = 0
-    contiguous_tokenized_whitespace = 0
 
     def create_word(word: List[str], with_whitespace: bool):
         if with_whitespace:
@@ -236,7 +234,7 @@ def split_whitespace_tokenized_string(original_sentence: str, sentence_with_spac
             whitespace_ownership.append(False)
 
     while True:
-        if len(original) == 0:
+        if len(original) == 0: # pylint: disable=len-as-condition
             if all([t.isspace() for t in current_word]):
                 # We started a new token and the previous token was completely
                 # whitespace, so it doesn't 'own' whitespace.
@@ -319,7 +317,7 @@ def split_whitespace_tokenized_string(original_sentence: str, sentence_with_spac
                 tokens.append("".join(current_word))
                 whitespace_ownership.append(False)
 
-            if len(original) == 0:
+            if len(original) == 0: # pylint: disable=len-as-condition
                 # If the original has ended, all whitespace _must_ have been
                 # added by us. So we can just ignore it, extracting only actual words.
                 final_chars = [x for x in tokenized if not x.isspace()]

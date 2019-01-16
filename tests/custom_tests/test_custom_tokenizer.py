@@ -1,6 +1,5 @@
 import pytest
 
-from scispacy.genia_tokenizer import GeniaTokenizer
 TEST_CASES = [("using a bag-of-words model", ["using", "a", "bag-of-words", "model"]),
               ("activators of cAMP- and cGMP-dependent protein", ["activators", "of", "cAMP-", "and", "cGMP-dependent", "protein"]),
               ("phorbol 12-myristate 13-acetate, caused almost", ["phorbol", "12-myristate", "13-acetate", ",", "caused", "almost"]),
@@ -49,13 +48,5 @@ TEST_CASES = [("using a bag-of-words model", ["using", "a", "bag-of-words", "mod
 def test_custom_tokenization(combined_all_model_fixture, remove_new_lines_fixture, text, expected_tokens):
     text = remove_new_lines_fixture(text)
     doc = combined_all_model_fixture(text)
-    tokens = [t.text for t in doc]
-    assert tokens == expected_tokens
-
-@pytest.mark.parametrize('text,expected_tokens', TEST_CASES)
-def test_genia_custom_tokenization(combined_all_model_fixture, remove_new_lines_fixture, text, expected_tokens):
-    text = remove_new_lines_fixture(text)
-    tokenizer = GeniaTokenizer(combined_all_model_fixture.vocab)
-    doc = tokenizer(text)
     tokens = [t.text for t in doc]
     assert tokens == expected_tokens
