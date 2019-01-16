@@ -163,7 +163,7 @@ _FINAL.append((re.compile(r'N\'T '), ' N\'T '))
 _FINAL.append((re.compile(r'×'), ' × '))
 
 # clean up possible extra space
-#__final.append((re.compile(r'  +'), r' '))
+#_FINAL.append((re.compile(r'  +'), r' '))
 
 def _tokenize(sentence: str):
     """
@@ -271,7 +271,7 @@ def split_whitespace_tokenized_string(original_sentence: str, sentence_with_spac
 
     while True:
 
-        if not original:
+        if len(original) == 0:
             if all([t.isspace() for t in current_word]):
                 # We started a new token and the previous token was completely
                 # whitespace, so it doesn't 'own' whitespace.
@@ -339,10 +339,26 @@ def split_whitespace_tokenized_string(original_sentence: str, sentence_with_spac
         elif tokenized_char.isspace():
             # This happens if the tokenization has _inserted_ a space.
             # E.g "word." "word ."
-            tokens.append("".join(current_word))
-            whitespace_ownership.append(False)
 
-            if not original:
+            print(current_word)
+            print(tokenized)
+            # TODO: Count until next token that is not a space. Then
+            # correct distance is difference between how long it takes
+            # the original to get there. 
+
+            if not current_word:
+                pass
+            elif all([t.isspace() for t in current_word]):
+                pass
+            elif current_word[-1].isspace():
+
+                tokens.append("".join(current_word[:-1]))
+                whitespace_ownership.append(False)
+            else:
+                tokens.append("".join(current_word))
+                whitespace_ownership.append(False)
+
+            if len(original) == 0:
                 break
             current_word = [tokenized.popleft()]
 
@@ -362,5 +378,10 @@ class GeniaTokenizer:
 
     def __call__(self, text):
         text_with_ws = tokenize(text)
+
+        print(repr(text))
+        print(repr(text_with_ws))
         words, spaces = split_whitespace_tokenized_string(text, text_with_ws)
+        print([repr(x) for x in words])
+        print(spaces)
         return Doc(self.vocab, words=words, spaces=spaces)
