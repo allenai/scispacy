@@ -37,15 +37,15 @@ except ImportError:
     vectors_loc=("optional: location of vectors file in Word2Vec format "
                  "(either as .txt or zipped as .zip or .tar.gz)", "option",
                  "v", str),
-    expand_vectors=("optional: Whether to expand vocab with words found in vector file",
-                     "option", "x", bool),
+    no_expand_vectors=("optional: Whether to expand vocab with words found in vector file",
+                     "flag", "x", bool),
     meta_overrides=("optional: meta_json file to load.",
                      "option", "m", Path),
     prune_vectors=("optional: number of vectors to prune to",
                    "option", "V", int)
 )
 def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None,
-               vectors_loc=None, expand_vectors=True, meta_overrides=None, prune_vectors=-1):
+               vectors_loc=None, no_expand_vectors=False, meta_overrides=None, prune_vectors=-1):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
     and word vectors.
@@ -56,7 +56,7 @@ def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None,
     vectors_loc = ensure_path(vectors_loc)
     probs, oov_prob = read_freqs(freqs_loc) if freqs_loc is not None else ({}, -20)
     vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
-    nlp = create_model(lang, probs, oov_prob, vectors_data, vector_keys, expand_vectors, prune_vectors)
+    nlp = create_model(lang, probs, oov_prob, vectors_data, vector_keys, not no_expand_vectors, prune_vectors)
 
     if meta_overrides is not None:
         metadata = json.load(open(meta_overrides))
