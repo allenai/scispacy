@@ -181,12 +181,8 @@ def create_text_with_whitespace(sentence: str) -> str:
     """
     Tokenizes the given string with a GTB-like tokenization.
     """
-    # Core tokenization needs starting and ending space and no newline;
-    # store to return string ending similarly
-    sentence = re.sub(r'^', ' ', sentence)
-    match = re.match(r'^((?:.+|\n)*?) *(\n*)$', sentence)
-    assert match, "INTERNAL ERROR on '%s'" % sentence # should always match
-    sentence, s_end = match.groups()
+    # Core tokenization needs starting and ending space.
+    sentence = " " + sentence + " "
     sentence = re.sub(r'$', ' ', sentence)
 
     # no escaping, just separate
@@ -202,7 +198,7 @@ def create_text_with_whitespace(sentence: str) -> str:
     sentence = re.sub(r'^ ', '', sentence)
     sentence = re.sub(r' $', '', sentence)
 
-    return sentence + s_end
+    return sentence
 
 
 
@@ -352,6 +348,8 @@ class GeniaTokenizer:
         self.vocab = vocab
 
     def __call__(self, text: str):
+        if text == "":
+            return Doc(self.vocab, words=None)
         text_with_ws = create_text_with_whitespace(text)
         words, spaces = split_whitespace_tokenized_string(text, text_with_ws)
         return Doc(self.vocab, words=words, spaces=spaces)

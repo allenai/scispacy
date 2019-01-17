@@ -105,3 +105,9 @@ class TestGeniaTokenizer:
         assert len(tokens) == 3
         assert tokens[1].text == "\n "
         assert [t.whitespace_ == " " for t in tokens] == [True, False, False]
+
+    @pytest.mark.parametrize('text', [""])
+    def test_tokenizer_handles_empty_string(self, text):
+        tokens = self.nlp(text)
+
+        assert len(tokens) == 0
