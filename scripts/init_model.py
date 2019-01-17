@@ -13,6 +13,7 @@ from preshed.counter import PreshCounter
 import tarfile
 import gzip
 import zipfile
+import json
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 
