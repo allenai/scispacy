@@ -1,5 +1,4 @@
 # coding: utf8
-from __future__ import unicode_literals
 
 import os
 import sys
@@ -22,37 +21,34 @@ from spacy.vectors import Vectors
 from spacy.errors import Errors, Warnings, user_warning
 from spacy.util import prints, ensure_path, get_lang_class
 
-try:
-    import ftfy
-except ImportError:
-    ftfy = None
-
+from scispacy.file_cache import cached_path
 
 @plac.annotations(
         lang=("model language", "positional", None, str),
         output_dir=("model output directory", "positional", None, Path),
         freqs_loc=("location of words frequencies file", "positional", None, Path),
-        clusters_loc=("optional: location of brown clusters data",
-                    "option", "c", str),
         vectors_loc=("optional: location of vectors file in Word2Vec format "
-                    "(either as .txt or zipped as .zip or .tar.gz)", "option",
-                    "v", str),
+                     "(either as .txt or zipped as .zip or .tar.gz)", "option",
+                     "v", str),
         no_expand_vectors=("optional: Whether to expand vocab with words found in vector file",
-                        "flag", "x", bool),
+                           "flag", "x", bool),
         meta_overrides=("optional: meta_json file to load.",
                         "option", "m", Path),
         prune_vectors=("optional: number of vectors to prune to",
-                    "option", "V", int)
+                       "option", "V", int)
 )
-def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None,
-               vectors_loc=None, no_expand_vectors=False, meta_overrides=None, prune_vectors=-1):
+def init_model(lang, output_dir, freqs_loc=None,
+               vectors_loc=None, no_expand_vectors=False,
+               meta_overrides=None, prune_vectors=-1):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
     and word vectors.
     """
+    vectors_loc = cached_path(vectors_loc)
+    freqs_loc = cached_path(freqs_loc)
+
     if freqs_loc is not None and not freqs_loc.exists():
         prints(freqs_loc, title=Messages.M037, exits=1)
-    clusters_loc = ensure_path(clusters_loc)
     vectors_loc = ensure_path(vectors_loc)
     probs, oov_prob = read_freqs(freqs_loc) if freqs_loc is not None else ({}, -20)
     vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
