@@ -5,22 +5,44 @@ BUILD_DIR="./build"
 PUBMED_FREQS="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/pubmed.freqs"
 PUBMED_VECTORS="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/pubmed_with_header.txt.gz"
 
+GENIA_TRAIN=
+GENIA_DEV=
+GENIA_TEST=
+
+SMALL_BASE="${BUILD_DIR}/small_base"
+LARGE_BASE="${BUILD_DIR}/large_base"
+SMALL_PARSER="${BUILD_DIR}/small_parser"
+LARGE_PARSER="${BUILD_DIR}/large_parser"
+
 init-small:
 	python scripts/init_model.py \
-	en ./build/base_small/ \
+	en ${SMALL_BASE} \
 	${PUBMED_FREQS} \
 	-m ./data/meta_small.json
 
 init-large:
 	python scripts/init_model.py \
-	en ./build/base_large/ \
+	en ${LARGE_BASE} \
 	${PUBMED_FREQS} \
 	-v ${PUBMED_VECTORS} \
 	-x -V 40000 -m ./data/meta_large.json
 
-parser:
-	# Takes in a model output by init and adds "tagger" and "parser" pipelines.
-	echo "Not implemented"
+parser-small:
+	python scripts/train_parser_and_tagger.py \
+	  --train_json_path \
+	  --dev_json_path \
+	  --test_json_path \
+	  --model_path ${SMALL_BASE} \
+	  --model_output_dir ${SMALL_PARSER}
+
+parser-large:
+	python scripts/train_parser_and_tagger.py \
+	  --train_json_path \
+	  --dev_json_path \
+	  --test_json_path \
+	  --model_path ${LARGE_BASE} \
+	  --model_output_dir ${LARGE_PARSER}
+
 
 ner:
 	# Takes in a model output by init or parser and adds an "ner" pipeline.
