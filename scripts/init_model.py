@@ -25,15 +25,15 @@ from scispacy.file_cache import cached_path
 
 @plac.annotations(
         lang=("model language", "positional", None, str),
-        output_dir=("model output directory", "positional", None, Path),
-        freqs_loc=("location of words frequencies file", "positional", None, Path),
+        output_dir=("model output directory", "positional", None, str),
+        freqs_loc=("location of words frequencies file", "positional", None, str),
         vectors_loc=("optional: location of vectors file in Word2Vec format "
                      "(either as .txt or zipped as .zip or .tar.gz)", "option",
                      "v", str),
         no_expand_vectors=("optional: Whether to expand vocab with words found in vector file",
                            "flag", "x", bool),
         meta_overrides=("optional: meta_json file to load.",
-                        "option", "m", Path),
+                        "option", "m", str),
         prune_vectors=("optional: number of vectors to prune to",
                        "option", "V", int)
 )
@@ -44,13 +44,16 @@ def init_model(lang, output_dir, freqs_loc=None,
     Create a new model from raw data, like word frequencies, Brown clusters
     and word vectors.
     """
+    output_dir = ensure_path(output_dir)
     if vectors_loc is not None:
         vectors_loc = cached_path(vectors_loc)
-    freqs_loc = cached_path(freqs_loc)
+        vectors_loc = ensure_path(vectors_loc)
+    if freqs_loc is not None:
+        freqs_loc = cached_path(freqs_loc)
+        freqs_loc = ensure_path(freqs_loc)
 
     if freqs_loc is not None and not freqs_loc.exists():
         prints(freqs_loc, title=Messages.M037, exits=1)
-    vectors_loc = ensure_path(vectors_loc)
     probs, oov_prob = read_freqs(freqs_loc) if freqs_loc is not None else ({}, -20)
     vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
     nlp = create_model(lang, probs, oov_prob, vectors_data, vector_keys, not no_expand_vectors, prune_vectors)
@@ -60,7 +63,7 @@ def init_model(lang, output_dir, freqs_loc=None,
         nlp.meta.update(metadata)
 
     if not output_dir.exists():
-        output_dir.mkdir()
+        os.makedirs(output_dir, exist_ok=True)
     nlp.to_disk(output_dir)
     return nlp
 

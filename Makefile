@@ -18,11 +18,6 @@ init-large:
 	-v ${PUBMED_VECTORS} \
 	-x -V 40000 -m ./data/meta_small.json
 
-init:
-	# Run python script to build vocabulary with vectors.
-	# Adds custom tokeniser to base model.
-	echo "Not implemented"
-	python scripts/init_model.py en ./test_init_model ./pubmed.freqs -m ./meta_small.json
 parser:
 	# Takes in a model output by init and adds "tagger" and "parser" pipelines.
 	echo "Not implemented"
@@ -35,7 +30,7 @@ package:
 	# Create model packages for 1) The library and 2) The Spacy model.
 	bash scripts/create_model_package.sh ${BUILD_DIR}
 
-all: init parser ner package
+all-small: init-small parser ner package
 
 install:
 	pip install -r requirements.in
