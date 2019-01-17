@@ -15,6 +15,8 @@ import spacy_convert
 import random
 import itertools
 
+from scispacy.file_cache import cached_path
+
 def train_parser_and_tagger(train_json_path: str,
                             dev_json_path: str,
                             test_json_path: str,
@@ -33,6 +35,10 @@ def train_parser_and_tagger(train_json_path: str,
        @param ontonotes_path: path to the directory containnig ontonotes in spacy format (optional)
        @param ontonotes_train_percent: percentage of the ontonotes training data to use (optional)
     """
+    train_json_path = cached_path(train_json_path)
+    dev_json_path = cached_path(dev_json_path)
+    test_json_path = cached_path(test_json_path)
+    model_path = cached_path(model_path)
 
     if model_path is not None:
         nlp = spacy.load(model_path)
