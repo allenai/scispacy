@@ -29,20 +29,20 @@ except ImportError:
 
 
 @plac.annotations(
-    lang=("model language", "positional", None, str),
-    output_dir=("model output directory", "positional", None, Path),
-    freqs_loc=("location of words frequencies file", "positional", None, Path),
-    clusters_loc=("optional: location of brown clusters data",
-                  "option", "c", str),
-    vectors_loc=("optional: location of vectors file in Word2Vec format "
-                 "(either as .txt or zipped as .zip or .tar.gz)", "option",
-                 "v", str),
-    no_expand_vectors=("optional: Whether to expand vocab with words found in vector file",
-                     "flag", "x", bool),
-    meta_overrides=("optional: meta_json file to load.",
-                     "option", "m", Path),
-    prune_vectors=("optional: number of vectors to prune to",
-                   "option", "V", int)
+        lang=("model language", "positional", None, str),
+        output_dir=("model output directory", "positional", None, Path),
+        freqs_loc=("location of words frequencies file", "positional", None, Path),
+        clusters_loc=("optional: location of brown clusters data",
+                    "option", "c", str),
+        vectors_loc=("optional: location of vectors file in Word2Vec format "
+                    "(either as .txt or zipped as .zip or .tar.gz)", "option",
+                    "v", str),
+        no_expand_vectors=("optional: Whether to expand vocab with words found in vector file",
+                        "flag", "x", bool),
+        meta_overrides=("optional: meta_json file to load.",
+                        "option", "m", Path),
+        prune_vectors=("optional: number of vectors to prune to",
+                    "option", "V", int)
 )
 def init_model(lang, output_dir, freqs_loc=None, clusters_loc=None,
                vectors_loc=None, no_expand_vectors=False, meta_overrides=None, prune_vectors=-1):
