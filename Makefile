@@ -16,7 +16,7 @@ init-large:
 	en ./build/base_large/ \
 	${PUBMED_FREQS} \
 	-v ${PUBMED_VECTORS} \
-	-x -V 40000 -m ./data/meta_small.json
+	-x -V 40000 -m ./data/meta_large.json
 
 parser:
 	# Takes in a model output by init and adds "tagger" and "parser" pipelines.
