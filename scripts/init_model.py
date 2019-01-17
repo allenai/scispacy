@@ -44,7 +44,8 @@ def init_model(lang, output_dir, freqs_loc=None,
     Create a new model from raw data, like word frequencies, Brown clusters
     and word vectors.
     """
-    vectors_loc = cached_path(vectors_loc)
+    if vectors_loc is not None:
+        vectors_loc = cached_path(vectors_loc)
     freqs_loc = cached_path(freqs_loc)
 
     if freqs_loc is not None and not freqs_loc.exists():
