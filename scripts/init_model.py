@@ -2,26 +2,27 @@
 
 import os
 import sys
-import plac
 import math
-from tqdm import tqdm
-import numpy
-from ast import literal_eval
-from pathlib import Path
-from preshed.counter import PreshCounter
 import tarfile
 import gzip
 import zipfile
 import json
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
+import plac
+from tqdm import tqdm
+import numpy
+from ast import literal_eval
+from pathlib import Path
+from preshed.counter import PreshCounter
 
 from spacy.cli._messages import Messages
 from spacy.vectors import Vectors
 from spacy.errors import Errors, Warnings, user_warning
 from spacy.util import prints, ensure_path, get_lang_class
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
+
 
 @plac.annotations(
         lang=("model language", "positional", None, str),
