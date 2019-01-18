@@ -53,7 +53,7 @@ def train(model, train_data, dev_data, output_dir, n_iter):
     # nlp.create_pipe works for built-ins that are registered with spaCy
     if 'ner' not in nlp.pipe_names:
         ner = nlp.create_pipe('ner')
-        nlp.add_pipe(ner, last=True)
+        nlp.add_pipe(ner, after="tagger")
     # otherwise, get it so we can add labels
     else:
         ner = nlp.get_pipe('ner')
@@ -131,32 +131,32 @@ def evaluate(nlp, eval_data):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--output_dir',
-        help="Path to the directory to output the trained models to"
+            '--output_dir',
+            help="Path to the directory to output the trained models to"
     )
 
     parser.add_argument(
-        '--data_path',
-        help="Path to the data directory."
+            '--data_path',
+            help="Path to the data directory."
     )
 
     parser.add_argument(
-        '--run_test',
-        help="Whether to run evaluation on the test dataset."
+            '--run_test',
+            help="Whether to run evaluation on the test dataset."
     )
 
     parser.add_argument(
-        '--model_path',
-        default=None,
-        help="Path to the spacy model to load"
+            '--model_path',
+            default=None,
+            help="Path to the spacy model to load"
     )
     parser.add_argument(
-        '--iterations',
-        help="Number of iterations to run."
+            '--iterations',
+            help="Number of iterations to run."
     )
     parser.add_argument(
-        '--label_granularity',
-        help="granularity of the labels, between 1-7."
+            '--label_granularity',
+            help="granularity of the labels, between 1-7."
     )
 
     args = parser.parse_args()
