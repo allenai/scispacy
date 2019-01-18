@@ -147,7 +147,7 @@ def train_parser_and_tagger(train_json_path: str,
 
     # save final model and output results on the test set
     with nlp.use_params(optimizer.averages):
-        final_model_path =os.path.join(model_output_dir, "genia_trained_parser_tagger")
+        final_model_path = os.path.join(model_output_dir, "genia_trained_parser_tagger")
         os.makedirs(epoch_model_path, exist_ok=True)
         nlp.to_disk(final_model_path)
 

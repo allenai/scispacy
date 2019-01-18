@@ -1,6 +1,6 @@
 
 
-BUILD_DIR="./build"
+BUILD_DIR=./build
 
 PUBMED_FREQS="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/pubmed.freqs"
 PUBMED_VECTORS="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/pubmed_with_header.txt.gz"
@@ -9,10 +9,10 @@ GENIA_TRAIN="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/genia/train
 GENIA_DEV="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/genia/dev.json"
 GENIA_TEST="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/genia/test.json"
 
-SMALL_BASE="${BUILD_DIR}/small_base"
-LARGE_BASE="${BUILD_DIR}/large_base"
-SMALL_PARSER="${BUILD_DIR}/small_parser"
-LARGE_PARSER="${BUILD_DIR}/large_parser"
+SMALL_BASE=${BUILD_DIR}/small_base
+LARGE_BASE=${BUILD_DIR}/large_base
+SMALL_PARSER=${BUILD_DIR}/small_parser
+LARGE_PARSER=${BUILD_DIR}/large_parser
 
 init-small:
 	python scripts/init_model.py \
