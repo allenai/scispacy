@@ -1,7 +1,6 @@
 import os
 import spacy
 import sys
-sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 from tqdm import tqdm
 from spacy import util
@@ -15,6 +14,7 @@ import spacy_convert
 import random
 import itertools
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
 
 def train_parser_and_tagger(train_json_path: str,
@@ -38,7 +38,6 @@ def train_parser_and_tagger(train_json_path: str,
     train_json_path = cached_path(train_json_path)
     dev_json_path = cached_path(dev_json_path)
     test_json_path = cached_path(test_json_path)
-    model_path = cached_path(model_path)
 
     if model_path is not None:
         nlp = spacy.load(model_path)
