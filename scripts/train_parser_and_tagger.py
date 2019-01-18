@@ -1,7 +1,6 @@
 import os
 import spacy
 import sys
-sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 from tqdm import tqdm
 from spacy import util
@@ -11,15 +10,18 @@ from spacy.vocab import Vocab
 from spacy.gold import GoldCorpus
 import argparse
 import json
-import spacy_convert
 import random
 import itertools
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
+from scispacy.file_cache import cached_path
+from scispacy import spacy_convert
 
 def train_parser_and_tagger(train_json_path: str,
                             dev_json_path: str,
                             test_json_path: str,
-                            vocab_path: str,
                             model_output_dir: str,
+                            model_path: str = None,
                             ontonotes_path: str = None,
                             ontonotes_train_percent: float = 0.0):
     """Function to train the spacy parser and tagger from a blank model, with the default, en_core_web_sm vocab.
@@ -28,13 +30,20 @@ def train_parser_and_tagger(train_json_path: str,
        @param train_json_path: path to the conll formatted training data
        @param dev_json_path: path to the conll formatted dev data
        @param test_json_path: path to the conll formatted test data
-       @param vocab_path: path to the vocab to load
        @param model_output_dir: path to the output directory for the trained models
+       @param model_path: path to the model to load
        @param ontonotes_path: path to the directory containnig ontonotes in spacy format (optional)
        @param ontonotes_train_percent: percentage of the ontonotes training data to use (optional)
     """
-    lang_class = util.get_lang_class('en')
-    nlp = lang_class()
+    train_json_path = cached_path(train_json_path)
+    dev_json_path = cached_path(dev_json_path)
+    test_json_path = cached_path(test_json_path)
+
+    if model_path is not None:
+        nlp = spacy.load(model_path)
+    else:
+        lang_class = util.get_lang_class('en')
+        nlp = lang_class()
 
     if 'tagger' not in nlp.pipe_names:
         tagger = nlp.create_pipe('tagger')
@@ -49,7 +58,7 @@ def train_parser_and_tagger(train_json_path: str,
         parser = nlp.get_pipe('parser')
 
     train_corpus = GoldCorpus(train_json_path, dev_json_path)
-    test_corpus = GoldCorpus(train_json_path, dev_json_path)
+    test_corpus = GoldCorpus(train_json_path, test_json_path)
 
     if ontonotes_path:
         onto_train_path = os.path.join(ontonotes_path, "train")
@@ -61,18 +70,21 @@ def train_parser_and_tagger(train_json_path: str,
     dropout_rates = util.decaying(0.2, 0.2, 0.0)
     batch_sizes = util.compounding(1., 16., 1.001)
 
-    meta = {}
-    meta["lang"] = "en"
-    meta["pipeline"] = ["tagger", "parser"]
-    meta["name"] = "scispacy_core_web_sm"
-    meta["license"] = "CC BY-SA 3.0"
-    meta["author"] = "Allen Institute for Artificial Intelligence"
-    meta["url"] = "allenai.org"
-    meta["sources"] = ["OntoNotes 5", "Common Crawl", "GENIA 1.0"]
-    meta["version"] = "1.0.0"
-    meta["spacy_version"] = ">=2.0.18"
-    meta["parent_package"] = "spacy"
-    meta["email"] = "ai2-info@allenai.org"
+    if model_path is not None:
+        meta = nlp.meta
+    else:
+        meta = {}
+        meta["lang"] = "en"
+        meta["pipeline"] = ["tagger", "parser"]
+        meta["name"] = "scispacy_core_web_sm"
+        meta["license"] = "CC BY-SA 3.0"
+        meta["author"] = "Allen Institute for Artificial Intelligence"
+        meta["url"] = "allenai.org"
+        meta["sources"] = ["OntoNotes 5", "Common Crawl", "GENIA 1.0"]
+        meta["version"] = "1.0.0"
+        meta["spacy_version"] = ">=2.0.18"
+        meta["parent_package"] = "spacy"
+        meta["email"] = "ai2-info@allenai.org"
 
     n_train_words = train_corpus.count_train()
 
@@ -108,6 +120,7 @@ def train_parser_and_tagger(train_json_path: str,
             # save intermediate model and output results on the dev set
             with nlp.use_params(optimizer.averages):
                 epoch_model_path = os.path.join(model_output_dir, "model"+str(i))
+                os.makedirs(epoch_model_path, exist_ok=True)
                 nlp.to_disk(epoch_model_path)
 
                 with open(os.path.join(model_output_dir, "model"+str(i), "meta.json"), "w") as meta_fp:
@@ -134,10 +147,14 @@ def train_parser_and_tagger(train_json_path: str,
 
     # save final model and output results on the test set
     with nlp.use_params(optimizer.averages):
-        nlp.to_disk(os.path.join(model_output_dir, "genia_trained_parser_tagger"))
-    with open(os.path.join(model_output_dir, "genia_trained_parser_tagger", "meta.json"), "w") as meta_fp:
+        final_model_path = os.path.join(model_output_dir, "genia_trained_parser_tagger")
+        os.makedirs(epoch_model_path, exist_ok=True)
+        nlp.to_disk(final_model_path)
+
+    with open(os.path.join(final_model_path, "meta.json"), "w") as meta_fp:
         meta_fp.write(json.dumps(meta))
-    nlp_loaded = util.load_model_from_path(os.path.join(model_output_dir, "genia_trained_parser_tagger"))
+
+    nlp_loaded = util.load_model_from_path(final_model_path)
     start_time = timer()
     test_docs = test_corpus.dev_docs(nlp_loaded)
     test_docs = list(test_docs)
@@ -202,9 +219,11 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        '--vocab_path',
-        help="Path to the spacy vocabulary to load"
+        '--model_path',
+        default=None,
+        help="Path to the spacy model to load"
     )
+
 
     parser.add_argument(
         '--model_output_dir',
@@ -226,7 +245,7 @@ if __name__ == "__main__":
     main(args.train_json_path,
          args.dev_json_path,
          args.test_json_path,
-         args.vocab_path,
          args.model_output_dir,
+         args.model_path,
          args.ontonotes_path,
          args.ontonotes_train_percent)

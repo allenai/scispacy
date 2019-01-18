@@ -6,8 +6,8 @@ import argparse
 import json
 from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.realpath(__file__)))
-import spacy_convert
+sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
+from scispacy import spacy_convert
 
 
 def generate_sentence(sentence):

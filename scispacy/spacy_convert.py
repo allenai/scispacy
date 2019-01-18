@@ -1,9 +1,8 @@
 from typing import List, Tuple
 
-import spacy
 from spacy.tokens import Doc
-from spacy.gold import GoldParse
-from spacy.vocab import Vocab
+from spacy.gold import GoldParse # pylint: disable=no-name-in-module
+from spacy.vocab import Vocab # pylint: disable=no-name-in-module
 from conllu.parser import parse_line, DEFAULT_FIELDS
 
 def _lazy_parse(text: str, fields=DEFAULT_FIELDS):
@@ -71,17 +70,17 @@ def convert_abstracts_to_docs(conll_path: str, pmids_path: str, vocab_path: str)
 
     corpus = []
     curr_pmid = None
-    curr_words = []
-    curr_heads = []
-    curr_pos_tags = []
-    curr_deps = []
+    curr_words: List[str] = []
+    curr_heads: List[int] = []
+    curr_pos_tags: List[str] = []
+    curr_deps: List[str] = []
     curr_offset = 0
     for sentence_parse, pmid in zip(get_dependency_annotations(conll_path), pmids):
         words = sentence_parse[1]
         pos_tags = sentence_parse[2]
         heads = sentence_parse[3]
         deps = [head if head != "root" else "ROOT" for head in sentence_parse[4]]
-        if curr_pmid != None and curr_pmid != pmid:
+        if curr_pmid not in (None, pmid):
             doc = Doc(vocab, words=curr_words)
             gold = GoldParse(doc, heads=curr_heads, tags=curr_pos_tags, deps=curr_deps)
             corpus.append((doc, gold))
@@ -94,7 +93,9 @@ def convert_abstracts_to_docs(conll_path: str, pmids_path: str, vocab_path: str)
             curr_offset = len(words)
         else:
             curr_words += words
-            curr_heads += [head + curr_offset - 1 if head != 0 else i + curr_offset for i, head in enumerate(heads)]
+            curr_heads += [head + curr_offset - 1
+                           if head != 0
+                           else i + curr_offset for i, head in enumerate(heads)]
             curr_pos_tags += pos_tags
             curr_deps += deps
             curr_offset += len(words)
