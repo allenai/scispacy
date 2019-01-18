@@ -70,10 +70,10 @@ def convert_abstracts_to_docs(conll_path: str, pmids_path: str, vocab_path: str)
 
     corpus = []
     curr_pmid = None
-    curr_words = []
-    curr_heads = []
-    curr_pos_tags = []
-    curr_deps = []
+    curr_words: List[str] = []
+    curr_heads: List[int] = []
+    curr_pos_tags: List[str] = []
+    curr_deps: List[str] = []
     curr_offset = 0
     for sentence_parse, pmid in zip(get_dependency_annotations(conll_path), pmids):
         words = sentence_parse[1]
