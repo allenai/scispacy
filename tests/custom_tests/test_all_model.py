@@ -5,7 +5,7 @@ import spacy
 from spacy.vocab import Vocab
 import shutil
 
-def test_retraining(test_model_dir, test_conll_path, test_pmids_path, test_vocab_dir, test_data_fixtures_path, test_raw_path):
+def test_retraining(test_model_dir, test_conll_path, test_pmids_path, test_data_fixtures_path, test_raw_path):
     if os.path.isdir(test_model_dir):
         shutil.rmtree(test_model_dir)
     if not os.path.isdir(test_model_dir):
@@ -19,7 +19,6 @@ def test_retraining(test_model_dir, test_conll_path, test_pmids_path, test_vocab
     train_parser_and_tagger.train_parser_and_tagger(test_json_path,
                                                     test_json_path,
                                                     test_json_path,
-                                                    test_vocab_dir,
                                                     test_model_dir)
     nlp = spacy.load(os.path.join(test_model_dir, "genia_trained_parser_tagger"))
     text = "Induction of cytokine expression in leukocytes by binding of thrombin-stimulated platelets. BACKGROUND: Activated platelets tether and activate myeloid leukocytes."

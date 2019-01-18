@@ -10,18 +10,18 @@ from spacy.vocab import Vocab
 from spacy.gold import GoldCorpus
 import argparse
 import json
-import spacy_convert
 import random
 import itertools
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
+from scispacy import spacy_convert
 
 def train_parser_and_tagger(train_json_path: str,
                             dev_json_path: str,
                             test_json_path: str,
-                            model_path: str,
                             model_output_dir: str,
+                            model_path: str = None,
                             ontonotes_path: str = None,
                             ontonotes_train_percent: float = 0.0):
     """Function to train the spacy parser and tagger from a blank model, with the default, en_core_web_sm vocab.
@@ -30,8 +30,8 @@ def train_parser_and_tagger(train_json_path: str,
        @param train_json_path: path to the conll formatted training data
        @param dev_json_path: path to the conll formatted dev data
        @param test_json_path: path to the conll formatted test data
-       @param model_path: path to the model to load
        @param model_output_dir: path to the output directory for the trained models
+       @param model_path: path to the model to load
        @param ontonotes_path: path to the directory containnig ontonotes in spacy format (optional)
        @param ontonotes_train_percent: percentage of the ontonotes training data to use (optional)
     """
@@ -245,7 +245,7 @@ if __name__ == "__main__":
     main(args.train_json_path,
          args.dev_json_path,
          args.test_json_path,
-         args.model_path,
          args.model_output_dir,
+         args.model_path,
          args.ontonotes_path,
          args.ontonotes_train_percent)
