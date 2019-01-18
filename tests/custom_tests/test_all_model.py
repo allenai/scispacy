@@ -1,6 +1,6 @@
 import os
 import sys
-from scripts import retrain_parser_and_tagger
+from scripts import train_parser_and_tagger
 import spacy
 from spacy.vocab import Vocab
 import shutil
@@ -16,11 +16,11 @@ def test_retraining(test_model_dir, test_conll_path, test_pmids_path, test_vocab
                                                                                                                       test_pmids_path,
                                                                                                                       test_raw_path))
     test_json_path = os.path.join(test_data_fixtures_path, "test.json")
-    retrain_parser_and_tagger.train_parser_and_tagger(test_json_path,
-                                                      test_json_path,
-                                                      test_json_path,
-                                                      test_vocab_dir,
-                                                      test_model_dir)
+    train_parser_and_tagger.train_parser_and_tagger(test_json_path,
+                                                    test_json_path,
+                                                    test_json_path,
+                                                    test_vocab_dir,
+                                                    test_model_dir)
     nlp = spacy.load(os.path.join(test_model_dir, "genia_trained_parser_tagger"))
     text = "Induction of cytokine expression in leukocytes by binding of thrombin-stimulated platelets. BACKGROUND: Activated platelets tether and activate myeloid leukocytes."
     doc = nlp(text)
