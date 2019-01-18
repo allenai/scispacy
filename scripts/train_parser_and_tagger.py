@@ -58,7 +58,7 @@ def train_parser_and_tagger(train_json_path: str,
         parser = nlp.get_pipe('parser')
 
     train_corpus = GoldCorpus(train_json_path, dev_json_path)
-    test_corpus = GoldCorpus(train_json_path, dev_json_path)
+    test_corpus = GoldCorpus(train_json_path, test_json_path)
 
     if ontonotes_path:
         onto_train_path = os.path.join(ontonotes_path, "train")
