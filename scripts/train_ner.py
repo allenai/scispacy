@@ -18,10 +18,10 @@ from scispacy.umls_semantic_type_tree import construct_umls_tree_from_tsv
 
 def train_ner(output_dir: str,
               data_path: str,
-              run_test: bool=None,
-              model: str=None,
-              n_iter: int=100,
-              label_granularity: int=None):
+              run_test: bool = None,
+              model: str = None,
+              n_iter: int = 100,
+              label_granularity: int = None):
 
     if label_granularity is not None:
         umls_tree = construct_umls_tree_from_tsv("data/umls_semantic_type_tree.tsv")
