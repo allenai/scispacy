@@ -9,10 +9,14 @@ GENIA_TRAIN="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/genia/train
 GENIA_DEV="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/genia/dev.json"
 GENIA_TEST="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/genia/test.json"
 
+MED_MENTIONS="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/med_mentions.tar.gz"
+
 SMALL_BASE=${BUILD_DIR}/small_base
 LARGE_BASE=${BUILD_DIR}/large_base
 SMALL_PARSER=${BUILD_DIR}/small_parser
 LARGE_PARSER=${BUILD_DIR}/large_parser
+SMALL_NER=${BUILD_DIR}/small_ner
+LARGE_NER=${BUILD_DIR}/large_ner
 
 init-small:
 	python scripts/init_model.py \
@@ -43,15 +47,27 @@ parser-large:
 	  --model_path ${LARGE_BASE} \
 	  --model_output_dir ${LARGE_PARSER}
 
-ner:
-	# Takes in a model output by init or parser and adds an "ner" pipeline.
-	echo "Not implemented"
+ner-small-from-parser:
+	python scripts/train_ner.py \
+	--model_output_dir ${SMALL_NER} \
+	--data_path ${MED_MENTIONS} \
+	--model_path ${SMALL_PARSER} \
+	--iterations 7 \
+	--label_granularity 7
+
+ner-large-from-parser:
+	python scripts/train_ner.py \
+	--model_output_dir ${LARGE_NER} \
+	--data_path ${MED_MENTIONS} \
+	--model_path ${LARGE_PARSER} \
+	--iterations 7 \
+	--label_granularity 7
 
 package:
 	# Create model packages for 1) The library and 2) The Spacy model.
 	bash scripts/create_model_package.sh ${BUILD_DIR}
 
-all-small: init-small parser-small ner package
+all-small: init-small parser-small ner-small-from-parser package
 
 install:
 	pip install -r requirements.in

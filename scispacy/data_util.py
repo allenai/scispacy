@@ -1,6 +1,12 @@
 
 from typing import NamedTuple, List, Iterator, Dict
+import tarfile
+import atexit
 import os
+import shutil
+import tempfile
+
+from scispacy.file_cache import cached_path
 
 class MedMentionEntity(NamedTuple):
     start: int
@@ -69,6 +75,24 @@ def read_med_mentions(filename: str):
 
 
 def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = None):
+
+    def _cleanup_dir(path: str):
+        if os.path.exists():
+            shutil.rmtree(path)
+
+    resolved_directory_path = cached_path(directory_path)
+    if "tar.gz" in directory_path:
+        # Extract dataset to temp dir
+        tempdir = tempfile.mkdtemp()
+        print(f"extracting dataset directory {resolved_directory_path} to temp dir {tempdir}")
+        with tarfile.open(resolved_directory_path, 'r:gz') as archive:
+            archive.extractall(tempdir)
+        # Postpone cleanup until exit in case the unarchived
+        # contents are needed outside this function.
+        atexit.register(_cleanup_dir, tempdir)
+
+        resolved_directory_path = tempdir
+
 
     expected_names = ["corpus_pubtator.txt",
                       "corpus_pubtator_pmids_all.txt",

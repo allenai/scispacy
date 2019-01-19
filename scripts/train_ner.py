@@ -131,7 +131,7 @@ def evaluate(nlp, eval_data):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-            '--output_dir',
+            '--model_output_dir',
             help="Path to the directory to output the trained models to"
     )
 
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    train_ner(args.output_dir,
+    train_ner(args.model_output_dir,
               args.data_path,
               args.run_test,
               args.model_path,
