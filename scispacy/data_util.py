@@ -76,9 +76,9 @@ def read_med_mentions(filename: str):
 
 def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = None):
 
-    def _cleanup_dir(path: str):
-        if os.path.exists():
-            shutil.rmtree(path)
+    def _cleanup_dir(dir_path: str):
+        if os.path.exists(dir_path):
+            shutil.rmtree(dir_path)
 
     resolved_directory_path = cached_path(directory_path)
     if "tar.gz" in directory_path:
