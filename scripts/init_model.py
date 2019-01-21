@@ -22,7 +22,7 @@ from spacy.util import prints, ensure_path, get_lang_class
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
-
+from scispacy.custom_tokenizer import combined_rule_tokenizer
 
 @plac.annotations(
         lang=("model language", "positional", None, str),
@@ -60,6 +60,9 @@ def init_model(lang, output_dir, freqs_loc=None,
     probs, oov_prob = read_freqs(freqs_loc, min_freq=min_word_frequency) if freqs_loc is not None else ({}, -20)
     vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
     nlp = create_model(lang, probs, oov_prob, vectors_data, vector_keys, not no_expand_vectors, prune_vectors)
+
+    # Insert our custom tokenizer into the base model.
+    nlp.tokenizer = combined_rule_tokenizer(nlp)
 
     if meta_overrides is not None:
         metadata = json.load(open(meta_overrides))
