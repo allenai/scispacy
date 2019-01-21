@@ -184,22 +184,6 @@ def train_parser_and_tagger(train_json_path: str,
         print("Tag %:", scorer_onto_retrained.tags_acc)
         print("Token acc:", scorer_onto_retrained.token_acc)
 
-def main(train_json_path: str,
-         dev_json_path: str,
-         test_json_path: str,
-         vocab_path: str,
-         model_output_dir: str,
-         ontonotes_path: str,
-         ontonotes_train_percent: float):
-
-    train_parser_and_tagger(train_json_path,
-                            dev_json_path,
-                            test_json_path,
-                            vocab_path,
-                            model_output_dir,
-                            ontonotes_path,
-                            ontonotes_train_percent)
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -242,10 +226,10 @@ if __name__ == "__main__":
         help="Percentage of ontonotes training data to mix in with the genia data")
 
     args = parser.parse_args()
-    main(args.train_json_path,
-         args.dev_json_path,
-         args.test_json_path,
-         args.model_output_dir,
-         args.model_path,
-         args.ontonotes_path,
-         args.ontonotes_train_percent)
+    train_parser_and_tagger(args.train_json_path,
+                            args.dev_json_path,
+                            args.test_json_path,
+                            args.model_output_dir,
+                            args.model_path,
+                            args.ontonotes_path,
+                            args.ontonotes_train_percent)

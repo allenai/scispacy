@@ -22,7 +22,7 @@ from spacy.util import prints, ensure_path, get_lang_class
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
-
+from scispacy.custom_tokenizer import combined_rule_tokenizer
 
 @plac.annotations(
         lang=("model language", "positional", None, str),
@@ -36,11 +36,13 @@ from scispacy.file_cache import cached_path
         meta_overrides=("optional: meta_json file to load.",
                         "option", "m", str),
         prune_vectors=("optional: number of vectors to prune to",
-                       "option", "V", int)
+                       "option", "V", int),
+        min_word_frequency=("optional: Word frequency to prune vocab to.",
+                       "option", "mwf", int)
 )
 def init_model(lang, output_dir, freqs_loc=None,
                vectors_loc=None, no_expand_vectors=False,
-               meta_overrides=None, prune_vectors=-1):
+               meta_overrides=None, prune_vectors=-1, min_word_frequency=50):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
     and word vectors.
@@ -55,9 +57,12 @@ def init_model(lang, output_dir, freqs_loc=None,
 
     if freqs_loc is not None and not freqs_loc.exists():
         prints(freqs_loc, title=Messages.M037, exits=1)
-    probs, oov_prob = read_freqs(freqs_loc) if freqs_loc is not None else ({}, -20)
+    probs, oov_prob = read_freqs(freqs_loc, min_freq=min_word_frequency) if freqs_loc is not None else ({}, -20)
     vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
     nlp = create_model(lang, probs, oov_prob, vectors_data, vector_keys, not no_expand_vectors, prune_vectors)
+
+    # Insert our custom tokenizer into the base model.
+    nlp.tokenizer = combined_rule_tokenizer(nlp)
 
     if meta_overrides is not None:
         metadata = json.load(open(meta_overrides))

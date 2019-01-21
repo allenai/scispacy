@@ -1,6 +1,12 @@
 
 from typing import NamedTuple, List, Iterator, Dict
+import tarfile
+import atexit
 import os
+import shutil
+import tempfile
+
+from scispacy.file_cache import cached_path
 
 class MedMentionEntity(NamedTuple):
     start: int
@@ -70,18 +76,36 @@ def read_med_mentions(filename: str):
 
 def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = None):
 
+    def _cleanup_dir(dir_path: str):
+        if os.path.exists(dir_path):
+            shutil.rmtree(dir_path)
+
+    resolved_directory_path = cached_path(directory_path)
+    if "tar.gz" in directory_path:
+        # Extract dataset to temp dir
+        tempdir = tempfile.mkdtemp()
+        print(f"extracting dataset directory {resolved_directory_path} to temp dir {tempdir}")
+        with tarfile.open(resolved_directory_path, 'r:gz') as archive:
+            archive.extractall(tempdir)
+        # Postpone cleanup until exit in case the unarchived
+        # contents are needed outside this function.
+        atexit.register(_cleanup_dir, tempdir)
+
+        resolved_directory_path = tempdir
+
+
     expected_names = ["corpus_pubtator.txt",
                       "corpus_pubtator_pmids_all.txt",
                       "corpus_pubtator_pmids_dev.txt",
                       "corpus_pubtator_pmids_test.txt",
                       "corpus_pubtator_pmids_trng.txt"]
 
-    corpus = os.path.join(directory_path, expected_names[0])
+    corpus = os.path.join(resolved_directory_path, expected_names[0])
     examples = med_mentions_example_iterator(corpus)
 
-    train_ids = {x.strip() for x in open(os.path.join(directory_path, expected_names[4]))}
-    dev_ids = {x.strip() for x in open(os.path.join(directory_path, expected_names[2]))}
-    test_ids = {x.strip() for x in open(os.path.join(directory_path, expected_names[3]))}
+    train_ids = {x.strip() for x in open(os.path.join(resolved_directory_path, expected_names[4]))}
+    dev_ids = {x.strip() for x in open(os.path.join(resolved_directory_path, expected_names[2]))}
+    test_ids = {x.strip() for x in open(os.path.join(resolved_directory_path, expected_names[3]))}
 
     train_examples = []
     dev_examples = []

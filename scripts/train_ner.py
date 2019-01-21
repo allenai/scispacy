@@ -3,7 +3,7 @@ import random
 import os
 from pathlib import Path
 
-import plac
+import argparse
 import tqdm
 import spacy
 from spacy.gold import minibatch
@@ -16,19 +16,12 @@ from scispacy.data_util import read_med_mentions, read_full_med_mentions
 from scispacy.per_class_scorer import PerClassScorer
 from scispacy.umls_semantic_type_tree import construct_umls_tree_from_tsv
 
-@plac.annotations(
-        output_dir=("output directory to store model in", "positional", None, str),
-        data_path=("location of training data", "positional", None, str),
-        run_test=("Whether or not to run on the test data.", "option", "test", bool),
-        model=("location of base model", "option", "model", str),
-        n_iter=("number of iterations", "option", "n", int),
-        label_granularity=("granularity of the labels, between 1-7", "option", "granularity", int))
-def main(output_dir: str,
-         data_path: str,
-         run_test: bool=None,
-         model: str=None,
-         n_iter: int=100,
-         label_granularity: int=None):
+def train_ner(output_dir: str,
+              data_path: str,
+              run_test: bool = None,
+              model: str = None,
+              n_iter: int = 100,
+              label_granularity: int = None):
 
     if label_granularity is not None:
         umls_tree = construct_umls_tree_from_tsv("data/umls_semantic_type_tree.tsv")
@@ -60,7 +53,7 @@ def train(model, train_data, dev_data, output_dir, n_iter):
     # nlp.create_pipe works for built-ins that are registered with spaCy
     if 'ner' not in nlp.pipe_names:
         ner = nlp.create_pipe('ner')
-        nlp.add_pipe(ner, last=True)
+        nlp.add_pipe(ner, after="tagger")
     # otherwise, get it so we can add labels
     else:
         ner = nlp.get_pipe('ner')
@@ -134,4 +127,42 @@ def evaluate(nlp, eval_data):
     for name, metric in scorer.get_metric().items():
         print(f"{name}: \t\t {metric}")
 
-plac.call(main, sys.argv[1:])
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+            '--model_output_dir',
+            help="Path to the directory to output the trained models to"
+    )
+
+    parser.add_argument(
+            '--data_path',
+            help="Path to the data directory."
+    )
+
+    parser.add_argument(
+            '--run_test',
+            help="Whether to run evaluation on the test dataset."
+    )
+
+    parser.add_argument(
+            '--model_path',
+            default=None,
+            help="Path to the spacy model to load"
+    )
+    parser.add_argument(
+            '--iterations',
+            help="Number of iterations to run."
+    )
+    parser.add_argument(
+            '--label_granularity',
+            help="granularity of the labels, between 1-7."
+    )
+
+    args = parser.parse_args()
+    train_ner(args.model_output_dir,
+              args.data_path,
+              args.run_test,
+              args.model_path,
+              args.iterations,
+              args.label_granularity)
