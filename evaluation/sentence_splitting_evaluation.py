@@ -55,12 +55,12 @@ def evaluate_sentence_splitting(model_path: str,
     skipped = 0
     citation_total = 0
     citation_correct = 0
-    lengths = []
     for line in open(citation_data_path, "r"):
 
         sentence = remove_new_lines(json.loads(line)["string"])
 
-        lengths.append(len(sentence))
+        # Skip sentence if it doesn't look roughly like a sentence,
+        # or it is > 2 std deviations above the mean length.
         if not sentence[0].isupper() or sentence[-1] != "." or len(sentence) > 450:
             skipped += 1
             continue
@@ -71,8 +71,6 @@ def evaluate_sentence_splitting(model_path: str,
             citation_correct += 1
         citation_total +=1
     print(f"Citation handling performance for {model_path}, skipped {skipped} examples :\n")
-    import numpy
-    print(f"Lengths: {numpy.mean(lengths)}, std: {numpy.std(lengths)}")
     print(f"Citation level accuracy: {citation_correct} of {citation_total}, {citation_correct / citation_total}. ")
 
 
