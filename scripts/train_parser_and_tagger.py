@@ -171,7 +171,7 @@ def train_parser_and_tagger(train_json_path: str,
     print("LAS:", scorer.las)
     print("Tag %:", scorer.tags_acc)
     print("Token acc:", scorer.token_acc)
-    with open(os.path.join(model_output_dir, "genia_trained_parser_tagger", "meta.json"), "w") as meta_fp:
+    with open(os.path.join(model_output_dir, "best", "meta.json"), "w") as meta_fp:
         meta_fp.write(json.dumps(meta))
 
     if ontonotes_path:
