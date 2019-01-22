@@ -29,7 +29,7 @@ init-large:
 	en ${LARGE_BASE} \
 	${PUBMED_FREQS} \
 	-v ${PUBMED_VECTORS} \
-	-x -V 40000 -m ./data/meta_large.json
+	-x -V 100000 -mwf 20 -m ./data/meta_large.json
 
 parser-small:
 	python scripts/train_parser_and_tagger.py \
@@ -51,7 +51,7 @@ ner-small-from-parser:
 	python scripts/train_ner.py \
 	--model_output_dir ${SMALL_NER} \
 	--data_path ${MED_MENTIONS} \
-	--model_path ${SMALL_PARSER} \
+	--model_path ${SMALL_PARSER}/best/ \
 	--iterations 7 \
 	--label_granularity 7
 
@@ -59,7 +59,7 @@ ner-large-from-parser:
 	python scripts/train_ner.py \
 	--model_output_dir ${LARGE_NER} \
 	--data_path ${MED_MENTIONS} \
-	--model_path ${LARGE_PARSER} \
+	--model_path ${LARGE_PARSER}/best/ \
 	--iterations 7 \
 	--label_granularity 7
 
@@ -67,7 +67,8 @@ package:
 	# Create model packages for 1) The library and 2) The Spacy model.
 	bash scripts/create_model_package.sh ${BUILD_DIR}
 
-all-small: init-small parser-small ner-small-from-parser package
+all-small: init-small parser-small ner-small-from-parser
+all-large: init-large parser-large ner-large-from-parser
 
 install:
 	pip install -r requirements.in
