@@ -76,15 +76,15 @@ def train(model, train_data, dev_data, output_dir, n_iter):
                                    util.env_opt('batch_to', 32),
                                    util.env_opt('batch_compound', 1.001))
 
-    with nlp.disable_pipes(*other_pipes):  # only train NER
-        optimizer = nlp.begin_training()
-        for i in range(n_iter):
+    optimizer = nlp.begin_training()
+    for i in range(n_iter):
 
-            random.shuffle(train_data)
-            count = 0
-            losses = {}
-            total = len(train_data)
+        random.shuffle(train_data)
+        count = 0
+        losses = {}
+        total = len(train_data)
 
+        with nlp.disable_pipes(*other_pipes):  # only train NER
             with tqdm.tqdm(total=total, leave=True) as pbar:
                 for batch in minibatch(train_data, size=batch_sizes):
                     docs, golds = zip(*batch)
@@ -95,21 +95,21 @@ def train(model, train_data, dev_data, output_dir, n_iter):
                         print('sum loss: %s' % losses['ner'])
                     count += 1
 
-            # save model to output directory
-            if output_dir is not None:
-                output_dir_path = Path(output_dir + "/" + str(i))
-                if not output_dir_path.exists():
-                    output_dir_path.mkdir()
+        # save model to output directory
+        if output_dir is not None:
+            output_dir_path = Path(output_dir + "/" + str(i))
+            if not output_dir_path.exists():
+                output_dir_path.mkdir()
 
-                with nlp.use_params(optimizer.averages):
-                    nlp.to_disk(output_dir_path)
-                    print("Saved model to", output_dir_path)
+            with nlp.use_params(optimizer.averages):
+                nlp.to_disk(output_dir_path)
+                print("Saved model to", output_dir_path)
 
-                # test the saved model
-                print("Loading from", output_dir_path)
-                nlp2 = spacy.load(output_dir_path)
+            # test the saved model
+            print("Loading from", output_dir_path)
+            nlp2 = util.load_model_from_path(output_dir_path)
 
-            evaluate(nlp2, dev_data)
+        evaluate(nlp2, dev_data)
 
 
 def evaluate(nlp, eval_data):
