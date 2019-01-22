@@ -1,6 +1,7 @@
 
 from typing import Dict, List, Tuple, Set
 from collections import defaultdict
+import copy
 
 class PerClassScorer:
 
@@ -14,6 +15,8 @@ class PerClassScorer:
                  predicted_spans: List[Tuple[int, int, str]],
                  gold_spans: List[Tuple[int, int, str]]) -> None:
 
+        gold_spans = copy.copy(gold_spans)
+        predicted_spans = copy.copy(predicted_spans)
         untyped_gold_spans = {(x[0], x[1]) for x in gold_spans}
         untyped_predicted_spans = {(x[0], x[1]) for x in predicted_spans}
 
