@@ -25,6 +25,6 @@ setup(
         'Topic :: Scientific/Engineering :: Bio-Informatics',
     ],
     packages = find_packages(),
-    licence="Apache",
+    license="Apache",
     install_requires = ['spacy==2.0.18'],
 )
