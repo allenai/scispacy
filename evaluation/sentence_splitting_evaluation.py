@@ -7,16 +7,20 @@ import spacy
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
-from scispacy.custom_tokenizer import remove_new_lines
+from scispacy.custom_tokenizer import remove_new_lines, combined_rule_tokenizer
 
 def evaluate_sentence_splitting(model_path: str,
                                 data_directory: str,
                                 rule_segmenter: bool = False,
+                                custom_tokenizer: bool = False,
                                 citation_data_path: str = None):
 
     model = spacy.load(model_path)
     if rule_segmenter:
         model.add_pipe(combined_rule_sentence_segmenter, first=True)
+    if custom_tokenizer:
+        model.tokenizer = combined_rule_tokenizer(model)
+
     total_correct = 0
     total = 0
     total_abstracts = 0
@@ -93,10 +97,16 @@ if __name__ == "__main__":
         help="Whether to use the rule based segmenter"
     )
     parser.add_argument(
+        '--custom_tokenizer',
+        default=False,
+        action="store_true",
+        help="Whether to use the rule based segmenter"
+    )
+    parser.add_argument(
         '--citation_data',
         default=None,
         help="Path to the jsonl file containing the citation contexts."
     )
 
     args = parser.parse_args()
-    evaluate_sentence_splitting(args.model_path, args.data, args.rule_segmenter, args.citation_data)
+    evaluate_sentence_splitting(args.model_path, args.data, args.rule_segmenter, args.custom_tokenizer, args.citation_data)
