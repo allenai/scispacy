@@ -95,19 +95,19 @@ def train_parser_and_tagger(train_json_path: str,
         optimizer = nlp.begin_training(lambda: train_corpus.train_tuples)
     nlp._optimizer = None
     print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
-    with nlp.disable_pipes(*other_pipes):
-        train_docs = train_corpus.train_docs(nlp, projectivize=True)
-        train_docs = list(train_docs)
+    train_docs = train_corpus.train_docs(nlp, projectivize=True)
+    train_docs = list(train_docs)
 
-        train_mixture = train_docs
-        if ontonotes_path:
-            onto_train_docs = onto_train_corpus.train_docs(nlp, projectivize=True)
-            onto_train_docs = list(onto_train_docs)
-            num_onto_docs = int(ontonotes_train_percent*len(onto_train_docs))
-            randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
-            train_mixture += randomly_sampled_onto
-        for i in range(10):
-            random.shuffle(train_mixture)
+    train_mixture = train_docs
+    if ontonotes_path:
+        onto_train_docs = onto_train_corpus.train_docs(nlp, projectivize=True)
+        onto_train_docs = list(onto_train_docs)
+        num_onto_docs = int(ontonotes_train_percent*len(onto_train_docs))
+        randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
+        train_mixture += randomly_sampled_onto
+    for i in range(10):
+        random.shuffle(train_mixture)
+        with nlp.disable_pipes(*other_pipes):
             with tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
                 minibatches = list(util.minibatch(train_docs, size=batch_sizes))
@@ -117,33 +117,33 @@ def train_parser_and_tagger(train_json_path: str,
                                drop=next(dropout_rates), losses=losses)
                     pbar.update(sum(len(doc) for doc in docs))
 
-            # save intermediate model and output results on the dev set
-            with nlp.use_params(optimizer.averages):
-                epoch_model_path = os.path.join(model_output_dir, "model"+str(i))
-                os.makedirs(epoch_model_path, exist_ok=True)
-                nlp.to_disk(epoch_model_path)
+        # save intermediate model and output results on the dev set
+        with nlp.use_params(optimizer.averages):
+            epoch_model_path = os.path.join(model_output_dir, "model"+str(i))
+            os.makedirs(epoch_model_path, exist_ok=True)
+            nlp.to_disk(epoch_model_path)
 
-                with open(os.path.join(model_output_dir, "model"+str(i), "meta.json"), "w") as meta_fp:
-                    meta["version"] = str(i)
-                    meta_fp.write(json.dumps(meta))
+            with open(os.path.join(model_output_dir, "model"+str(i), "meta.json"), "w") as meta_fp:
+                meta["version"] = str(i)
+                meta_fp.write(json.dumps(meta))
 
-                nlp_loaded = util.load_model_from_path(epoch_model_path)
-                dev_docs = train_corpus.dev_docs(nlp_loaded)
-                dev_docs = list(dev_docs)
-                nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
-                start_time = timer()
-                scorer = nlp_loaded.evaluate(dev_docs)
-                end_time = timer()
-                gpu_wps = None
-                cpu_wps = nwords/(end_time-start_time)
+            nlp_loaded = util.load_model_from_path(epoch_model_path)
+            dev_docs = train_corpus.dev_docs(nlp_loaded)
+            dev_docs = list(dev_docs)
+            nwords = sum(len(doc_gold[0]) for doc_gold in dev_docs)
+            start_time = timer()
+            scorer = nlp_loaded.evaluate(dev_docs)
+            end_time = timer()
+            gpu_wps = None
+            cpu_wps = nwords/(end_time-start_time)
 
-                if ontonotes_path:
-                    onto_dev_docs = list(onto_train_corpus.dev_docs(nlp_loaded))
-                    onto_scorer = nlp_loaded.evaluate(onto_dev_docs)
-
-            print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
             if ontonotes_path:
-                print_progress(i, losses, onto_scorer.scores, cpu_wps=0, gpu_wps=0)
+                onto_dev_docs = list(onto_train_corpus.dev_docs(nlp_loaded))
+                onto_scorer = nlp_loaded.evaluate(onto_dev_docs)
+
+        print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
+        if ontonotes_path:
+            print_progress(i, losses, onto_scorer.scores, cpu_wps=0, gpu_wps=0)
 
     # save final model and output results on the test set
     with nlp.use_params(optimizer.averages):
