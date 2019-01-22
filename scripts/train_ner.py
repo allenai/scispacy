@@ -49,8 +49,6 @@ def train(model, train_data, dev_data, output_dir, n_iter):
         nlp = spacy.blank('en')  # create blank Language class
         print("Created blank 'en' model")
 
-
-    print("Pipe names: ", nlp.pipe_names)
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
     if 'ner' not in nlp.pipe_names:
@@ -60,7 +58,6 @@ def train(model, train_data, dev_data, output_dir, n_iter):
     else:
         ner = nlp.get_pipe('ner')
 
-    print("Pipe names: ", nlp.pipe_names)
     # add labels
     for _, annotations in train_data:
         for ent in annotations.get('entities'):
