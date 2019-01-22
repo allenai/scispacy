@@ -51,7 +51,7 @@ ner-small-from-parser:
 	python scripts/train_ner.py \
 	--model_output_dir ${SMALL_NER} \
 	--data_path ${MED_MENTIONS} \
-	--model_path ${SMALL_PARSER} \
+	--model_path ${SMALL_PARSER}/best/ \
 	--iterations 7 \
 	--label_granularity 7
 
@@ -59,7 +59,7 @@ ner-large-from-parser:
 	python scripts/train_ner.py \
 	--model_output_dir ${LARGE_NER} \
 	--data_path ${MED_MENTIONS} \
-	--model_path ${LARGE_PARSER} \
+	--model_path ${LARGE_PARSER}/best/ \
 	--iterations 7 \
 	--label_granularity 7
 
