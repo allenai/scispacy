@@ -54,6 +54,8 @@ def url_to_filename(url: str, etag: str = None) -> str:
     If `etag` is specified, append its hash to the url's, delimited
     by a period.
     """
+
+    last_part = url.split("/")[-1]
     url_bytes = url.encode('utf-8')
     url_hash = sha256(url_bytes)
     filename = url_hash.hexdigest()
@@ -63,6 +65,7 @@ def url_to_filename(url: str, etag: str = None) -> str:
         etag_hash = sha256(etag_bytes)
         filename += '.' + etag_hash.hexdigest()
 
+    filename += "." + last_part
     return filename
 
 

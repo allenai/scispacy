@@ -12,6 +12,8 @@ class TestPerClassScorer(unittest.TestCase):
 
         predicted = [(1, 3, "PER"), (10, 12, "LOC")]
         gold = [(1, 3, "PER"), (10, 12, "ORG")]
+        original_gold = [x for x in gold]
+        original_predicted = [x for x in predicted]
 
         scorer(predicted, gold)
 
@@ -37,6 +39,9 @@ class TestPerClassScorer(unittest.TestCase):
 
         scorer.get_metric(reset=True)
 
+        # Check input is not modified.
+        assert gold == original_gold
+        assert predicted == original_predicted
         # Check reseting.
         assert scorer._true_positives == {} # pylint: disable=protected-access
         assert scorer._false_positives == {} # pylint: disable=protected-access
