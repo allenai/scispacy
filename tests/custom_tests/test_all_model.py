@@ -20,7 +20,7 @@ def test_retraining(test_model_dir, test_conll_path, test_pmids_path, test_data_
                                                     test_json_path,
                                                     test_json_path,
                                                     test_model_dir)
-    nlp = spacy.load(os.path.join(test_model_dir, "genia_trained_parser_tagger"))
+    nlp = spacy.load(os.path.join(test_model_dir, "best"))
     text = "Induction of cytokine expression in leukocytes by binding of thrombin-stimulated platelets. BACKGROUND: Activated platelets tether and activate myeloid leukocytes."
     doc = nlp(text)
     assert doc.is_parsed
