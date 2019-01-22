@@ -23,6 +23,7 @@ from spacy.util import prints, ensure_path, get_lang_class
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
 from scispacy.custom_tokenizer import combined_rule_tokenizer
+from scispacy.version import VERSION
 
 @plac.annotations(
         lang=("model language", "positional", None, str),
@@ -67,6 +68,7 @@ def init_model(lang, output_dir, freqs_loc=None,
     if meta_overrides is not None:
         metadata = json.load(open(meta_overrides))
         nlp.meta.update(metadata)
+        nlp.meta["version"] = VERSION
 
     if not output_dir.exists():
         os.makedirs(output_dir, exist_ok=True)
