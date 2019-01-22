@@ -2,6 +2,7 @@ import sys
 import random
 import os
 from pathlib import Path
+import json
 
 import argparse
 import tqdm
@@ -93,23 +94,37 @@ def train(model, train_data, dev_data, output_dir, n_iter):
                     count += 1
 
         # save model to output directory
-        if output_dir is not None:
-            output_dir_path = Path(output_dir + "/" + str(i))
-            if not output_dir_path.exists():
-                output_dir_path.mkdir()
+        output_dir_path = Path(output_dir + "/" + str(i))
+        if not output_dir_path.exists():
+            output_dir_path.mkdir()
 
-            with nlp.use_params(optimizer.averages):
-                nlp.to_disk(output_dir_path)
-                print("Saved model to", output_dir_path)
+        with nlp.use_params(optimizer.averages):
+            nlp.to_disk(output_dir_path)
+            print("Saved model to", output_dir_path)
 
-            # test the saved model
-            print("Loading from", output_dir_path)
-            nlp2 = util.load_model_from_path(output_dir_path)
+        # test the saved model
+        print("Loading from", output_dir_path)
+        nlp2 = util.load_model_from_path(output_dir_path)
 
         evaluate(nlp2, dev_data)
 
+    # save model to output directory
+    output_dir_path = Path(output_dir + "/" + "best")
+    if not output_dir_path.exists():
+        output_dir_path.mkdir()
 
-def evaluate(nlp, eval_data):
+    with nlp.use_params(optimizer.averages):
+        nlp.to_disk(output_dir_path)
+        print("Saved model to", output_dir_path)
+
+    # test the saved model
+    print("Loading from", output_dir_path)
+    nlp2 = util.load_model_from_path(output_dir_path)
+
+    evaluate(nlp2, dev_data, dump_path=output_dir)
+
+
+def evaluate(nlp, eval_data, dump_path=None):
 
     scorer = PerClassScorer()
     print("Evaluating %d rows" % len(eval_data))
@@ -124,8 +139,11 @@ def evaluate(nlp, eval_data):
             for name, metric in scorer.get_metric().items():
                 print(f"{name}: {metric}")
 
+    if dump_path is not None:
+        json.dump(scorer.get_metric(), open(os.path.join(dump_path, "metrics.json"), "a+"))
     for name, metric in scorer.get_metric().items():
-        print(f"{name}: \t\t {metric}")
+        if "overall" in name or "untyped" in name:
+            print(f"{name}: \t\t {metric}")
 
 
 if __name__ == "__main__":

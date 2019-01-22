@@ -29,7 +29,7 @@ init-large:
 	en ${LARGE_BASE} \
 	${PUBMED_FREQS} \
 	-v ${PUBMED_VECTORS} \
-	-x -V 40000 -mwf 30 -m ./data/meta_large.json
+	-x -V 100000 -mwf 20 -m ./data/meta_large.json
 
 parser-small:
 	python scripts/train_parser_and_tagger.py \
