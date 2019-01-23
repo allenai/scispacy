@@ -124,7 +124,6 @@ def train_parser_and_tagger(train_json_path: str,
             nlp.to_disk(epoch_model_path)
 
             with open(os.path.join(model_output_dir, "model"+str(i), "meta.json"), "w") as meta_fp:
-                meta["version"] = str(i)
                 meta_fp.write(json.dumps(meta))
 
             nlp_loaded = util.load_model_from_path(epoch_model_path)
