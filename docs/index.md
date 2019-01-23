@@ -2,7 +2,7 @@
 layout: default
 ---
 
-**SciSpaCy is a Python package containing [SpaCy](https://spacy.io/) models for processing _biomedical_ or _clinical_ text.**
+**SciSpaCy is a Python package containing [SpaCy](https://spacy.io/) models for processing _biomedical_, _scientific_ or _clinical_ text.**
 
 ## Installing
 ```python
