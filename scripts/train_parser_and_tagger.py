@@ -156,13 +156,6 @@ def train_parser_and_tagger(train_json_path: str,
     final_model_path = os.path.join(model_output_dir, "best")
     shutil.copytree(os.path.join(model_output_dir, "model" + str(best_epoch)),
                     final_model_path)
-#    with nlp.use_params(optimizer.averages):
-#        final_model_path = os.path.join(model_output_dir, "best")
-#        os.makedirs(epoch_model_path, exist_ok=True)
-#        nlp.to_disk(final_model_path)
-#
-#    with open(os.path.join(final_model_path, "meta.json"), "w") as meta_fp:
-#        meta_fp.write(json.dumps(meta))
 
     nlp_loaded = util.load_model_from_path(final_model_path)
     start_time = timer()

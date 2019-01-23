@@ -120,9 +120,6 @@ def train(model, train_data, dev_data, output_dir, n_iter):
     best_model_path = Path(output_dir + "/" + "best")
     shutil.copytree(os.path.join(output_dir, str(best_epoch)),
                     best_model_path)
-    #with nlp.use_params(optimizer.averages):
-    #    nlp.to_disk(best_model_path)
-    #    print("Saved model to", best_model_path)
 
     # test the saved model
     print("Loading from", best_model_path)
