@@ -1,6 +1,7 @@
 import os
 import spacy
 import sys
+import shutil
 
 from tqdm import tqdm
 from spacy import util
@@ -102,9 +103,12 @@ def train_parser_and_tagger(train_json_path: str,
     if ontonotes_path:
         onto_train_docs = onto_train_corpus.train_docs(nlp, projectivize=True)
         onto_train_docs = list(onto_train_docs)
-        num_onto_docs = int(ontonotes_train_percent*len(onto_train_docs))
+        num_onto_docs = int(float(ontonotes_train_percent)*len(onto_train_docs))
         randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
         train_mixture += randomly_sampled_onto
+
+    best_epoch = 0
+    best_epoch_uas = 0.0
     for i in range(10):
         random.shuffle(train_mixture)
         with nlp.disable_pipes(*other_pipes):
@@ -124,7 +128,6 @@ def train_parser_and_tagger(train_json_path: str,
             nlp.to_disk(epoch_model_path)
 
             with open(os.path.join(model_output_dir, "model"+str(i), "meta.json"), "w") as meta_fp:
-                meta["version"] = str(i)
                 meta_fp.write(json.dumps(meta))
 
             nlp_loaded = util.load_model_from_path(epoch_model_path)
@@ -141,18 +144,18 @@ def train_parser_and_tagger(train_json_path: str,
                 onto_dev_docs = list(onto_train_corpus.dev_docs(nlp_loaded))
                 onto_scorer = nlp_loaded.evaluate(onto_dev_docs)
 
+
+        if scorer.scores["uas"] > best_epoch_uas:
+            best_epoch_uas = scorer.scores["uas"]
+            best_epoch = i
         print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
         if ontonotes_path:
             print_progress(i, losses, onto_scorer.scores, cpu_wps=0, gpu_wps=0)
 
     # save final model and output results on the test set
-    with nlp.use_params(optimizer.averages):
-        final_model_path = os.path.join(model_output_dir, "best")
-        os.makedirs(epoch_model_path, exist_ok=True)
-        nlp.to_disk(final_model_path)
-
-    with open(os.path.join(final_model_path, "meta.json"), "w") as meta_fp:
-        meta_fp.write(json.dumps(meta))
+    final_model_path = os.path.join(model_output_dir, "best")
+    shutil.copytree(os.path.join(model_output_dir, "model" + str(best_epoch)),
+                    final_model_path)
 
     nlp_loaded = util.load_model_from_path(final_model_path)
     start_time = timer()
