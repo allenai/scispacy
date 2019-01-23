@@ -12,7 +12,7 @@ GENIA_TEST="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/genia/test.j
 
 if [[ -z "${MODEL_PATH}" ]]; then
   echo "Usage (run from base SciSpaCy repository): parser.sh <model_path> {path to existing model} <output directory> {default=./parser}"
-  echo "(optionally export the ONTONOTES_PATH variable to mix ontonotes data in with training.)"
+  echo "(optionally export the ONTONOTES_PATH and ONTONOTES_PERCENT variables to mix ontonotes data in with training.)"
   exit 1
 fi
 
@@ -24,7 +24,7 @@ if [[ -n "${ONTONOTES_PATH}" ]]; then
     --model_path ${MODEL_PATH} \
     --model_output_dir ${OUT_PATH} \
     --ontonotes_path ${ONTONOTES_PATH} \
-    --ontonotes_train_percent 1.0
+    --ontonotes_train_percent ${ONTONOTES_PERCENT}
 
 else
   python scripts/train_parser_and_tagger.py \
