@@ -26,8 +26,9 @@ COPY scispacy/ scispacy/
 COPY scripts/ scripts/
 COPY tests/ tests/
 COPY .pylintrc .
-COPY Makefile Makefile
 
-RUN make install
+pip install -r requirements.in
+python -m spacy download en_core_web_sm
+python -m spacy download en_core_web_md
 
 CMD [ "/bin/bash" ]
