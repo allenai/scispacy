@@ -2,120 +2,82 @@
 layout: default
 ---
 
-Text can be **bold**, _italic_, or ~~strikethrough~~.
+**SciSpaCy is a Python package containing [SpaCy](https://spacy.io/) models for processing _biomedical_, _scientific_ or _clinical_ text.**
 
-There should be whitespace between paragraphs.
+## Installing
+```python
+pip install <Mark add package here>
+pip install <add paths to models here.>
+```
+## Models
 
-There should be whitespace between paragraphs. We recommend including a README, or a file with information about your project.
+### Performance
 
-# Header 1
+Our models achieve performance within 1% of published state of the art dependency parsers and within 0.2% accuracy of state of the art biomedical POS taggers.
 
-This is a normal paragraph following a header. GitHub is a code hosting platform for version control and collaboration. It lets you and others work together on projects from anywhere.
+| model          | UAS | LAS   | POS   | NER | Web UAS
+|:---------------|:----|:------|:------|:---|:---|
+| en_core_sci_sm | good| nice  |       |    |    |
+| en_core_sci_md | good| nice  |       |    |    |
 
-## Header 2
 
-> This is a blockquote following a header.
->
-> When something is important enough, you do it even if the odds are not in your favor.
+### Example Usage
 
-### Header 3
+```python
+import scispacy
+import spacy
 
-```js
-// Javascript code with syntax highlighting.
-var fun = function lang(l) {
-  dateformat.i18n = require('./lang/' + l)
-  return true;
-}
+nlp = spacy.load("en_core_sci_sm")
+text = """
+Myeloid derived suppressor cells (MDSC) are immature 
+myeloid cells with immunosuppressive activity. 
+They accumulate in tumor-bearing mice and humans 
+with different types of cancer, including hepatocellular 
+carcinoma (HCC).
+"""
+doc = nlp(text)
+
+print(list(doc.sents))
+>>> ["Myeloid derived suppressor cells (MDSC) are immature myeloid cells with immunosuppressive activity.", 
+     "They accumulate in tumor-bearing mice and humans with different types of cancer, including hepatocellular carcinoma (HCC)."]
+
+# Examine the entities extracted by the mention detector.
+# Note that they don't have types like in SpaCy, and they
+# are more general (e.g including verbs) - these are any
+# spans which might be an entity in UMLS, a large
+# biomedical database.
+print(doc.ents)
+>>> (Myeloid derived suppressor cells,
+     MDSC,
+     immature,
+     myeloid cells,
+     immunosuppressive activity,
+     accumulate,
+     tumor-bearing mice,
+     humans,
+     cancer,
+     hepatocellular carcinoma,
+     HCC)
+
+# We can also visualise dependency parses
+# (This renders automatically inside a jupyter notebook!):
+from spacy import displacy
+displacy.render(next(doc.sents), style='dep', jupyter=True)
+
+# See below for the generated SVG.
+# Zoom your browser in a bit!
+
 ```
 
-```ruby
-# Ruby code with syntax highlighting
-GitHubPages::Dependencies.gems.each do |gem, version|
-  s.add_dependency(gem, "= #{version}")
-end
-```
+![Branching](./example.svg)
 
-#### Header 4
+### Data Sources
 
-*   This is an unordered list following a header.
-*   This is an unordered list following a header.
-*   This is an unordered list following a header.
+SciSpaCy models are trained on data from a variety of sources. In particular,
+we use:
 
-##### Header 5
-
-1.  This is an ordered list following a header.
-2.  This is an ordered list following a header.
-3.  This is an ordered list following a header.
-
-###### Header 6
-
-| head1        | head two          | three |
-|:-------------|:------------------|:------|
-| ok           | good swedish fish | nice  |
-| out of stock | good and plenty   | nice  |
-| ok           | good `oreos`      | hmm   |
-| ok           | good `zoute` drop | yumm  |
-
-### There's a horizontal rule below this.
-
-* * *
-
-### Here is an unordered list:
-
-*   Item foo
-*   Item bar
-*   Item baz
-*   Item zip
-
-### And an ordered list:
-
-1.  Item one
-1.  Item two
-1.  Item three
-1.  Item four
-
-### And a nested list:
-
-- level 1 item
-  - level 2 item
-  - level 2 item
-    - level 3 item
-    - level 3 item
-- level 1 item
-  - level 2 item
-  - level 2 item
-  - level 2 item
-- level 1 item
-  - level 2 item
-  - level 2 item
-- level 1 item
-
-### Small image
-
-![Octocat](https://assets-cdn.github.com/images/icons/emoji/octocat.png)
-
-### Large image
-
-![Branching](https://guides.github.com/activities/hello-world/branching.png)
-
-
-### Definition lists can be used with HTML syntax.
-
-<dl>
-<dt>Name</dt>
-<dd>Godzilla</dd>
-<dt>Born</dt>
-<dd>1952</dd>
-<dt>Birthplace</dt>
-<dd>Japan</dd>
-<dt>Color</dt>
-<dd>Green</dd>
-</dl>
-
-```
-Long, single-line code blocks should not wrap. They should horizontally scroll if they are too long. This line should be long enough to demonstrate this.
-```
-
-```
-The final element.
-```
+*   **[The GENIA 1.0 Treebank](https://nlp.stanford.edu/~mcclosky/biomedical.html)**, converted to basic Universal Dependencies using the [Stanford Dependency Converter](https://nlp.stanford.edu/software/stanford-dependencies.shtml).
+We have made this dataset available along with the original raw data here. TODO(Mark) add link.
+*   **[word2vec word vectors](http://bio.nlplab.org/#word-vectors)** trained on the Pubmed Central Open Access Subset.
+*   **[The MedMentions Entity Linking dataset](https://github.com/chanzuckerberg/MedMentions)**, used for training a mention detector.
+*  **[Ontonotes 5.0](https://catalog.ldc.upenn.edu/LDC2013T19)** to make the parser and tagger more robust to non-biomedical text. Unfortunately this is not publically available.
