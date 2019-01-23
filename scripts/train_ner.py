@@ -52,9 +52,12 @@ def train(model, train_data, dev_data, output_dir, n_iter):
 
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
-    if 'ner' not in nlp.pipe_names:
+    if 'ner' not in nlp.pipe_names and "tagger" in nlp.pipe_names:
         ner = nlp.create_pipe('ner')
         nlp.add_pipe(ner, after="tagger")
+    elif 'ner' not in nlp.pipe_names:
+        ner = nlp.create_pipe('ner')
+        nlp.add_pipe(ner, last=True)
     # otherwise, get it so we can add labels
     else:
         ner = nlp.get_pipe('ner')
