@@ -27,8 +27,8 @@ COPY scripts/ scripts/
 COPY tests/ tests/
 COPY .pylintrc .
 
-pip install -r requirements.in
-python -m spacy download en_core_web_sm
-python -m spacy download en_core_web_md
+RUN pip install -r requirements.in
+RUN python -m spacy download en_core_web_sm
+RUN python -m spacy download en_core_web_md
 
 CMD [ "/bin/bash" ]
