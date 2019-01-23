@@ -66,6 +66,7 @@ displacy.render(next(doc.sents), style='dep', jupyter=True)
 
 # See below for the generated SVG.
 # Zoom your browser in a bit!
+
 ```
 
 ![Branching](./example.svg)
