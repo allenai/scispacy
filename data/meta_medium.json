@@ -1,6 +1,6 @@
 {
   "lang":"en",
-  "name":"core_sci_lg",
+  "name":"core_sci_md",
   "sources": ["OntoNotes 5", "Common Crawl", "GENIA 1.0"],
   "description":"Spacy Models for Biomedical Text.",
   "author":"Allen Institute for Artificial Intelligence",
