@@ -8,7 +8,7 @@ Instructions for creating a release of the scispacy library.
 2. Make sure that you have changed the versions in "scispacy/version.py".
 3. Create the distribution by running "python setup.py sdist" in the root of the repository.
 4. Check you can install the new distribution in a clean environment.
-5. Upload the distribution to pypi by running "twine upload <path to the distribution>".
+5. Upload the distribution to pypi by running "twine upload <path to the distribution> -u <username> -p <password>".
    This step will ask you for a username and password - the username is "scispacy" you can
    get the password from LastPass.
 """
@@ -27,6 +27,8 @@ setup(
     author = 'Allen Institute for Artificial Intelligence',
     author_email = 'ai2-info@allenai.org',
     description = 'A full SpaCy pipeline and models for scientific/biomedical documents.',
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     keywords = ["bioinformatics nlp spacy SpaCy biomedical"],
     classifiers=[
         'Intended Audience :: Science/Research',
