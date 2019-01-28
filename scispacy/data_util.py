@@ -130,3 +130,52 @@ def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = 
             test_examples.append(spacy_example)
 
     return train_examples, dev_examples, test_examples
+
+
+
+
+def read_ner_from_tsv(filename: str):
+    with open(filename) as f:
+        data = []
+        words = []
+        for line in f:
+            line = line.strip()
+            if line.startswith('-DOCSTART-'):
+                continue
+            if line == "":
+                if len(words) > 0:
+                    start_index = -1
+                    current_index = 0
+                    in_entity = False
+                    entity_type = None
+                    sent = ""
+                    entities = []
+                    for w, e in words:
+                        sent += w
+                        sent += " "
+                        if e != 'O':
+                            if in_entity:
+                                pass
+                            else:
+                                start_index = current_index
+                                in_entity = True
+                                entity_type = e[2:].upper()
+                        else:
+                            if in_entity:
+                                end_index = current_index - 1
+                                entities.append((start_index, end_index, entity_type))
+                            in_entity = False
+                            entity_type = None
+                            start_index = -1
+                        current_index += (len(w) + 1)
+                    if in_entity:
+                        end_index = current_index - 1
+                        entities.append((start_index, end_index, entity_type))
+                    sent = sent[:-1]
+                    # if len(entities) > 0:
+                    data.append((sent, {'entities': entities}))
+                words = []
+            else:
+                word, entity = line.split("\t")
+                words.append((word, entity))
+    return data
