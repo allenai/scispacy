@@ -1,9 +1,14 @@
-pytest
-pytest-cov
-pylint
-mypy
 numpy
 spacy==2.0.18
 pandas
 awscli
 conllu
+
+# Required for testing.
+pytest
+pytest-cov
+pylint
+mypy
+
+# Required for releases.
+twine
