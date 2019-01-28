@@ -24,7 +24,19 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
     ],
-    packages = find_packages(),
+    packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     license="Apache",
-    install_requires = ['spacy==2.0.18'],
+    install_requires=[
+        "spacy==2.0.18",
+        "awscli",
+        "conllu",
+        "numpy"
+        ],
+    tests_require=[
+        "pytest",
+        "pytest-cov",
+        "pylint",
+        "mypy"
+        ],
+    python_requires='>=3.5.0',
 )
