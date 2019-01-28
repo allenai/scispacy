@@ -2,7 +2,6 @@ import sys
 import random
 import os
 from pathlib import Path
-import json
 import shutil
 
 import argparse

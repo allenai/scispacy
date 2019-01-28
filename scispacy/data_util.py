@@ -1,5 +1,5 @@
 
-from typing import NamedTuple, List, Iterator, Dict
+from typing import NamedTuple, List, Iterator, Dict, Tuple
 import tarfile
 import atexit
 import os
@@ -132,50 +132,58 @@ def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = 
     return train_examples, dev_examples, test_examples
 
 
+SpacyNerExample = Tuple[str, Dict[str, Tuple[int, int, str]]] # pylint: disable=invalid-name
 
+def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:
 
-def read_ner_from_tsv(filename: str):
-    with open(filename) as f:
-        data = []
-        words = []
-        for line in f:
-            line = line.strip()
-            if line.startswith('-DOCSTART-'):
-                continue
-            if line == "":
-                if len(words) > 0:
-                    start_index = -1
-                    current_index = 0
-                    in_entity = False
-                    entity_type = None
-                    sent = ""
-                    entities = []
-                    for w, e in words:
-                        sent += w
-                        sent += " "
-                        if e != 'O':
-                            if in_entity:
-                                pass
-                            else:
-                                start_index = current_index
-                                in_entity = True
-                                entity_type = e[2:].upper()
-                        else:
-                            if in_entity:
-                                end_index = current_index - 1
-                                entities.append((start_index, end_index, entity_type))
-                            in_entity = False
-                            entity_type = None
-                            start_index = -1
-                        current_index += (len(w) + 1)
-                    if in_entity:
-                        end_index = current_index - 1
-                        entities.append((start_index, end_index, entity_type))
-                    sent = sent[:-1]
-                    # if len(entities) > 0:
-                    data.append((sent, {'entities': entities}))
-                words = []
+    start_index = -1
+    current_index = 0
+    in_entity = False
+    entity_type = None
+    sent = ""
+    entities = []
+    for word, entity in examples:
+        sent += word
+        sent += " "
+        if entity != 'O':
+            if in_entity:
+                pass
             else:
-                word, entity = line.split("\t")
-                words.append((word, entity))
-    return data
+                start_index = current_index
+                in_entity = True
+                entity_type = entity[2:].upper()
+        else:
+            if in_entity:
+                end_index = current_index - 1
+                entities.append((start_index, end_index, entity_type))
+            in_entity = False
+            entity_type = None
+            start_index = -1
+        current_index += (len(word) + 1)
+    if in_entity:
+        end_index = current_index - 1
+        entities.append((start_index, end_index, entity_type))
+
+    # Remove last space.
+    sent = sent[:-1]
+    return (sent, {'entities': entities})
+
+
+def read_ner_from_tsv(filename: str) -> List[SpacyNerExample]:
+
+    spacy_format_data = []
+    examples = []
+    for line in open(filename):
+        line = line.strip()
+        if line.startswith('-DOCSTART-'):
+            continue
+        # We have reached the end of a sentence.
+        if not line:
+            if not examples:
+                continue
+            spacy_format_data.extend(_handle_sentence(examples))
+            examples = []
+        else:
+            word, entity = line.split("\t")
+            examples.append((word, entity))
+    return spacy_format_data
