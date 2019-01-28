@@ -135,7 +135,10 @@ def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = 
 SpacyNerExample = Tuple[str, Dict[str, Tuple[int, int, str]]] # pylint: disable=invalid-name
 
 def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:
-
+    """
+    Processes a single sentence by building it up as a space separated string
+    with its corresponding typed entity spans.
+    """
     start_index = -1
     current_index = 0
     in_entity = False
@@ -170,7 +173,28 @@ def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:
 
 
 def read_ner_from_tsv(filename: str) -> List[SpacyNerExample]:
+    """
+    Reads BIO formatted NER data from a TSV file, such as the
+    NER data found here:
+    https://github.com/cambridgeltl/MTL-Bioinformatics-2016
 
+    Data is expected to be 2 tab seperated tokens per line, with
+    sentences denoted by empty lines. Sentences read by this
+    function will be already tokenized, but returned as a string,
+    as this is the format required by SpaCy. Consider using the
+    WhitespaceTokenizer(scispacy/util.py) to split this data
+    with a SpaCy model.
+
+    Parameters
+    ----------
+    filename : str
+        The path to the tsv data.
+
+    Returns
+    -------
+    spacy_format_data : List[SpacyNerExample]
+        The BIO tagged NER examples.
+    """
     spacy_format_data = []
     examples = []
     for line in open(filename):
