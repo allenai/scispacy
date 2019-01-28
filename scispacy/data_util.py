@@ -132,7 +132,7 @@ def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = 
     return train_examples, dev_examples, test_examples
 
 
-SpacyNerExample = Tuple[str, Dict[str, Tuple[int, int, str]]] # pylint: disable=invalid-name
+SpacyNerExample = Tuple[str, Dict[str, List[Tuple[int, int, str]]]] # pylint: disable=invalid-name
 
 def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:
     """
@@ -142,9 +142,9 @@ def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:
     start_index = -1
     current_index = 0
     in_entity = False
-    entity_type = None
+    entity_type: str = ""
     sent = ""
-    entities = []
+    entities: List[Tuple[int, int, str]] = []
     for word, entity in examples:
         sent += word
         sent += " "
@@ -160,7 +160,7 @@ def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:
                 end_index = current_index - 1
                 entities.append((start_index, end_index, entity_type))
             in_entity = False
-            entity_type = None
+            entity_type = ""
             start_index = -1
         current_index += (len(word) + 1)
     if in_entity:
@@ -196,7 +196,7 @@ def read_ner_from_tsv(filename: str) -> List[SpacyNerExample]:
         The BIO tagged NER examples.
     """
     spacy_format_data = []
-    examples = []
+    examples: List[Tuple[str, str]] = []
     for line in open(filename):
         line = line.strip()
         if line.startswith('-DOCSTART-'):
