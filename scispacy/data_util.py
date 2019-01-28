@@ -181,9 +181,12 @@ def read_ner_from_tsv(filename: str) -> List[SpacyNerExample]:
         if not line:
             if not examples:
                 continue
-            spacy_format_data.extend(_handle_sentence(examples))
+            spacy_format_data.append(_handle_sentence(examples))
             examples = []
         else:
             word, entity = line.split("\t")
             examples.append((word, entity))
+    if examples:
+        spacy_format_data.append(_handle_sentence(examples))
+
     return spacy_format_data
