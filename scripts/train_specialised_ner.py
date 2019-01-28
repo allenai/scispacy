@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.par
 from scispacy.data_util import read_med_mentions, read_full_med_mentions, read_ner_from_tsv
 from scispacy.util import WhitespaceTokenizer
 from scispacy.per_class_scorer import PerClassScorer
+from scispacy.train_utils import evaluate_ner
 
 def train_ner(output_dir: str,
               train_data_path: str,
@@ -34,8 +35,8 @@ def train_ner(output_dir: str,
     if run_test:
         nlp = spacy.load(model)
         print("Loaded model '%s'" % model)
-        evaluate(nlp, dev_data, dump_path=os.path.join(output_dir, "dev_metrics.json"))
-        evaluate(nlp, test_data, dump_path=os.path.join(output_dir, "test_metrics.json"))
+        evaluate_ner(nlp, dev_data, dump_path=os.path.join(output_dir, "dev_metrics.json"))
+        evaluate_ner(nlp, test_data, dump_path=os.path.join(output_dir, "test_metrics.json"))
     else:
         train(model, train_data, dev_data, test_data, output_dir, n_iter)
 
@@ -117,7 +118,7 @@ def train(model, train_data, dev_data, test_data, output_dir, n_iter):
         nlp2 = util.load_model_from_path(output_dir_path)
         nlp2.tokenizer = WhitespaceTokenizer(nlp.vocab)
 
-        metrics = evaluate(nlp2, dev_data)
+        metrics = evaluate_ner(nlp2, dev_data)
         if metrics["f1-measure-overall"] > best_f1:
             best_f1 = metrics["f1-measure-overall"]
             best_epoch = i
@@ -132,33 +133,9 @@ def train(model, train_data, dev_data, test_data, output_dir, n_iter):
     nlp2 = util.load_model_from_path(best_model_path)
     nlp2.tokenizer = WhitespaceTokenizer(nlp.vocab)
 
-    evaluate(nlp2, dev_data, dump_path=os.path.join(output_dir, "dev_metrics.json"))
-    evaluate(nlp2, test_data, dump_path=os.path.join(output_dir, "test_metrics.json"))
+    evaluate_ner(nlp2, dev_data, dump_path=os.path.join(output_dir, "dev_metrics.json"))
+    evaluate_ner(nlp2, test_data, dump_path=os.path.join(output_dir, "test_metrics.json"))
 
-
-def evaluate(nlp, eval_data, dump_path=None):
-
-    scorer = PerClassScorer()
-    print("Evaluating %d rows" % len(eval_data))
-    for i, (text, gold_spans) in enumerate(tqdm.tqdm(eval_data)):
-
-        # parse dev data with trained model
-        doc = nlp(text)
-        predicted_spans = [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents]
-        scorer(predicted_spans, gold_spans["entities"])
-
-        if i % 1000 == 0 and i > 0:
-            for name, metric in scorer.get_metric().items():
-                print(f"{name}: {metric}")
-
-    metrics = scorer.get_metric()
-    if dump_path is not None:
-        json.dump(metrics, open(dump_path, "w"))
-    for name, metric in metrics.items():
-        if "overall" in name or "untyped" in name:
-            print(f"{name}: \t\t {metric}")
-
-    return metrics
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
