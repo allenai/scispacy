@@ -13,25 +13,23 @@ from spacy import util
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 
-from scispacy.data_util import read_med_mentions, read_full_med_mentions
+from scispacy.data_util import read_med_mentions, read_full_med_mentions, read_ner_from_tsv
+from scispacy.util import WhitespaceTokenizer
 from scispacy.per_class_scorer import PerClassScorer
-from scispacy.umls_semantic_type_tree import construct_umls_tree_from_tsv
 from scispacy.train_utils import evaluate_ner
 
-
 def train_ner(output_dir: str,
-              data_path: str,
+              train_data_path: str,
+              dev_data_path: str,
+              test_data_path: str,
               run_test: bool = None,
               model: str = None,
-              n_iter: int = 100,
-              label_granularity: int = None):
+              n_iter: int = 100):
 
-    if label_granularity is not None:
-        umls_tree = construct_umls_tree_from_tsv("data/umls_semantic_type_tree.tsv")
-        label_mapping = umls_tree.get_collapsed_type_id_map_at_level(label_granularity)
-    else:
-        label_mapping = None
-    train_data, dev_data, test_data = read_full_med_mentions(data_path, label_mapping)
+    util.fix_random_seed(util.env_opt("seed", 0))
+    train_data = read_ner_from_tsv(train_data_path)
+    dev_data = read_ner_from_tsv(dev_data_path)
+    test_data = read_ner_from_tsv(test_data_path)
     os.makedirs(output_dir, exist_ok=True)
     if run_test:
         nlp = spacy.load(model)
@@ -39,10 +37,10 @@ def train_ner(output_dir: str,
         evaluate_ner(nlp, dev_data, dump_path=os.path.join(output_dir, "dev_metrics.json"))
         evaluate_ner(nlp, test_data, dump_path=os.path.join(output_dir, "test_metrics.json"))
     else:
-        train(model, train_data, dev_data, output_dir, n_iter)
+        train(model, train_data, dev_data, test_data, output_dir, n_iter)
 
 
-def train(model, train_data, dev_data, output_dir, n_iter):
+def train(model, train_data, dev_data, test_data, output_dir, n_iter):
     """Load the model, set up the pipeline and train the entity recognizer."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
@@ -50,6 +48,11 @@ def train(model, train_data, dev_data, output_dir, n_iter):
     else:
         nlp = spacy.blank('en')  # create blank Language class
         print("Created blank 'en' model")
+
+
+    original_tokenizer = nlp.tokenizer
+
+    nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
 
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
@@ -105,27 +108,32 @@ def train(model, train_data, dev_data, output_dir, n_iter):
             output_dir_path.mkdir()
 
         with nlp.use_params(optimizer.averages):
+            nlp.tokenizer = original_tokenizer
             nlp.to_disk(output_dir_path)
             print("Saved model to", output_dir_path)
 
         # test the saved model
         print("Loading from", output_dir_path)
         nlp2 = util.load_model_from_path(output_dir_path)
+        nlp2.tokenizer = WhitespaceTokenizer(nlp.vocab)
 
         metrics = evaluate_ner(nlp2, dev_data)
-        if metrics["f1-measure-untyped"] > best_f1:
-            best_f1 = metrics["f1-measure-untyped"]
+        if metrics["f1-measure-overall"] > best_f1:
+            best_f1 = metrics["f1-measure-overall"]
             best_epoch = i
     # save model to output directory
     best_model_path = Path(output_dir + "/" + "best")
+    print(f"Best Epoch: {best_epoch} of {n_iter}")
     shutil.copytree(os.path.join(output_dir, str(best_epoch)),
                     best_model_path)
 
     # test the saved model
     print("Loading from", best_model_path)
     nlp2 = util.load_model_from_path(best_model_path)
+    nlp2.tokenizer = WhitespaceTokenizer(nlp.vocab)
 
-    evaluate_ner(nlp2, dev_data, dump_path=os.path.join(output_dir, "metrics.json"))
+    evaluate_ner(nlp2, dev_data, dump_path=os.path.join(output_dir, "dev_metrics.json"))
+    evaluate_ner(nlp2, test_data, dump_path=os.path.join(output_dir, "test_metrics.json"))
 
 
 if __name__ == "__main__":
@@ -136,8 +144,19 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-            '--data_path',
-            help="Path to the data directory."
+            '--train_data_path',
+            help="Path to the training data."
+    )
+
+
+    parser.add_argument(
+            '--dev_data_path',
+            help="Path to the development data."
+    )
+
+    parser.add_argument(
+            '--test_data_path',
+            help="Path to the test data."
     )
 
     parser.add_argument(
@@ -155,16 +174,12 @@ if __name__ == "__main__":
             type=int,
             help="Number of iterations to run."
     )
-    parser.add_argument(
-            '--label_granularity',
-            type=int,
-            help="granularity of the labels, between 1-7."
-    )
 
     args = parser.parse_args()
     train_ner(args.model_output_dir,
-              args.data_path,
+              args.train_data_path,
+              args.dev_data_path,
+              args.test_data_path,
               args.run_test,
               args.model_path,
-              args.iterations,
-              args.label_granularity)
+              args.iterations)

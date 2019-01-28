@@ -1,5 +1,5 @@
 
-from typing import NamedTuple, List, Iterator, Dict
+from typing import NamedTuple, List, Iterator, Dict, Tuple
 import tarfile
 import atexit
 import os
@@ -130,3 +130,87 @@ def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = 
             test_examples.append(spacy_example)
 
     return train_examples, dev_examples, test_examples
+
+
+SpacyNerExample = Tuple[str, Dict[str, List[Tuple[int, int, str]]]] # pylint: disable=invalid-name
+
+def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:
+    """
+    Processes a single sentence by building it up as a space separated string
+    with its corresponding typed entity spans.
+    """
+    start_index = -1
+    current_index = 0
+    in_entity = False
+    entity_type: str = ""
+    sent = ""
+    entities: List[Tuple[int, int, str]] = []
+    for word, entity in examples:
+        sent += word
+        sent += " "
+        if entity != 'O':
+            if in_entity:
+                pass
+            else:
+                start_index = current_index
+                in_entity = True
+                entity_type = entity[2:].upper()
+        else:
+            if in_entity:
+                end_index = current_index - 1
+                entities.append((start_index, end_index, entity_type))
+            in_entity = False
+            entity_type = ""
+            start_index = -1
+        current_index += (len(word) + 1)
+    if in_entity:
+        end_index = current_index - 1
+        entities.append((start_index, end_index, entity_type))
+
+    # Remove last space.
+    sent = sent[:-1]
+    return (sent, {'entities': entities})
+
+
+def read_ner_from_tsv(filename: str) -> List[SpacyNerExample]:
+    """
+    Reads BIO formatted NER data from a TSV file, such as the
+    NER data found here:
+    https://github.com/cambridgeltl/MTL-Bioinformatics-2016
+
+    Data is expected to be 2 tab seperated tokens per line, with
+    sentences denoted by empty lines. Sentences read by this
+    function will be already tokenized, but returned as a string,
+    as this is the format required by SpaCy. Consider using the
+    WhitespaceTokenizer(scispacy/util.py) to split this data
+    with a SpaCy model.
+
+    Parameters
+    ----------
+    filename : str
+        The path to the tsv data.
+
+    Returns
+    -------
+    spacy_format_data : List[SpacyNerExample]
+        The BIO tagged NER examples.
+    """
+    spacy_format_data = []
+    examples: List[Tuple[str, str]] = []
+    for line in open(filename):
+        line = line.strip()
+        if line.startswith('-DOCSTART-'):
+            continue
+        # We have reached the end of a sentence.
+        if not line:
+            if not examples:
+                continue
+            spacy_format_data.append(_handle_sentence(examples))
+            examples = []
+        else:
+            word, entity = line.split("\t")
+            examples.append((word, entity))
+    if examples:
+        spacy_format_data.append(_handle_sentence(examples))
+
+    return spacy_format_data

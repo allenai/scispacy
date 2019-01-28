@@ -1,0 +1,35 @@
+Intraocular	O
+pressure	O
+in	O
+genetically	B-SO
+distinct	O
+mice	B-Taxon
+:	O
+an	O
+update	O
+and	O
+strain	O
+survey	O
+
+Abstract	O
+
+Background	O
+
+Little	O
+is	O
+known	O
+about	O
+genetic	B-SO
+factors	O
+affecting	O
+intraocular	O
+pressure	O
+(	O
+IOP	O
+)	O
+in	O
+mice	B-Taxon
+and	O
+other	O
+mammals	B-Taxon
+.	O
