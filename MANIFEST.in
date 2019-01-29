@@ -1,0 +1,9 @@
+
+
+include LICENSE
+include README.md
+include requirements.in
+recursive-include data *
+recursive-exclude proto_model *
+recursive-exclude scispacy/models *
+recursive-exclude * __pycache__
