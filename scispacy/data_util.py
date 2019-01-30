@@ -74,7 +74,9 @@ def read_med_mentions(filename: str):
     return examples
 
 
-def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = None):
+def read_full_med_mentions(directory_path: str,
+                           label_mapping: Dict[str, str] = None,
+                           span_only: bool = False):
 
     def _cleanup_dir(dir_path: str):
         if os.path.exists(dir_path):
@@ -112,6 +114,8 @@ def read_full_med_mentions(directory_path: str, label_mapping: Dict[str, str] = 
     test_examples = []
 
     def label_function(label):
+        if span_only:
+            return "ENTITY"
         if label_mapping is None:
             return label
         else:

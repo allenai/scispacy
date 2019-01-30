@@ -29,9 +29,12 @@ def train_ner(output_dir: str,
     if label_granularity is not None:
         umls_tree = construct_umls_tree_from_tsv("data/umls_semantic_type_tree.tsv")
         label_mapping = umls_tree.get_collapsed_type_id_map_at_level(label_granularity)
+        if label_granularity == 0:
+            span_only = True
     else:
         label_mapping = None
-    train_data, dev_data, test_data = read_full_med_mentions(data_path, label_mapping)
+        span_only = False
+    train_data, dev_data, test_data = read_full_med_mentions(data_path, label_mapping, span_only)
     os.makedirs(output_dir, exist_ok=True)
     if run_test:
         nlp = spacy.load(model)
