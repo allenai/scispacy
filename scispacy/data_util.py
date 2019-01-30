@@ -201,7 +201,7 @@ def read_ner_from_tsv(filename: str) -> List[SpacyNerExample]:
     """
     spacy_format_data = []
     examples: List[Tuple[str, str]] = []
-    for line in open(filename):
+    for line in open(cached_path(filename)):
         line = line.strip()
         if line.startswith('-DOCSTART-'):
             continue

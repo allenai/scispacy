@@ -1,0 +1,10 @@
+{
+  "lang":"en",
+  "name":"ner_bionlp13cg_md",
+  "sources": ["BIONLP13CG", "OntoNotes 5", "Common Crawl", "GENIA 1.0"],
+  "description":"Spacy Models for Biomedical Text.",
+  "author":"Allen Institute for Artificial Intelligence",
+  "email": "ai2-info@allenai.org",
+  "url":"https://allenai.github.io/SciSpaCy/",
+  "license":"CC BY-SA 3.0"
+}
