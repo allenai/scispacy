@@ -190,7 +190,7 @@ def train_parser_and_tagger(train_json_path: str,
         print("Token acc:", scorer_onto_retrained.token_acc)
 
         with open(os.path.join(model_output_dir, "ontonotes_test.json")) as metric_file:
-            json.dump(scorer.scores, metric_file)
+            json.dump(scorer_onto_retrained.scores, metric_file)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
