@@ -174,6 +174,8 @@ def train_parser_and_tagger(train_json_path: str,
     print("LAS:", scorer.las)
     print("Tag %:", scorer.tags_acc)
     print("Token acc:", scorer.token_acc)
+    with open(os.path.join(model_output_dir, "genia_test.json"), "w+") as metric_file:
+        json.dump(scorer.scores, metric_file)
     with open(os.path.join(model_output_dir, "best", "meta.json"), "w") as meta_fp:
         meta_fp.write(json.dumps(meta))
 
@@ -187,6 +189,8 @@ def train_parser_and_tagger(train_json_path: str,
         print("Tag %:", scorer_onto_retrained.tags_acc)
         print("Token acc:", scorer_onto_retrained.token_acc)
 
+        with open(os.path.join(model_output_dir, "ontonotes_test.json"), "w+") as metric_file:
+            json.dump(scorer_onto_retrained.scores, metric_file)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
