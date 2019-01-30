@@ -3,6 +3,7 @@ import random
 import os
 from pathlib import Path
 import shutil
+import json
 
 import argparse
 import tqdm
@@ -24,7 +25,8 @@ def train_ner(output_dir: str,
               test_data_path: str,
               run_test: bool = None,
               model: str = None,
-              n_iter: int = 100):
+              n_iter: int = 10,
+              meta_overrides: str = None):
 
     util.fix_random_seed(util.env_opt("seed", 0))
     train_data = read_ner_from_tsv(train_data_path)
@@ -37,10 +39,10 @@ def train_ner(output_dir: str,
         evaluate_ner(nlp, dev_data, dump_path=os.path.join(output_dir, "dev_metrics.json"))
         evaluate_ner(nlp, test_data, dump_path=os.path.join(output_dir, "test_metrics.json"))
     else:
-        train(model, train_data, dev_data, test_data, output_dir, n_iter)
+        train(model, train_data, dev_data, test_data, output_dir, n_iter, meta_overrides)
 
 
-def train(model, train_data, dev_data, test_data, output_dir, n_iter):
+def train(model, train_data, dev_data, test_data, output_dir, n_iter, meta_overrides):
     """Load the model, set up the pipeline and train the entity recognizer."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
@@ -49,6 +51,9 @@ def train(model, train_data, dev_data, test_data, output_dir, n_iter):
         nlp = spacy.blank('en')  # create blank Language class
         print("Created blank 'en' model")
 
+    if meta_overrides is not None:
+        metadata = json.load(open(meta_overrides))
+        nlp.meta.update(metadata)
 
     original_tokenizer = nlp.tokenizer
 
@@ -174,6 +179,11 @@ if __name__ == "__main__":
             type=int,
             help="Number of iterations to run."
     )
+    parser.add_argument(
+            '--meta_overrides',
+            type=str,
+            help="Metadata to override."
+    )
 
     args = parser.parse_args()
     train_ner(args.model_output_dir,
@@ -182,4 +192,5 @@ if __name__ == "__main__":
               args.test_data_path,
               args.run_test,
               args.model_path,
-              args.iterations)
+              args.iterations,
+              args.meta_overrides)
