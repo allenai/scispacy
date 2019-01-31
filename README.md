@@ -1,36 +1,56 @@
 # SciSpaCy
 This repository contains custom pipes and models related to using spaCy for scientific documents. In particular, there is a custom tokenizer that adds tokenization rules on top of spaCy's rule-based tokenizer, and a custom sentence segmenter that adds sentence segmentation rules on top of spaCy's statistical sentence segmenter.
 
-# Usage
-## Using SciSpaCy as is
-To use SciSpaCy as is, follow these steps:
-1. Clone this repository
-1. From within this repository, run
-`./scripts/create_model_package.sh ./scispacy/models/combined_rule_tokenizer_and_segmenter`
-1. Run `python setup.py sdist`
-1. Run `pip install --user dist/scispacy-1.0.0.tar.gz`
-1. Run `pip install --user dist/en_scispacy_core_web_sm-1.0.0.tar.gz`
 
-Once you have completed the above steps, you can load SciSpaCy as you would any other spaCy model. For example: 
+## Installation
+Installing scispacy requires two steps: installing the library and intalling the models. To install the library, run:
+```
+pip install scispacy
+```
+
+to install a model, run:
+
+```
+pip install <model url>
+```
+
+Note: We strongly recommend that you use an isolated Python environment (such as virtualenv or conda) to install scispacy.
+Additionally, scispacy uses modern features of Python and is such only available for Python 3.5 or greater.
+
+
+Once you have completed the above steps and downloaded one of the models below, you can load SciSpaCy as you would any other spaCy model. For example:
 ```
 import spacy
 nlp = spacy.load("en_scispacy_core_web_sm")
 ```
 
-To make full use of this package, you will also need to preprocess the text that you will be running through spaCy. This means passing the raw text through `custom_tokenizer.remove_new_lines()` before passing it through spaCy.
+## Available Models
 
-## Modifying SciSpaCy
-### Changing the tokenizer or segmenter
-To change the tokenizer or segmenter, all you need to do is change the tokenization or segmentation function, rebuild the model folder, and then follow the above steps for using SciSpaCy as is. In detail:
 
-1. Change the tokenizer (`combined_rule_tokenizer()` in `scispacy/custom_tokenizer.py`) and/or segmenter(`combined_rule_sentence_segmenter()` in `scispacy/custom_sentence_segmenter.py`)
-1. Rebuild the model folder by running `save_model(create_combined_rule_model, /path/to/model/folder)` in `scispacy/util.py`
-1. Edit the newly create `meta.json` as you see fit
-1. Go through the steps above for using SciSpaCy as is
+<table>
+<tr>
+    <td><b> en_core_sci_sm </b></td>
+    <td> A full SpaCy pipeline for biomedical data. </td>
+</tr>
+<tr>
+    <td><b> en_core_sci_md </b></td>
+    <td>  A full SpaCy pipeline for biomedical data with a larger vocabulary and word vectors. </td>
+</tr>
+<tr>
+    <td><b> en_ner_craft_md </b></td>
+    <td> A SpaCy NER model trained on the CRAFT corpus. </td>
+</tr>
+<tr>
+    <td><b> en_ner_jnlpba_md </b></td>
+    <td> A SpaCy NER model trained on the JNLPBA corpus. </td>
+</tr>
+<tr>
+    <td><b> en_ner_bc5cdr_md </b></td>
+    <td> A SpaCy NER model trained on the BC5CDR corpus. </td>
+</tr>
+<tr>
+    <td><b> en_ner_bionlp13cg_md </b></td>
+    <td> A SpaCy NER model trained on the BIONLP13CG</td>
+</tr>
+</table>
 
-### Adding a new pipe or further customization
-Adding a new pipe requires that you 
-1. Create your new pipe
-1. Save your model following the pattern described above for changing the tokenizer or segmenter (steps 2 and 3)
-1. Add your new pipe to `Language.factories` in `proto_model/__init__.py`
-1. Follow the steps for using SciSpaCy as is
