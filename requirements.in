@@ -1,5 +1,5 @@
 numpy
-spacy==2.0.18
+spacy-nightly
 pandas
 awscli
 conllu
