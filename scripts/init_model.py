@@ -18,7 +18,7 @@ from wasabi import Printer
 
 from spacy.vectors import Vectors
 from spacy.errors import Errors, Warnings, user_warning
-from spacy.util import prints, ensure_path, get_lang_class
+from spacy.util import ensure_path, get_lang_class
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
