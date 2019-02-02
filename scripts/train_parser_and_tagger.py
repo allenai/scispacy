@@ -98,7 +98,7 @@ def train_parser_and_tagger(train_json_path: str,
     else:
         optimizer = nlp.begin_training(lambda: train_corpus.train_tuples)
     nlp._optimizer = None
-    print("Itn.  Dep Loss  NER Loss  UAS     NER P.  NER R.  NER F.  Tag %   Token %  CPU WPS  GPU WPS")
+
     train_docs = train_corpus.train_docs(nlp)
     train_docs = list(train_docs)
 
