@@ -129,6 +129,8 @@ def train(model, train_data, dev_data, test_data, output_dir, n_iter, meta_overr
     # save model to output directory
     best_model_path = Path(output_dir + "/" + "best")
     print(f"Best Epoch: {best_epoch} of {n_iter}")
+    if os.path.exists(best_model_path):
+        shutil.rmtree(best_model_path)
     shutil.copytree(os.path.join(output_dir, str(best_epoch)),
                     best_model_path)
 
