@@ -173,6 +173,8 @@ def train_parser_and_tagger(train_json_path: str,
 
     # save final model and output results on the test set
     final_model_path = os.path.join(model_output_dir, "best")
+    if os.path.exists(final_model_path):
+        shutil.rmtree(final_model_path)
     shutil.copytree(os.path.join(model_output_dir, "model" + str(best_epoch)),
                     final_model_path)
 
