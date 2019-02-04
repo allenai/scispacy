@@ -16,7 +16,7 @@ CURDIR=${PWD}
 
 mkdir -p dist
 
-spacy package ${MODEL} ${WORK}
+spacy package ${MODEL} ${WORK} --meta-path ${MODEL}/meta.json
 
 INITFILE=`find ${WORK} -name __init__.py`
 
