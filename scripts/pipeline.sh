@@ -6,6 +6,14 @@ SIZE=$1
 OUT_PATH=${2:-./build}
 MODEL_NAME=${3:-scispacy_model}
 
+if [ -d ${OUT_PATH}/${MODEL_NAME} ]; then 
+  read -p "Are you sure you wish to remove existing model directory ${OUT_PATH}/${MODEL_NAME} (yes to continue)?"
+  if [ "$REPLY" != "yes" ]; then
+    exit
+  fi
+  rm -Rf ${OUT_PATH}/${MODEL_NAME}; 
+fi
+
 if [[ -z "${SIZE}" ]]; then
   echo "Usage (run from base SciSpaCy repository):"
   echo "pipeline.sh <size> {small|medium} <build_directory> {default=./build} <model name> {default='scispacy_model'}"
