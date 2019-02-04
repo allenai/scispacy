@@ -19,10 +19,12 @@ from wasabi import Printer
 from spacy.vectors import Vectors
 from spacy.errors import Errors, Warnings, user_warning
 from spacy.util import ensure_path, get_lang_class
+from spacy.language import Language
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
 from scispacy.custom_tokenizer import combined_rule_tokenizer
+from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
 from scispacy.version import VERSION
 
 msg = Printer()
@@ -66,6 +68,8 @@ def init_model(lang, output_dir, freqs_loc=None,
 
     # Insert our custom tokenizer into the base model.
     nlp.tokenizer = combined_rule_tokenizer(nlp)
+    Language.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter
+    nlp.add_pipe(nlp.create_pipe('combined_rule_sentence_segmenter'), first=True)
 
     if meta_overrides is not None:
         metadata = json.load(open(meta_overrides))
