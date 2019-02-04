@@ -9,6 +9,7 @@ import argparse
 import tqdm
 import spacy
 from spacy.gold import minibatch
+from spacy.language import Language
 from spacy import util
 
 
@@ -18,6 +19,7 @@ from scispacy.data_util import read_med_mentions, read_full_med_mentions, read_n
 from scispacy.util import WhitespaceTokenizer
 from scispacy.per_class_scorer import PerClassScorer
 from scispacy.train_utils import evaluate_ner
+from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
 
 def train_ner(output_dir: str,
               train_data_path: str,
@@ -34,6 +36,7 @@ def train_ner(output_dir: str,
     test_data = read_ner_from_tsv(test_data_path)
     os.makedirs(output_dir, exist_ok=True)
     if run_test:
+        Language.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter
         nlp = spacy.load(model)
         print("Loaded model '%s'" % model)
         evaluate_ner(nlp, dev_data, dump_path=os.path.join(output_dir, "dev_metrics.json"))
@@ -45,6 +48,7 @@ def train_ner(output_dir: str,
 def train(model, train_data, dev_data, test_data, output_dir, n_iter, meta_overrides):
     """Load the model, set up the pipeline and train the entity recognizer."""
     if model is not None:
+        Language.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter
         nlp = spacy.load(model)  # load existing spaCy model
         print("Loaded model '%s'" % model)
     else:
@@ -61,7 +65,10 @@ def train(model, train_data, dev_data, test_data, output_dir, n_iter, meta_overr
 
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
-    if 'ner' not in nlp.pipe_names and "tagger" in nlp.pipe_names:
+    if 'ner' not in nlp.pipe_names and "parser" in nlp.pipe_names:
+        ner = nlp.create_pipe('ner')
+        nlp.add_pipe(ner, after="parser")
+    elif 'ner' not in nlp.pipe_names and "tagger" in nlp.pipe_names:
         ner = nlp.create_pipe('ner')
         nlp.add_pipe(ner, after="tagger")
     elif 'ner' not in nlp.pipe_names:

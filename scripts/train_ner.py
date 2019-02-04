@@ -8,6 +8,7 @@ import argparse
 import tqdm
 import spacy
 from spacy.gold import minibatch
+from spacy.language import Language
 from spacy import util
 
 
@@ -17,6 +18,7 @@ from scispacy.data_util import read_med_mentions, read_full_med_mentions
 from scispacy.per_class_scorer import PerClassScorer
 from scispacy.umls_semantic_type_tree import construct_umls_tree_from_tsv
 from scispacy.train_utils import evaluate_ner
+from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
 
 
 def train_ner(output_dir: str,
@@ -48,6 +50,7 @@ def train_ner(output_dir: str,
 def train(model, train_data, dev_data, output_dir, n_iter):
     """Load the model, set up the pipeline and train the entity recognizer."""
     if model is not None:
+        Language.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter
         nlp = spacy.load(model)  # load existing spaCy model
         print("Loaded model '%s'" % model)
     else:
@@ -56,6 +59,9 @@ def train(model, train_data, dev_data, output_dir, n_iter):
 
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
+    if 'ner' not in nlp.pipe_names and "parser" in nlp.pipe_names:
+        ner = nlp.create_pipe('ner')
+        nlp.add_pipe(ner, after="parser")
     if 'ner' not in nlp.pipe_names and "tagger" in nlp.pipe_names:
         ner = nlp.create_pipe('ner')
         nlp.add_pipe(ner, after="tagger")
