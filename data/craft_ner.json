@@ -1,5 +1,6 @@
 {
   "lang":"en",
+  "parent_package":"spacy-nightly",
   "name":"ner_craft_md",
   "sources": ["CRAFT", "OntoNotes 5", "Common Crawl", "GENIA 1.0"],
   "description":"Spacy Models for Biomedical Text.",

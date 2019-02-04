@@ -1,5 +1,6 @@
 {
   "lang":"en",
+  "parent_package":"spacy-nightly",
   "name":"core_sci_md",
   "sources": ["OntoNotes 5", "Common Crawl", "GENIA 1.0"],
   "description":"Spacy Models for Biomedical Text.",
