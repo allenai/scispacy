@@ -7,11 +7,9 @@ OUT_PATH=${2:-./build}
 MODEL_NAME=${3:-scispacy_model}
 
 if [ -d ${OUT_PATH}/${MODEL_NAME} ]; then 
-  read -p "Are you sure you wish to remove existing model directory ${OUT_PATH}/${MODEL_NAME} (yes to continue)?"
-  if [ "$REPLY" != "yes" ]; then
-    exit
-  fi
-  rm -Rf ${OUT_PATH}/${MODEL_NAME}; 
+  echo "Build directory ${OUT_PATH}/${MODEL_NAME} already exists. Delete if you woud like to remake the package"
+  echo "Exiting"
+  exit
 fi
 
 if [[ -z "${SIZE}" ]]; then
