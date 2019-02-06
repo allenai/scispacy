@@ -19,7 +19,6 @@ import itertools
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
 from scispacy import spacy_convert
-from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
 
 def train_parser_and_tagger(train_json_path: str,
                             dev_json_path: str,
@@ -46,15 +45,11 @@ def train_parser_and_tagger(train_json_path: str,
     test_json_path = cached_path(test_json_path)
 
     if model_path is not None:
-        Language.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter
         nlp = spacy.load(model_path)
     else:
         lang_class = util.get_lang_class('en')
         nlp = lang_class()
 
-    if 'tagger' not in nlp.pipe_names and 'combined_rule_sentence_segmenter' in nlp.pipe_names:
-        tagger = nlp.create_pipe('tagger')
-        nlp.add_pipe(tagger, after='combined_rule_sentence_segmenter')
     if 'tagger' not in nlp.pipe_names:
         tagger = nlp.create_pipe('tagger')
         nlp.add_pipe(tagger, first=True)
@@ -128,7 +123,7 @@ def train_parser_and_tagger(train_json_path: str,
     msg.row(["-" * width for width in row_settings["widths"]], **row_settings)
     best_epoch = 0
     best_epoch_uas = 0.0
-    for i in range(10):
+    for i in range(20):
         random.shuffle(train_mixture)
         with nlp.disable_pipes(*other_pipes):
             with tqdm(total=n_train_words, leave=False) as pbar:

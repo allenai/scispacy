@@ -18,7 +18,6 @@ from scispacy.data_util import read_med_mentions, read_full_med_mentions
 from scispacy.per_class_scorer import PerClassScorer
 from scispacy.umls_semantic_type_tree import construct_umls_tree_from_tsv
 from scispacy.train_utils import evaluate_ner
-from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
 
 
 def train_ner(output_dir: str,
@@ -50,7 +49,6 @@ def train_ner(output_dir: str,
 def train(model, train_data, dev_data, output_dir, n_iter):
     """Load the model, set up the pipeline and train the entity recognizer."""
     if model is not None:
-        Language.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter
         nlp = spacy.load(model)  # load existing spaCy model
         print("Loaded model '%s'" % model)
     else:
