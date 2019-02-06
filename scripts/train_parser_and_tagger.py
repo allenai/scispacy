@@ -123,7 +123,7 @@ def train_parser_and_tagger(train_json_path: str,
     msg.row(["-" * width for width in row_settings["widths"]], **row_settings)
     best_epoch = 0
     best_epoch_uas = 0.0
-    for i in range(10):
+    for i in range(20):
         random.shuffle(train_mixture)
         with nlp.disable_pipes(*other_pipes):
             with tqdm(total=n_train_words, leave=False) as pbar:
