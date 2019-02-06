@@ -2,7 +2,7 @@
 layout: default
 ---
 
-**SciSpaCy is a Python package containing [SpaCy](https://spacy.io/) models for processing _biomedical_, _scientific_ or _clinical_ text.**
+**scispaCy is a Python package containing [spaCy](https://spacy.io/) models for processing _biomedical_, _scientific_ or _clinical_ text.**
 
 ## Installing
 ```python
@@ -73,7 +73,7 @@ displacy.render(next(doc.sents), style='dep', jupyter=True)
 
 ### Data Sources
 
-SciSpaCy models are trained on data from a variety of sources. In particular,
+scispaCy models are trained on data from a variety of sources. In particular,
 we use:
 
 *   **[The GENIA 1.0 Treebank](https://nlp.stanford.edu/~mcclosky/biomedical.html)**, converted to basic Universal Dependencies using the [Stanford Dependency Converter](https://nlp.stanford.edu/software/stanford-dependencies.shtml).
