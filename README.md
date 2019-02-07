@@ -1,3 +1,7 @@
+
+<p align="center"><img width="40%" src="docs/scispacy-logo.png" /></p>
+
+
 # SciSpaCy
 This repository contains custom pipes and models related to using spaCy for scientific documents. In particular, there is a custom tokenizer that adds tokenization rules on top of spaCy's rule-based tokenizer, and a custom sentence segmenter that adds sentence segmentation rules on top of spaCy's statistical sentence segmenter.
 
