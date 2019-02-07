@@ -1,5 +1,5 @@
 
-<p align="center"><img width="40%" src="docs/scispacy-logo.svg" /></p>
+<p align="center"><img width="40%" src="docs/scispacy-logo.png" /></p>
 
 
 # SciSpaCy
