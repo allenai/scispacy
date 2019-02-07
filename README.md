@@ -3,29 +3,56 @@
 
 
 # SciSpaCy
-This repository contains custom pipes and models related to using spaCy for scientific documents. In particular, there is a custom tokenizer that adds tokenization rules on top of spaCy's rule-based tokenizer, and a custom sentence segmenter that adds sentence segmentation rules on top of spaCy's statistical sentence segmenter.
+This repository contains custom pipes and models related to using spaCy for scientific documents. In particular, there is a custom tokenizer
+that adds tokenization rules on top of spaCy's rule-based tokenizer, a POS tagger and syntactic parser trained on biomedical data and
+a entity span detection model. Separately, there are also NER models for more specific tasks.
 
 
 ## Installation
 Installing scispacy requires two steps: installing the library and intalling the models. To install the library, run:
-```
+```bash
 pip install scispacy
 ```
 
 to install a model, run:
 
-```
+```bash
 pip install <model url>
 ```
 
 Note: We strongly recommend that you use an isolated Python environment (such as virtualenv or conda) to install scispacy.
+Take a look below in the "Setting up a virtual environment" section if you need some help with this.
 Additionally, scispacy uses modern features of Python and is such only available for Python 3.5 or greater.
 
 
-Once you have completed the above steps and downloaded one of the models below, you can load SciSpaCy as you would any other spaCy model. For example:
+
+#### Setting up a virtual environment
+
+[Conda](https://conda.io/) can be used set up a virtual environment with the
+version of Python required for scispaCy.  If you already have a Python 3.6 or 3.7
+environment you want to use, you can skip to the 'installing via pip' section.
+
+1.  [Download and install Conda](https://conda.io/docs/download.html).
+
+2.  Create a Conda environment called "scispacy" with Python 3.6
+
+    ```bash
+    conda create -n scispacy python=3.6
+    ```
+
+3.  Activate the Conda environment. You will need to activate the Conda environment in each terminal in which you want to use scispaCy.
+
+    ```bash
+    source activate scispacy
+    ```
+
+Now you can install `scispacy` and one of the models using the steps above.
+
+
+Once you have completed the above steps and downloaded one of the models below, you can load sciSpaCy as you would any other spaCy model. For example:
 ```
 import spacy
-nlp = spacy.load("en_scispacy_core_web_sm")
+nlp = spacy.load("en_core_sci_sm")
 ```
 
 ## Available Models
