@@ -1,7 +1,6 @@
 """
 
 Convert a umls release to a json file of concepts.
-This script assumes the first row of each RFF file has the column names (from MRFILES.RRF)
 
 """
 import sys
@@ -14,18 +13,43 @@ DEF_SOURCES_PREFERRED = {'NCI_BRIDG', 'NCI_NCI-GLOSS', 'NCI', 'GO', 'MSH', 'NCI_
 
 @plac.annotations(
         output_filename=('name of the output json file', 'positional', None, str),
-        concepts_filename=('path of MRCONSO.RRF file for concepts', 'positional', None, str),
-        definitions_filename=('name of MRDEF.RRF file for concept definitions', 'positional', None, str),
-        types_filename=('name of MRSTY.RRF file for concept types', 'positional', None, str))
-def main(output_filename, concepts_filename, definitions_filename, types_filename):
+        umls_meta_directory=('path of the META directory', 'positional', None, str))
+def main(output_filename, umls_meta_directory):
+
+    concepts_filename = '{}/MRCONSO.RRF'.format(umls_meta_directory)
+    types_filename = '{}/MRSTY.RRF'.format(umls_meta_directory)
+    definitions_filename = '{}/MRDEF.RRF'.format(umls_meta_directory)
+    file_descriptors = '{}/MRFILES.RRF'.format(umls_meta_directory)  # to get column names
+
+    concepts_header = types_header = definitions_header = None
+    with open(file_descriptors) as fin:
+        for line in fin:
+            splits = line.split('|')
+            filename = splits[0]
+            column_names = (splits[2] + ',').split(',')  # ugly hack because all files end with an empty column
+            if filename == 'MRCONSO.RRF':
+                concepts_header = column_names
+                print('Headers for MRCONSO.RRF: {}'.format(concepts_header))
+            elif filename == 'MRSTY.RRF':
+                types_header = column_names
+                print('Headers for MRSTY.RRF: {}'.format(types_header))
+            elif filename == 'MRDEF.RRF':
+                definitions_header = column_names
+                print('Headers for MRDEF.RRF: {}'.format(definitions_header))
+
+    if concepts_header is None or  types_header is None or definitions_header is None:
+        print('ERROR .. column names are not found')
+        exit()
 
     concept_details = {}  # dictionary of concept_id -> concept_dictionary
 
     print('Reading concepts ... ')
     with open(concepts_filename) as fin:
-        headers = next(fin).strip().split('|')
+        headers = concepts_header
         for line in fin:
-            concept = dict(zip(headers, line.strip().split('|')))
+            splits = line.strip().split('|')
+            assert len(headers) == len(splits)
+            concept = dict(zip(headers, splits))
 
             if concept['LAT'] != 'ENG' or concept['SUPPRESS'] != 'N':
                 continue  # Keep English non-suppressed concepts only
@@ -46,9 +70,11 @@ def main(output_filename, concepts_filename, definitions_filename, types_filenam
 
     print('Reading types ... ')
     with open(types_filename) as fin:
-        headers = next(fin).strip().split('|')
+        headers = types_header
         for line in fin:
-            concept_type = dict(zip(headers, line.strip().split('|')))
+            splits = line.strip().split('|')
+            assert len(headers) == len(splits)
+            concept_type = dict(zip(headers, splits))
 
             concept = concept_details.get(concept_type['CUI'])
             if concept is not None:
@@ -56,9 +82,11 @@ def main(output_filename, concepts_filename, definitions_filename, types_filenam
 
     print('Reading definitions ... ')
     with open(definitions_filename) as fin:
-        headers = next(fin).strip().split('|')
+        headers = definitions_header
         for line in fin:
-            definition = dict(zip(headers, line.strip().split('|')))
+            splits = line.strip().split('|')
+            assert len(headers) == len(splits)
+            definition = dict(zip(headers, splits))
 
             if definition['SUPPRESS'] != 'N':
                 continue
