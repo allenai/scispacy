@@ -14,19 +14,16 @@ import numpy
 from ast import literal_eval
 from pathlib import Path
 from preshed.counter import PreshCounter
-from wasabi import Printer
 
+from spacy.cli._messages import Messages
 from spacy.vectors import Vectors
 from spacy.errors import Errors, Warnings, user_warning
-from spacy.util import ensure_path, get_lang_class
-from spacy.language import Language
+from spacy.util import prints, ensure_path, get_lang_class
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
 from scispacy.custom_tokenizer import combined_rule_tokenizer
 from scispacy.version import VERSION
-
-msg = Printer()
 
 @plac.annotations(
         lang=("model language", "positional", None, str),
@@ -60,7 +57,7 @@ def init_model(lang, output_dir, freqs_loc=None,
         freqs_loc = ensure_path(freqs_loc)
 
     if freqs_loc is not None and not freqs_loc.exists():
-        msg.fail("Can't find words frequencies file", freqs_loc, exits=1)
+        prints(freqs_loc, title=Messages.M037, exits=1)
     probs, oov_prob = read_freqs(freqs_loc, min_freq=min_word_frequency) if freqs_loc is not None else ({}, -20)
     vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
     nlp = create_model(lang, probs, oov_prob, vectors_data, vector_keys, not no_expand_vectors, prune_vectors)
@@ -132,10 +129,8 @@ def create_model(lang, probs, oov_prob, vectors_data, vector_keys, expand_vector
         if prune_vectors >= 1:
             nlp.vocab.prune_vectors(prune_vectors)
     vec_added = len(nlp.vocab.vectors)
-    msg.good(
-        "Sucessfully compiled vocab",
-        "{} entries, {} vectors".format(lex_added, vec_added),
-    )
+    prints(Messages.M039.format(entries=lex_added, vectors=vec_added),
+           title=Messages.M038)
     return nlp
 
 
