@@ -96,12 +96,12 @@ def train_parser_and_tagger(train_json_path: str,
         optimizer = nlp.begin_training(lambda: train_corpus.train_tuples)
     nlp._optimizer = None
 
-    train_docs = train_corpus.train_docs(nlp)
+    train_docs = train_corpus.train_docs(nlp, projectivize=True)
     train_docs = list(train_docs)
 
     train_mixture = train_docs
     if ontonotes_path:
-        onto_train_docs = onto_train_corpus.train_docs(nlp)
+        onto_train_docs = onto_train_corpus.train_docs(nlp, projectivize=True)
         onto_train_docs = list(onto_train_docs)
         num_onto_docs = int(float(ontonotes_train_percent)*len(onto_train_docs))
         randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
