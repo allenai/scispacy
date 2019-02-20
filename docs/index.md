@@ -33,6 +33,14 @@ Our models achieve performance within 2% of published state of the art dependenc
 | en_core_sci_md | 90.60| 88.79  |  98.51  |  68.97  |  84.75  |
 
 
+| model          | F1 |   Entity Types|
+|:---------------|:-----|:--------|
+| en_ner_craft_md | 75.78|GGP, SO, TAXON, CHEBI, GO, CL|
+| en_ner_jnlpba_md | 73.48| DNA, CELL_TYPE, CELL_LINE, RNA, PROTEIN |
+| en_ner_bc5cdr_md | 83.62| DISEASE, CHEMICAL|
+| en_ner_bionlp13cg_md | 76.70|CANCER, ORGAN, TISSUE, ORGANISM, CELL, AMINO_ACID, GENE_OR_GENE_PRODUCT, SIMPLE_CHEMICAL, ANATOMICAL_SYSTEM, IMMATERIAL_ANATOMICAL_ENTITY, MULTI-TISSUE_STRUCTURE, DEVELOPING_ANATOMICAL_STRUCTURE, ORGANISM_SUBDIVISION, CELLULAR_COMPONENT|
+
+
 ### Example Usage
 
 ```python
