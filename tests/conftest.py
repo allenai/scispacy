@@ -96,7 +96,7 @@ def combined_all_model_fixture():
         SpacyModelType.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter # pylint: disable=line-too-long
     nlp = get_spacy_model('scispacy/models/combined_all_model', True, True, True,
                           with_custom_tokenizer=True,
-                          with_sentence_segmenter=True)
+                          with_sentence_segmenter=False)
     return nlp
 
 @pytest.fixture()
