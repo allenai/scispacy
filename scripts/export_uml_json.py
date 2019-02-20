@@ -3,23 +3,18 @@
 Convert a umls release to a json file of concepts.
 
 """
-import sys
 import json
-import plac
+import argparse
 
 # preferred definitions (from S2)
 DEF_SOURCES_PREFERRED = {'NCI_BRIDG', 'NCI_NCI-GLOSS', 'NCI', 'GO', 'MSH', 'NCI_FDA'}
 
+def main(meta_path, output_path):
 
-@plac.annotations(
-        output_filename=('name of the output json file', 'positional', None, str),
-        umls_meta_directory=('path of the META directory', 'positional', None, str))
-def main(output_filename, umls_meta_directory):
-
-    concepts_filename = '{}/MRCONSO.RRF'.format(umls_meta_directory)
-    types_filename = '{}/MRSTY.RRF'.format(umls_meta_directory)
-    definitions_filename = '{}/MRDEF.RRF'.format(umls_meta_directory)
-    file_descriptors = '{}/MRFILES.RRF'.format(umls_meta_directory)  # to get column names
+    concepts_filename = '{}/MRCONSO.RRF'.format(meta_path)
+    types_filename = '{}/MRSTY.RRF'.format(meta_path)
+    definitions_filename = '{}/MRDEF.RRF'.format(meta_path)
+    file_descriptors = '{}/MRFILES.RRF'.format(meta_path)  # to get column names
 
     concepts_header = types_header = definitions_header = None
     with open(file_descriptors) as fin:
@@ -50,21 +45,21 @@ def main(output_filename, umls_meta_directory):
             splits = line.strip().split('|')
             assert len(headers) == len(splits)
             concept = dict(zip(headers, splits))
-
             if concept['LAT'] != 'ENG' or concept['SUPPRESS'] != 'N':
                 continue  # Keep English non-suppressed concepts only
 
-            # this condition is copied from S2
-            is_canonical = concept['ISPREF'] == 'Y' and concept['TS'] == 'P' and concept['STT'] == 'PF'
-
             concept_id = concept['CUI']
-            if concept_id not in concept_details:
-                concept_details[concept_id] = {'concept_id': concept_id, 'aliases': list(), 'types': list()}
+            if concept_id not in concept_details:  # a new concept
+                # add it to the dictionary with an empty list of aliases and types
+                concept_details[concept_id] = {'concept_id': concept_id, 'aliases': [], 'types': []}
+
             concept_name = concept['STR']
+            # this condition is copied from S2. It checks if the concept name is canonical or not
+            is_canonical = concept['ISPREF'] == 'Y' and concept['TS'] == 'P' and concept['STT'] == 'PF'
 
             if not is_canonical or 'canonical_name' in concept_details[concept_id]:
                 # not a canonical name or a canonical name already found
-                concept_details[concept_id]['aliases'].append(concept_name)  # add it as an alisase
+                concept_details[concept_id]['aliases'].append(concept_name)  # add it as an alias
             else:
                 concept_details[concept_id]['canonical_name'] = concept_name  # set as canonical name
 
@@ -100,33 +95,44 @@ def main(output_filename, umls_meta_directory):
                 concept['definition'] = definition['DEF']
                 concept['is_from_preferred_source'] = 'Y' if is_from_preferred_source else 'N'
 
-    print('Number of concepts: {}'.format(len(concept_details)))
-    print('Number of concepts without canonical name (one of the aliases will be used instead): {}'.format(len(
-            [1 for c in concept_details.values() if 'canonical_name' not in c])))
-    print('Number of concepts with no aliases: {}'.format(len(
-            [1 for c in concept_details.values() if len(c['aliases']) == 0])))
-    print('Number of concepts with 1 aliase: {}'.format(len(
-            [1 for c in concept_details.values() if len(c['aliases']) == 1])))
-    print('Number of concepts with > 1 aliase: {}'.format(len(
-            [1 for c in concept_details.values() if len(c['aliases']) > 1])))
-    print('Number of concepts with no type: {}'.format(len(
-            [1 for c in concept_details.values() if len(c['types']) == 0])))
-    print('Number of concepts with 1 type: {}'.format(len(
-            [1 for c in concept_details.values() if len(c['types']) == 1])))
-    print('Number of concepts with > 1 type: {}'.format(len(
-            [1 for c in concept_details.values() if len(c['types']) > 1])))
-    print('Number of concepts with no definition: {}'.format(len(
-            [1 for c in concept_details.values() if 'definition' not in c])))
-    print('Number of concepts with definition from preferred sources: {}'.format(len(
-            [1 for c in concept_details.values()
-             if 'is_from_preferred_source' in c and c['is_from_preferred_source'] == 'Y'])))
-    print('Number of concepts with definition from other sources: {}'.format(len(
-            [1 for c in concept_details.values()
-             if 'is_from_preferred_source' in c and c['is_from_preferred_source'] == 'N'])))
+    without_canonical_name_count = 0
+    without_aliases_count = 0
+    with_one_alias_count = 0
+    with_more_than_one_alias_count = 0
+    without_type_count = 0
+    with_one_type_count = 0
+    with_more_than_one_type_count = 0
+    without_definition_count = 0
+    with_definition_pref_source_count = 0
+    with_definition_other_sources_count = 0
+    for concept in concept_details.values():
+        without_canonical_name_count += 1 if 'canonical_name' not in concept else 0
+        without_aliases_count += 1 if len(concept['aliases']) == 0 else 0
+        with_one_alias_count += 1 if len(concept['aliases']) == 1 else 0
+        with_more_than_one_alias_count += 1 if len(concept['aliases']) > 1 else 0
+        without_type_count += 1 if len(concept['types']) == 0 else 0
+        with_one_type_count += 1 if len(concept['types']) == 1 else 0
+        with_more_than_one_type_count += 1 if len(concept['types']) >= 1 else 0
+        without_definition_count += 1 if 'definition' not in concept else 0
+        with_definition_pref_source_count += 1 if concept.get('is_from_preferred_source') == 'Y' else 0
+        with_definition_other_sources_count += 1 if concept.get('is_from_preferred_source') == 'N' else 0
+
+    print(f'Number of concepts: {len(concept_details)}')
+    print(f'Number of concepts without canonical name (one of the aliases will be used instead): '
+          f'{without_canonical_name_count}')
+    print(f'Number of concepts with no aliases: {without_aliases_count}')
+    print(f'Number of concepts with 1 alias: {with_one_alias_count}')
+    print(f'Number of concepts with > 1 alias: {with_more_than_one_alias_count}')
+    print(f'Number of concepts with no type: {without_type_count}')
+    print(f'Number of concepts with 1 type: {with_one_type_count}')
+    print(f'Number of concepts with > 1 type: {with_more_than_one_type_count}')
+    print(f'Number of concepts with no definition: {without_definition_count}')
+    print(f'Number of concepts with definition from preferred sources: {with_definition_pref_source_count}')
+    print(f'Number of concepts with definition from other sources: {with_definition_other_sources_count}')
 
     print('Deleting unused fields and choosing a canonical name from aliases ... ')
     for concept in concept_details.values():
-        # if a concept doesn't have a canonical name, use the first aliase instead
+        # if a concept doesn't have a canonical name, use the first alias instead
         if 'canonical_name' not in concept:
             aliases = concept['aliases']
             concept['canonical_name'] = aliases[0]
@@ -136,11 +142,21 @@ def main(output_filename, umls_meta_directory):
         if 'is_from_preferred_source' in concept:
             del concept['is_from_preferred_source']
 
-    print('Exporting to the a json file {} ...'.format(output_filename))
-    with open(output_filename, 'w') as fout:
+    print('Exporting to the a json file {} ...'.format(output_path))
+    with open(output_path, 'w') as fout:
         json.dump(list(concept_details.values()), fout)
 
     print('DONE.')
 
-
-plac.call(main, sys.argv[1:])
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--meta_path',
+        help="Path to the META directory of an UMLS release."
+    )
+    parser.add_argument(
+        '--output_path',
+        help="Path to the output json file"
+    )
+    args = parser.parse_args()
+    main(args.meta_path, args.output_path)
