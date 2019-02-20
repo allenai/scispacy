@@ -6,19 +6,39 @@ layout: default
 
 ## Installing
 ```python
-pip install <Mark add package here>
-pip install <add paths to models here.>
+pip install scispacy
+pip install <Model URL>
 ```
 ## Models
 
+| Model          | Description       | Install URL
+|:---------------|:------------------|:----------|
+| en_core_sci_sm | A full spaCy pipeline for biomedical data. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_core_sci_sm-0.1.0.tar.gz)|
+| en_core_sci_md |  A full spaCy pipeline for biomedical data with a larger vocabulary and word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_core_sci_md-0.1.0.tar.gz)|
+| en_ner_craft_md|  A spaCy NER model trained on the CRAFT corpus.|[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_craft_md-0.1.0.tar.gz)|
+| en_ner_jnlpba_md | A spaCy NER model trained on the JNLPBA corpus.| [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_jnlpba_md-0.1.0.tar.gz)|
+| en_ner_bc5cdr_md |  A spaCy NER model trained on the BC5CDR corpus. | [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_bc5cdr_md-0.1.0.tar.gz)|
+| en_ner_bionlp13cg_md |  A spaCy NER model trained on the BIONLP13CG corpus. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_bionlp13cg_md-0.1.0.tar.gz)|
+
+
+
+
 ### Performance
 
-Our models achieve performance within 1% of published state of the art dependency parsers and within 0.2% accuracy of state of the art biomedical POS taggers.
+Our models achieve performance within 2% of published state of the art dependency parsers and within 0.2% accuracy of state of the art biomedical POS taggers.
 
-| model          | UAS | LAS   | POS   | NER | Web UAS
+| model          | UAS | LAS   | POS   | Mentions (F1) | Web UAS | 
 |:---------------|:----|:------|:------|:---|:---|
-| en_core_sci_sm | good| nice  |       |    |    |
-| en_core_sci_md | good| nice  |       |    |    |
+| en_core_sci_sm | 89.69| 87.67  |  98.38  |  68.19  |  85.85  |
+| en_core_sci_md | 90.60| 88.79  |  98.51  |  68.97  |  84.75  |
+
+
+| model          | F1 |   Entity Types|
+|:---------------|:-----|:--------|
+| en_ner_craft_md | 75.78|GGP, SO, TAXON, CHEBI, GO, CL|
+| en_ner_jnlpba_md | 73.48| DNA, CELL_TYPE, CELL_LINE, RNA, PROTEIN |
+| en_ner_bc5cdr_md | 83.62| DISEASE, CHEMICAL|
+| en_ner_bionlp13cg_md | 76.70|CANCER, ORGAN, TISSUE, ORGANISM, CELL, AMINO_ACID, GENE_OR_GENE_PRODUCT, SIMPLE_CHEMICAL, ANATOMICAL_SYSTEM, IMMATERIAL_ANATOMICAL_ENTITY, MULTI-TISSUE_STRUCTURE, DEVELOPING_ANATOMICAL_STRUCTURE, ORGANISM_SUBDIVISION, CELLULAR_COMPONENT|
 
 
 ### Example Usage
