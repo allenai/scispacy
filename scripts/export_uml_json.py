@@ -5,95 +5,26 @@ Convert a umls release to a json file of concepts.
 """
 import json
 import argparse
-
-# preferred definitions (from S2)
-DEF_SOURCES_PREFERRED = {'NCI_BRIDG', 'NCI_NCI-GLOSS', 'NCI', 'GO', 'MSH', 'NCI_FDA'}
+from scispacy import umls_utils
 
 def main(meta_path, output_path):
 
-    concepts_filename = '{}/MRCONSO.RRF'.format(meta_path)
-    types_filename = '{}/MRSTY.RRF'.format(meta_path)
-    definitions_filename = '{}/MRDEF.RRF'.format(meta_path)
-    file_descriptors = '{}/MRFILES.RRF'.format(meta_path)  # to get column names
-
-    concepts_header = types_header = definitions_header = None
-    with open(file_descriptors) as fin:
-        for line in fin:
-            splits = line.split('|')
-            filename = splits[0]
-            column_names = (splits[2] + ',').split(',')  # ugly hack because all files end with an empty column
-            if filename == 'MRCONSO.RRF':
-                concepts_header = column_names
-                print('Headers for MRCONSO.RRF: {}'.format(concepts_header))
-            elif filename == 'MRSTY.RRF':
-                types_header = column_names
-                print('Headers for MRSTY.RRF: {}'.format(types_header))
-            elif filename == 'MRDEF.RRF':
-                definitions_header = column_names
-                print('Headers for MRDEF.RRF: {}'.format(definitions_header))
-
-    if concepts_header is None or  types_header is None or definitions_header is None:
-        print('ERROR .. column names are not found')
-        exit()
-
-    concept_details = {}  # dictionary of concept_id -> concept_dictionary
+    concept_details = {}  # dictionary of concept_id -> {
+                          #                 'concept_id': str,
+                          #                 'canonical_name': str
+                          #                 'aliases': List[str]
+                          #                 'types': List[str]
+                          #                 'definition': str
+                          # }
 
     print('Reading concepts ... ')
-    with open(concepts_filename) as fin:
-        headers = concepts_header
-        for line in fin:
-            splits = line.strip().split('|')
-            assert len(headers) == len(splits)
-            concept = dict(zip(headers, splits))
-            if concept['LAT'] != 'ENG' or concept['SUPPRESS'] != 'N':
-                continue  # Keep English non-suppressed concepts only
-
-            concept_id = concept['CUI']
-            if concept_id not in concept_details:  # a new concept
-                # add it to the dictionary with an empty list of aliases and types
-                concept_details[concept_id] = {'concept_id': concept_id, 'aliases': [], 'types': []}
-
-            concept_name = concept['STR']
-            # this condition is copied from S2. It checks if the concept name is canonical or not
-            is_canonical = concept['ISPREF'] == 'Y' and concept['TS'] == 'P' and concept['STT'] == 'PF'
-
-            if not is_canonical or 'canonical_name' in concept_details[concept_id]:
-                # not a canonical name or a canonical name already found
-                concept_details[concept_id]['aliases'].append(concept_name)  # add it as an alias
-            else:
-                concept_details[concept_id]['canonical_name'] = concept_name  # set as canonical name
+    umls_utils.read_umls_concepts(meta_path, concept_details)
 
     print('Reading types ... ')
-    with open(types_filename) as fin:
-        headers = types_header
-        for line in fin:
-            splits = line.strip().split('|')
-            assert len(headers) == len(splits)
-            concept_type = dict(zip(headers, splits))
-
-            concept = concept_details.get(concept_type['CUI'])
-            if concept is not None:
-                concept['types'].append(concept_type['TUI'])
+    umls_utils.read_umls_types(meta_path, concept_details)
 
     print('Reading definitions ... ')
-    with open(definitions_filename) as fin:
-        headers = definitions_header
-        for line in fin:
-            splits = line.strip().split('|')
-            assert len(headers) == len(splits)
-            definition = dict(zip(headers, splits))
-
-            if definition['SUPPRESS'] != 'N':
-                continue
-            is_from_preferred_source = definition['SAB'] in DEF_SOURCES_PREFERRED
-            concept = concept_details.get(definition['CUI'])
-            if concept is None:
-                continue
-
-            if 'definition' not in concept or  \
-                is_from_preferred_source and concept['is_from_preferred_source'] == 'N':
-                concept['definition'] = definition['DEF']
-                concept['is_from_preferred_source'] = 'Y' if is_from_preferred_source else 'N'
+    umls_utils.read_umls_definitions(meta_path, concept_details)
 
     without_canonical_name_count = 0
     without_aliases_count = 0
