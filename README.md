@@ -15,10 +15,10 @@ Installing scispacy requires two steps: installing the library and intalling the
 pip install scispacy
 ```
 
-to install a model, run:
+to install a model (see our full selection of available models below), run a command like the following:
 
 ```bash
-pip install <model url>
+pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_core_sci_sm-0.1.0.tar.gz
 ```
 
 Note: We strongly recommend that you use an isolated Python environment (such as virtualenv or conda) to install scispacy.
