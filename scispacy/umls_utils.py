@@ -95,7 +95,7 @@ def read_umls_types(meta_path: str, concept_details: Dict):
             concept_type = dict(zip(headers, splits))
 
             concept = concept_details.get(concept_type['CUI'])
-            if concept is not None:
+            if concept is not None:  # a small number of types are for concepts that don't exist
                 concept['types'].append(concept_type['TUI'])
 
 def read_umls_definitions(meta_path: str, concept_details: Dict):
@@ -124,7 +124,7 @@ def read_umls_definitions(meta_path: str, concept_details: Dict):
                 continue
             is_from_preferred_source = definition['SAB'] in DEF_SOURCES_PREFERRED
             concept = concept_details.get(definition['CUI'])
-            if concept is None:
+            if concept is None:  # a small number of definitions are for concepts that don't exist
                 continue
 
             if 'definition' not in concept or  \
