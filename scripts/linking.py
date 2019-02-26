@@ -8,7 +8,7 @@ from collections import defaultdict
 from scispacy import data_util
 
 def normalize(text):
-    return " ".join(sorted(text.lower().split(" ")))
+    return " ".join(text.lower().split(" "))
 
 def linking(entity: data_util.MedMentionEntity, umls_concept_dict_by_name):
     """
