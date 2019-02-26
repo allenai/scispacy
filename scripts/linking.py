@@ -5,83 +5,66 @@ Linking based on simple text normalization and exact matching
 import json
 import argparse
 from collections import defaultdict
+from scispacy import data_util
 
 def normalize(text):
-    normalized = " ".join(sorted(text.lower().split(" ")))
-    return normalized
+    return " ".join(sorted(text.lower().split(" ")))
 
-def main(medmentions_path, umls_path):
+def linking(entity: data_util.MedMentionEntity, umls_concept_dict_by_name):
+    """
+    Links the entity mention and returns umls concept
+    """
+    normalized_mention = normalize(entity.mention_text)
+    concept_candidates = umls_concept_dict_by_name.get(normalized_mention)
+    return None if concept_candidates is None else concept_candidates[0]
 
-    # reading entity information from umls
-    entities_dict_by_id = {}
-    entities_dict_by_name = defaultdict(set)
+def prepare_umls_indices(umls_path: str):
+    """
+    Returns two indices, one by entity id, and one by concept name.
+    """
+    umls_concept_dict_by_id = {}
+    umls_concept_dict_by_name = defaultdict(list)
     with open(umls_path) as f:
-        print('loading entities')
-        entities = json.load(f)
-        print('building indices')
-        for entity in entities:
-            # entity id -> entity object  (UMLS calls them concepts, and MedMentions calls them entities)
-            entities_dict_by_id[entity['concept_id']] = entity
+        print('Loading umls concepts ... ')
+        concepts = json.load(f)
+        print('Building indices ... ')
+        for concept in concepts:
+            # concept id -> concept object  (UMLS calls them concepts, MedMentions calls them entities)
+            umls_concept_dict_by_id[concept['concept_id']] = concept
             # normalized entity name -> entity object  (useful for exact matching)
-            entities_dict_by_name[normalize(entity['canonical_name'])].add(entity['concept_id'])
-    print("entities_dict_by_id", len(entities_dict_by_id))
-    print("entities_dict_by_name", len(entities_dict_by_name))
+            umls_concept_dict_by_name[normalize(concept['canonical_name'])].append(concept)
+    print(f'Number of umls concepts: {len(umls_concept_dict_by_id)}')
+    print(f'Number of unique names: {len(umls_concept_dict_by_name)}')
+    return umls_concept_dict_by_id, umls_concept_dict_by_name
 
-    # abstract ids
-    train_ids = set()
-    dev_ids = set()
-    test_ids = set()
-    print('reading train/dev/test abstract splits of MedMentions')
-    with open(f'{medmentions_path}/corpus_pubtator_pmids_trng.txt') as f:
-        for line in f:
-            train_ids.add(line.strip())
-    with open(f'{medmentions_path}/corpus_pubtator_pmids_dev.txt') as f:
-        for line in f:
-            dev_ids.add(line.strip())
-    with open(f'{medmentions_path}/corpus_pubtator_pmids_test.txt') as f:
-        for line in f:
-            test_ids.add(line.strip())
+def main(medmentions_path: str, umls_path: str):
+
+    umls_concept_dict_by_id, umls_concept_dict_by_name = prepare_umls_indices(umls_path)
+
+    print('Reading corpus ... ')
+    train_examples, dev_examples, test_examples = data_util.read_full_med_mentions(medmentions_path,
+                                                                                   spacy_format=False)
 
     missing_entity_ids = []  # entities in MedMentions but not in UMLS
     found_entity_ids = []  # entities in MedMentions and in UMLS
     entity_correct_links_count = 0  # number of correctly linked entities
     entity_wrong_links_count = 0  # number of wrongly linked entities
     entity_no_links_count = 0  # number of entities that are not linked
-    print('reading corpus')
-
-    # This file is mostly a tsv. Each line is the title, abstract or an entity mention. 
-    # Entity mention lines have the following format:
-    # abstract id, char start offset, char end offset, entity mention, entity type, entity id
-    with open(f'{medmentions_path}/corpus_pubtator.txt') as f:
-        for line in f:
-            if line.strip() == "":
-                continue  # empty line is the start of a new paper
-
-            splits = line.strip().split('\t')
-            if len(splits) == 1:
-                continue  # title or abstract, not used for now
-
-            assert len(splits) == 6
-            paper_id, _, _, mention, gold_entity_type, gold_entity_id = splits
-
-            if paper_id not in dev_ids:  # run only on dev for now 
+    print('Linking ... ')
+    for example in dev_examples:  # only loop over the dev examples for now because we don't have a trained model
+        for entity in example.entities:
+            if entity.umls_id not in umls_concept_dict_by_id:
+                missing_entity_ids.append(entity)
                 continue
+            found_entity_ids.append(entity)
 
-            if gold_entity_id not in entities_dict_by_id:
-                missing_entity_ids.append((mention, gold_entity_type, gold_entity_id))
-                continue
-
-            found_entity_ids.append((mention, gold_entity_type, gold_entity_id))
-
-            # exact match linking
-            normalized_mention = normalize(mention)
-            if normalized_mention in entities_dict_by_name:
-                if gold_entity_id in entities_dict_by_name[normalized_mention]:
-                    entity_correct_links_count += 1
-                else:
-                    entity_wrong_links_count += 1
-            else:
+            predicted_umls_concept = linking(entity, umls_concept_dict_by_name)
+            if predicted_umls_concept is None:
                 entity_no_links_count += 1
+            elif predicted_umls_concept['concept_id'] == entity.umls_id:
+                entity_correct_links_count += 1
+            else:
+                entity_wrong_links_count += 1
 
     print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
     print(f'MedMentions entities found in UMLS: {len(found_entity_ids)}')
@@ -92,12 +75,12 @@ def main(medmentions_path, umls_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--medmentions_path',
-        help="Path to the MedMentions dataset."
+            '--medmentions_path',
+            help="Path to the MedMentions dataset."
     )
     parser.add_argument(
-        '--umls_path',
-        help="Path to the json UMLS release."
+            '--umls_path',
+            help="Path to the json UMLS release."
     )
     args = parser.parse_args()
     main(args.medmentions_path, args.umls_path)
