@@ -15,10 +15,10 @@ Installing scispacy requires two steps: installing the library and intalling the
 pip install scispacy
 ```
 
-to install a model, run:
+to install a model (see our full selection of available models below), run a command like the following:
 
 ```bash
-pip install <model url>
+pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_core_sci_sm-0.1.0.tar.gz
 ```
 
 Note: We strongly recommend that you use an isolated Python environment (such as virtualenv or conda) to install scispacy.
@@ -59,34 +59,30 @@ doc = nlp("Alterations in the hypocretin receptor 2 and preprohypocretin genes p
 
 ## Available Models
 
+To install a model, click on the link below to download the model, and then run 
 
-<table>
-<tr>
-    <td><b> en_core_sci_sm </b></td>
-    <td> A full spaCy pipeline for biomedical data. </td>
-</tr>
-<tr>
-    <td><b> en_core_sci_md </b></td>
-    <td>  A full spaCy pipeline for biomedical data with a larger vocabulary and word vectors. </td>
-</tr>
-<tr>
-    <td><b> en_ner_craft_md </b></td>
-    <td> A spaCy NER model trained on the CRAFT corpus. </td>
-</tr>
-<tr>
-    <td><b> en_ner_jnlpba_md </b></td>
-    <td> A spaCy NER model trained on the JNLPBA corpus. </td>
-</tr>
-<tr>
-    <td><b> en_ner_bc5cdr_md </b></td>
-    <td> A spaCy NER model trained on the BC5CDR corpus. </td>
-</tr>
-<tr>
-    <td><b> en_ner_bionlp13cg_md </b></td>
-    <td> A spaCy NER model trained on the BIONLP13CG</td>
-</tr>
-</table>
+```python
+pip install </path/to/download>
+```
+
+Alternatively, you can install directly from the URL by right-clicking on the link, selecting "Copy Link Address" and running 
+```python
+pip install CMD-V(to paste the copied URL)
+```
+
+| Model          | Description       | Install URL
+|:---------------|:------------------|:----------|
+| en_core_sci_sm | A full spaCy pipeline for biomedical data. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_core_sci_sm-0.1.0.tar.gz)|
+| en_core_sci_md |  A full spaCy pipeline for biomedical data with a larger vocabulary and word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_core_sci_md-0.1.0.tar.gz)|
+| en_ner_craft_md|  A spaCy NER model trained on the CRAFT corpus.|[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_craft_md-0.1.0.tar.gz)|
+| en_ner_jnlpba_md | A spaCy NER model trained on the JNLPBA corpus.| [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_jnlpba_md-0.1.0.tar.gz)|
+| en_ner_bc5cdr_md |  A spaCy NER model trained on the BC5CDR corpus. | [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_bc5cdr_md-0.1.0.tar.gz)|
+| en_ner_bionlp13cg_md |  A spaCy NER model trained on the BIONLP13CG corpus. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_bionlp13cg_md-0.1.0.tar.gz)|
 
 ## Paper on arXiv
 
 Further details about this module can be found in [ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing](https://arxiv.org/abs/1902.07669)
+
+ScispaCy is an open-source project developed by [the Allen Institute for Artificial Intelligence (AI2)](http://www.allenai.org).
+AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
+
