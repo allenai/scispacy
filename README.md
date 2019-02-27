@@ -87,3 +87,6 @@ doc = nlp("Alterations in the hypocretin receptor 2 and preprohypocretin genes p
 </tr>
 </table>
 
+## Paper on arXiv
+
+Further details about this module can be found in [ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing](https://arxiv.org/abs/1902.07669)
