@@ -79,9 +79,15 @@ pip install CMD-V(to paste the copied URL)
 | en_ner_bc5cdr_md |  A spaCy NER model trained on the BC5CDR corpus. | [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_bc5cdr_md-0.1.0.tar.gz)|
 | en_ner_bionlp13cg_md |  A spaCy NER model trained on the BIONLP13CG corpus. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_bionlp13cg_md-0.1.0.tar.gz)|
 
-## Paper on arXiv
+## Citing
 
-Further details about this module can be found in [ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing](https://arxiv.org/abs/1902.07669)
+If you use ScispaCy in your research, please cite [ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing](https://arxiv.org/abs/1902.07669).
+@inproceedings{Neumann2019ScispaCyFA,
+  title={ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing},
+  author={Mark Neumann and Daniel King and Iz Beltagy and Waleed Ammar},
+  year={2019},
+  Eprint={arXiv:1902.07669}
+}
 
 ScispaCy is an open-source project developed by [the Allen Institute for Artificial Intelligence (AI2)](http://www.allenai.org).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
