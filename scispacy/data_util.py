@@ -76,7 +76,8 @@ def read_med_mentions(filename: str):
 
 def read_full_med_mentions(directory_path: str,
                            label_mapping: Dict[str, str] = None,
-                           span_only: bool = False):
+                           span_only: bool = False,
+                           spacy_format: bool = True):
 
     def _cleanup_dir(dir_path: str):
         if os.path.exists(dir_path):
@@ -125,13 +126,13 @@ def read_full_med_mentions(directory_path: str,
         spacy_format_entities = [(x.start, x.end, label_function(x.mention_type)) for x in example.entities]
         spacy_example = (example.text, {"entities": spacy_format_entities})
         if example.pubmed_id in train_ids:
-            train_examples.append(spacy_example)
+            train_examples.append(spacy_example if spacy_format else example)
 
         elif example.pubmed_id in dev_ids:
-            dev_examples.append(spacy_example)
+            dev_examples.append(spacy_example if spacy_format else example)
 
         elif example.pubmed_id in test_ids:
-            test_examples.append(spacy_example)
+            test_examples.append(spacy_example if spacy_format else example)
 
     return train_examples, dev_examples, test_examples
 
