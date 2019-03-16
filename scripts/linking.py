@@ -8,10 +8,11 @@ from collections import defaultdict
 from scispacy import data_util
 import re
 import string
+import datetime
 import spacy
-nlp = spacy.load('en_core_sci_sm', disable=['ner', 'tagger', 'parser'])
-regex_split = re.compile('[%s]' % re.escape(string.punctuation))
-regex_remove_suffix = re.compile('ed$|al$|ment$|ing$|s$|est$|er$|tion$')
+# nlp = spacy.load('en_core_sci_sm', disable=['ner', 'tagger', 'parser'])
+# regex_split = re.compile('[%s]' % re.escape(string.punctuation))
+# regex_remove_suffix = re.compile('ed$|al$|ment$|ing$|s$|est$|er$|tion$')
 from sklearn.neighbors import NearestNeighbors
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -59,7 +60,7 @@ def prepare_umls_indices(umls_path: str):
     print(f'Number of unique names: {len(umls_concept_dict_by_name)}')
     return umls_concept_dict_by_id, umls_concept_dict_by_name
 
-def prepare_tfidf_nn(umls_path: str):
+def prepare_tfidf_nn(umls_path: str, k: int):
     """
     Returns two indices, one by entity id, and one by concept name.
     """
@@ -83,7 +84,7 @@ def prepare_tfidf_nn(umls_path: str):
     tfidf_vec = TfidfVectorizer(analyzer='char', ngram_range=(4,4))
     print('Fitting tfidf vectorizer')
     canonical_names_tfidf = tfidf_vec.fit_transform(canonical_names)
-    nn = NearestNeighbors(n_neighbors=50, n_jobs=-1)
+    nn = NearestNeighbors(n_neighbors=k, n_jobs=10)
     print('Fitting nn')
     nn.fit(canonical_names_tfidf)
     print(f'Number of umls concepts: {len(umls_concept_dict_by_id)}')
@@ -91,10 +92,10 @@ def prepare_tfidf_nn(umls_path: str):
     return umls_concept_dict_by_id, kb, tfidf_vec, nn
 
 
-def main(medmentions_path: str, umls_path: str):
+def main(medmentions_path: str, umls_path: str, k: int):
 
     # umls_concept_dict_by_id, umls_concept_dict_by_name = prepare_umls_indices(umls_path)
-    umls_concept_dict_by_id, kb, tfidf_vec, nn = prepare_tfidf_nn(umls_path)
+    umls_concept_dict_by_id, kb, tfidf_vec, nn = prepare_tfidf_nn(umls_path, k)
 
     print('Reading corpus ... ')
     train_examples, dev_examples, test_examples = data_util.read_full_med_mentions(medmentions_path,
@@ -127,8 +128,12 @@ def main(medmentions_path: str, umls_path: str):
             else:
                 entity_wrong_links_count += 1
                 print(entity.mention_text, " ===> ", umls_concept_dict_by_id[entity.umls_id]['canonical_name'])
-        if i % 100 == 0:
+        if i % 5 == 0:
+            print(datetime.datetime.now())
             print(f' >>>>>>>>>>>>>>>>>>>>  Processed {i} of {len(dev_examples)} examples <<<<<<<<<<<<<<<<<<<<')
+            print('Correct linking: {0:.2f}%'.format(100 * entity_correct_links_count / len(found_entity_ids)))
+            print('Wrong linking: {0:.2f}%'.format(100 * entity_wrong_links_count / len(found_entity_ids)))
+            print('No linking: {0:.2f}%'.format(100 * entity_no_links_count / len(found_entity_ids)))
 
     print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
     print(f'MedMentions entities found in UMLS: {len(found_entity_ids)}')
@@ -147,5 +152,10 @@ if __name__ == "__main__":
             '--umls_path',
             help="Path to the json UMLS release."
     )
+    parser.add_argument(
+            '--k',
+            help="Number of candidates.",
+            type=int
+    )
     args = parser.parse_args()
-    main(args.medmentions_path, args.umls_path)
+    main(args.medmentions_path, args.umls_path, args.k)
