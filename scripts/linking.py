@@ -10,6 +10,11 @@ import re
 import string
 import datetime
 import spacy
+import nmslib
+import numpy as np
+import os.path
+from joblib import dump, load
+
 # nlp = spacy.load('en_core_sci_sm', disable=['ner', 'tagger', 'parser'])
 # regex_split = re.compile('[%s]' % re.escape(string.punctuation))
 # regex_remove_suffix = re.compile('ed$|al$|ment$|ing$|s$|est$|er$|tion$')
@@ -81,12 +86,43 @@ def prepare_tfidf_nn(umls_path: str, k: int):
             canonical_names.append(concept['canonical_name'])
             if i % 100000 == 0:
                 print(f'Processed {i} or {len(concepts)} concepts')
-    tfidf_vec = TfidfVectorizer(analyzer='char', ngram_range=(4,4))
-    print('Fitting tfidf vectorizer')
-    canonical_names_tfidf = tfidf_vec.fit_transform(canonical_names)
-    nn = NearestNeighbors(n_neighbors=k, n_jobs=10)
+                # if i > 0:
+                #     break
+    tfidf_vectorizer_filename = 'data/tfidfvec.joblib'
+    if not os.path.isfile(tfidf_vectorizer_filename):
+        tfidf_vec = TfidfVectorizer(analyzer='char', ngram_range=(4,4))
+        print('Fitting tfidf vectorizer')
+        tfidf_vec.fit(canonical_names)
+        dump(tfidf_vec, tfidf_vectorizer_filename) 
+    tfidf_vec = load(tfidf_vectorizer_filename)
+    canonical_names_tfidf = tfidf_vec.transform(canonical_names)
+    kb = np.array(kb)
+    empty_tfidfs_boolean_flags = np.array(canonical_names_tfidf.sum(axis=1) != 0).reshape(-1,)
+    print(canonical_names_tfidf.shape, sum(empty_tfidfs_boolean_flags), canonical_names_tfidf.shape[0] - sum(empty_tfidfs_boolean_flags))
+    kb = kb[empty_tfidfs_boolean_flags]
+    canonical_names_tfidf = canonical_names_tfidf[empty_tfidfs_boolean_flags]
     print('Fitting nn')
-    nn.fit(canonical_names_tfidf)
+
+    M = 30
+    efC = 100
+    num_threads = 4
+    efS = 100
+
+    index_time_params = {'M': M, 'indexThreadQty': num_threads, 'efConstruction': efC, 'post' : 0}
+    nn = nmslib.init(method='hnsw', space='cosinesimil_sparse', data_type=nmslib.DataType.SPARSE_VECTOR)
+    index_filename = 'data/sparse_index.bin'
+    if not os.path.isfile(index_filename):
+        nn.addDataPointBatch(canonical_names_tfidf)
+        nn.createIndex(index_time_params, print_progress=True)
+        nn.saveIndex(index_filename)
+    nn.addDataPointBatch(canonical_names_tfidf)
+    nn.loadIndex(index_filename)
+    query_time_params = {'efSearch': efS}
+    nn.setQueryTimeParams(query_time_params)
+
+    # nn = NearestNeighbors(n_neighbors=k, n_jobs=10)
+    # print('Fitting nn')
+    # nn.fit(canonical_names_tfidf)
     print(f'Number of umls concepts: {len(umls_concept_dict_by_id)}')
     print(f'Shape of tfidf: {canonical_names_tfidf.shape}')
     return umls_concept_dict_by_id, kb, tfidf_vec, nn
@@ -117,8 +153,12 @@ def main(medmentions_path: str, umls_path: str, k: int):
 
             # predicted_umls_concept_ids = linking(entity, umls_concept_dict_by_name)
             tfidf = tfidf_vec.transform([entity.mention_text])
-            neighbors = nn.kneighbors(tfidf)
-            predicted_umls_concept_ids = set([kb[x]['concept_id'] for x in neighbors[1][0]])
+            if tfidf.nnz > 0:
+                neighbors = nn.knnQueryBatch(tfidf, k=k)
+                # neighbors = nn.kneighbors(tfidf)
+                predicted_umls_concept_ids = set([kb[x]['concept_id'] for x in neighbors[0][0]])
+            else:
+                predicted_umls_concept_ids = []
             # candidate_list_len.append(len(predicted_umls_concept_ids))
             if len(predicted_umls_concept_ids) == 0:
                 entity_no_links_count += 1
@@ -127,6 +167,9 @@ def main(medmentions_path: str, umls_path: str, k: int):
                 entity_correct_links_count += 1
             else:
                 entity_wrong_links_count += 1
+                if entity.mention_text.lower() == umls_concept_dict_by_id[entity.umls_id]['canonical_name'].lower():
+                    import ipdb; ipdb.set_trace()
+
                 print(entity.mention_text, " ===> ", umls_concept_dict_by_id[entity.umls_id]['canonical_name'])
         if i % 5 == 0:
             print(datetime.datetime.now())
@@ -134,6 +177,8 @@ def main(medmentions_path: str, umls_path: str, k: int):
             print('Correct linking: {0:.2f}%'.format(100 * entity_correct_links_count / len(found_entity_ids)))
             print('Wrong linking: {0:.2f}%'.format(100 * entity_wrong_links_count / len(found_entity_ids)))
             print('No linking: {0:.2f}%'.format(100 * entity_no_links_count / len(found_entity_ids)))
+            if i >= 20:
+                break
 
     print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
     print(f'MedMentions entities found in UMLS: {len(found_entity_ids)}')
