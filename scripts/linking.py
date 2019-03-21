@@ -214,8 +214,17 @@ def main(medmentions_path: str, umls_path: str, k: int, ann: bool, test_size: in
     tfidfs = tfidf_vec.transform(mention_texts)
     empty_tfidfs_boolean_flags = np.array(tfidfs.sum(axis=1) != 0).reshape(-1,)
     entity_no_links_count = tfidfs.shape[0] - sum(empty_tfidfs_boolean_flags)
-    umls_ids = np.array(umls_ids)[empty_tfidfs_boolean_flags]
+
+    umls_ids = np.array(umls_ids)
+    mention_texts = np.array(mention_texts)
+    deleted_umls_ids = umls_ids[empty_tfidfs_boolean_flags == False]
+    deleted_mention_texts = mention_texts[empty_tfidfs_boolean_flags == False]
+    for mention_text, umls_id in zip(deleted_mention_texts, deleted_umls_ids):
+        print(mention_text, " ===> ", umls_concept_dict_by_id[umls_id]['canonical_name'])
+
+    umls_ids = umls_ids[empty_tfidfs_boolean_flags]
     tfidfs = tfidfs[empty_tfidfs_boolean_flags]
+    mention_texts = mention_texts[empty_tfidfs_boolean_flags]
 
     print('neighbors')
     a = datetime.datetime.now()
@@ -229,7 +238,7 @@ def main(medmentions_path: str, umls_path: str, k: int, ann: bool, test_size: in
         predicted_umls_concept_ids = set([kb[x]['concept_id'] for x in n])
         if len(predicted_umls_concept_ids) == 0:
             entity_no_links_count += 1
-            # print(mention_text, " ===> ", umls_concept_dict_by_id[umls_id]['canonical_name'])
+            print(mention_text, " ===> ", umls_concept_dict_by_id[umls_id]['canonical_name'])
         elif umls_id in predicted_umls_concept_ids:
             entity_correct_links_count += 1
         else:
@@ -237,7 +246,7 @@ def main(medmentions_path: str, umls_path: str, k: int, ann: bool, test_size: in
             # if entity.mention_text.lower() == umls_concept_dict_by_id[entity.umls_id]['canonical_name'].lower():
             #     import ipdb; ipdb.set_trace()
 
-            #  print(mention_text, " >>>> ", umls_concept_dict_by_id[umls_id]['canonical_name'])
+            print(mention_text, " >>>> ", umls_concept_dict_by_id[umls_id]['canonical_name'])
 
     print('time: ', c.total_seconds())
 
