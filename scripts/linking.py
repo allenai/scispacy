@@ -196,12 +196,12 @@ def main(medmentions_path: str, umls_path: str, ann_index_path: str, tfidf_vecto
         gold_canonical_name = umls_concept_dict_by_id[gold_umls_id]['canonical_name']
         if len(candidate_neighbor_ids) == 0:
             entity_no_links_count += 1
-            print(f'No candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
+            # print(f'No candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
         elif gold_umls_id in candidate_neighbor_ids:
             entity_correct_links_count += 1
         else:
             entity_wrong_links_count += 1
-            print(f'Wrong candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
+            # print(f'Wrong candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
 
 
     print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
