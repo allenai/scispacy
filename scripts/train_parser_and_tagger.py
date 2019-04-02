@@ -162,7 +162,7 @@ def train_parser_and_tagger(train_json_path: str,
         if scorer.scores["uas"] > best_epoch_uas:
             best_epoch_uas = scorer.scores["uas"]
             best_epoch = i
-	    progress = _get_progress(
+        progress = _get_progress(
             i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps
         )
         msg.row(progress, **row_settings)
