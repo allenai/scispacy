@@ -1,6 +1,4 @@
-FROM python:3.6.4-jessie
-
-# set env variables
+FROM python:3.6.4-stretch
 
 # install base packages
 RUN apt-get clean \
