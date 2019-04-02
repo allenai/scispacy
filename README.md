@@ -23,7 +23,7 @@ pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/e
 
 Note: We strongly recommend that you use an isolated Python environment (such as virtualenv or conda) to install scispacy.
 Take a look below in the "Setting up a virtual environment" section if you need some help with this.
-Additionally, scispacy uses modern features of Python and as such is only available for **Python 3.5 or greater**.
+Additionally, scispacy uses modern features of Python and as such is only available for **Python 3.6 or greater**.
 
 
 
