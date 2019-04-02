@@ -153,7 +153,7 @@ def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
 
     return uml_concept_ids, tfidf_vectorizer, ann_index
 
-def main(medmentions_path: str, umls_path: str, ann_index_path: str, tfidf_vectorizer_path: str, k: int):
+def main(medmentions_path: str, umls_path: str, ann_index_path: str, tfidf_vectorizer_path: str, ks: str):
 
     umls_concept_list = load_umls_kb(umls_path)
     umls_concept_dict_by_id = dict((c['concept_id'], c) for c in umls_concept_list)
@@ -186,30 +186,33 @@ def main(medmentions_path: str, umls_path: str, ann_index_path: str, tfidf_vecto
             gold_umls_ids.append(entity.umls_id)
             continue
 
-    entity_correct_links_count = 0  # number of correctly linked entities
-    entity_wrong_links_count = 0  # number of wrongly linked entities
-    entity_no_links_count = 0  # number of entities that are not linked
+    k_list = [int(k) for k in args.ks.split(',')]
+    for k in k_list:
+        print(f'for k = {k}')
+        entity_correct_links_count = 0  # number of correctly linked entities
+        entity_wrong_links_count = 0  # number of wrongly linked entities
+        entity_no_links_count = 0  # number of entities that are not linked
 
-    candidate_neighbor_ids = generate_candidates(mention_texts, k, tfidf_vectorizer, ann_index, ann_concept_id_list)
+        candidate_neighbor_ids = generate_candidates(mention_texts, k, tfidf_vectorizer, ann_index, ann_concept_id_list)
 
-    for mention_text, gold_umls_id, candidate_neighbor_ids in zip(mention_texts, gold_umls_ids, candidate_neighbor_ids):
-        gold_canonical_name = umls_concept_dict_by_id[gold_umls_id]['canonical_name']
-        if len(candidate_neighbor_ids) == 0:
-            entity_no_links_count += 1
-            # print(f'No candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
-        elif gold_umls_id in candidate_neighbor_ids:
-            entity_correct_links_count += 1
-        else:
-            entity_wrong_links_count += 1
-            # print(f'Wrong candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
+        for mention_text, gold_umls_id, candidate_neighbor_ids in zip(mention_texts, gold_umls_ids, candidate_neighbor_ids):
+            gold_canonical_name = umls_concept_dict_by_id[gold_umls_id]['canonical_name']
+            if len(candidate_neighbor_ids) == 0:
+                entity_no_links_count += 1
+                # print(f'No candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
+            elif gold_umls_id in candidate_neighbor_ids:
+                entity_correct_links_count += 1
+            else:
+                entity_wrong_links_count += 1
+                # print(f'Wrong candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
 
 
-    print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
-    print(f'MedMentions entities found in UMLS: {len(found_entity_ids)}')
-    print(f'K: {k}')
-    print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(found_entity_ids)))
-    print('Gold concept not in candidates: {0:.2f}%'.format(100 * entity_wrong_links_count / len(found_entity_ids)))
-    print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(found_entity_ids)))
+        print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
+        print(f'MedMentions entities found in UMLS: {len(found_entity_ids)}')
+        print(f'K: {k}')
+        print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(found_entity_ids)))
+        print('Gold concept not in candidates: {0:.2f}%'.format(100 * entity_wrong_links_count / len(found_entity_ids)))
+        print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(found_entity_ids)))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -230,10 +233,9 @@ if __name__ == "__main__":
             help='Path to sklearn tfidf char-ngram vectorizer.'
     )
     parser.add_argument(
-            '--k',
-            help='Number of candidates.',
-            type=int
+            '--ks',
+            help='Comma separated list of number of candidates.',
     )
 
     args = parser.parse_args()
-    main(args.medmentions_path, args.umls_path, args.ann_index_path, args.tfidf_vectorizer_path, args.k)
+    main(args.medmentions_path, args.umls_path, args.ann_index_path, args.tfidf_vectorizer_path, args.ks)
