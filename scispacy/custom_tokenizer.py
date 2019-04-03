@@ -6,8 +6,6 @@ from spacy.tokenizer import Tokenizer # pylint: disable-msg=E0611,E0401
 from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 from spacy.language import Language
 
-from collections import OrderedDict
-
 from scispacy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 
 def remove_new_lines(text: str) -> str:
