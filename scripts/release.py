@@ -46,7 +46,7 @@ def run_prerelease_checks(release: str):
     for line in remote_output.split("\n"):
         if line.strip():
             upstream_name, url, fetch_push = line.split()
-            if fetch_push == "(push)" and (("allenai/SciSpaCy" in url) and ("github.com" in url)):
+            if fetch_push == "(push)" and (("allenai/scispacy" in url) and ("github.com" in url)):
                     break
     else:
         # Never found a remote pointing at the right repo
