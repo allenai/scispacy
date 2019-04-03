@@ -1,7 +1,7 @@
 """
 Linking using char-n-gram with approximate nearest neighbors.
 """
-from typing import List
+from typing import List, Dict, Tuple
 import json
 import argparse
 import os.path
@@ -10,11 +10,13 @@ import numpy as np
 from joblib import dump, load
 from sklearn.feature_extraction.text import TfidfVectorizer
 import nmslib
+from nmslib.dist import FloatIndex
 from scispacy import data_util
 
-def load_umls_kb(umls_path: str):
+def load_umls_kb(umls_path: str) -> List[Dict]:
     """
-    Returns a list of concept object
+    Reads a UMLS json release and return it as a list of concepts.
+    Each concept is a dictionary.
     """
     with open(umls_path) as f:
         print(f'Loading umls concepts from {umls_path}')
@@ -22,13 +24,23 @@ def load_umls_kb(umls_path: str):
     print(f'Number of umls concepts: {len(umls_concept_list)}')
     return umls_concept_list
 
-def nmslis_knn_with_zero_vectors(vectors, k, ann_index):
+def nmslis_knn_with_zero_vectors(vectors: np.ndarray, k: int, ann_index: FloatIndex) -> List[List]:
+    """ ann_index.knnQueryBatch crashes if any of the vectors is all zeros.
+    This function is a wrapper around `ann_index.knnQueryBatch` that solves this problem. It works as follows:
+    - remove empty vectors from `vectors`
+    - call `ann_index.knnQueryBatch` with the non-empty vectors only. This returns `neighbors`,
+    a list of list of neighbors. `len(neighbors)` equals the length of the non-empty vectors.
+    - extend the list `neighbors` with `None`s in place of empty vectors.
+    - return the extended list of neighbors
+    """
     empty_vectors_boolean_flags = np.array(vectors.sum(axis=1) != 0).reshape(-1,)
     empty_vectors_count = vectors.shape[0] - sum(empty_vectors_boolean_flags)
     print(f'Number of empty vectors: {empty_vectors_count}')
 
     # remove empty vectors before calling `ann_index.knnQueryBatch`
     vectors = vectors[empty_vectors_boolean_flags]
+
+    # call `knnQueryBatch` to get neighbors
     neighbors = [x[0].tolist() for x in ann_index.knnQueryBatch(vectors, k=k)]
 
     # all an empty list in place for each empty vector to make sure len(extended_neighbors) == len(vectors)
@@ -45,7 +57,8 @@ def nmslis_knn_with_zero_vectors(vectors, k, ann_index):
 
     return extended_neighbors
 
-def generate_candidates(mention_texts, k, tfidf_vectorizer, ann_index, ann_concept_id_list):
+def generate_candidates(mention_texts: List[str], k: int, tfidf_vectorizer: TfidfVectorizer,
+                        ann_index: FloatIndex, ann_concept_id_list: List[int]) -> List[List[int]]:
     """Given a list of mention texts, returns a list of candidate neighbors
     args:
         mention_texts: list of mention texts
@@ -57,6 +70,9 @@ def generate_candidates(mention_texts, k, tfidf_vectorizer, ann_index, ann_conce
     print(f'Generating candidates for {len(mention_texts)} mentions')
     tfidfs = tfidf_vectorizer.transform(mention_texts)
     start_time = datetime.datetime.now()
+
+    # `ann_index.knnQueryBatch` crashes if one of the vectors is all zeros.
+    # `nmslis_knn_with_zero_vectors` is a wrapper around `ann_index.knnQueryBatch` that addresses this issue.
     neighbors = nmslis_knn_with_zero_vectors(tfidfs, k, ann_index)
     end_time = datetime.datetime.now()
     total_time = end_time - start_time
@@ -69,7 +85,8 @@ def generate_candidates(mention_texts, k, tfidf_vectorizer, ann_index, ann_conce
         neighbors_by_concept_ids.append(predicted_umls_concept_ids)
     return neighbors_by_concept_ids
 
-def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str, umls_concept_list: List):
+def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
+                                umls_concept_list: List) -> Tuple[List[int], TfidfVectorizer, FloatIndex]:
     """
     Build or load tfidf vectorizer and ann index
     """
@@ -104,31 +121,37 @@ def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
     tfidf_vectorizer = load(tfidf_vectorizer_path)
     print(f'Vectorizing aliases ... ')
     start_time = datetime.datetime.now()
-    uml_concept_aliase_tfidfs = tfidf_vectorizer.transform(uml_concept_aliases)
+    uml_concept_alias_tfidfs = tfidf_vectorizer.transform(uml_concept_aliases)
     end_time = datetime.datetime.now()
     total_time = (end_time - start_time)
     print(f'Vectorizing aliases took {total_time.total_seconds()} seconds')
 
     # find empty (all zeros) tfidf vectors
-    empty_tfidfs_boolean_flags = np.array(uml_concept_aliase_tfidfs.sum(axis=1) != 0).reshape(-1,)
+    empty_tfidfs_boolean_flags = np.array(uml_concept_alias_tfidfs.sum(axis=1) != 0).reshape(-1,)
     deleted_aliases = uml_concept_aliases[empty_tfidfs_boolean_flags == False]
-    number_of_none_empty_tfidfs = len(deleted_aliases)
-    total_number_of_tfidfs = uml_concept_aliase_tfidfs.shape[0]
-    print(f'Deleting {number_of_none_empty_tfidfs}/{total_number_of_tfidfs} aliases because their tfidf is empty')
+    number_of_non_empty_tfidfs = len(deleted_aliases)
+    total_number_of_tfidfs = uml_concept_alias_tfidfs.shape[0]
+    print(f'Deleting {number_of_non_empty_tfidfs}/{total_number_of_tfidfs} aliases because their tfidf is empty')
 
     # remove empty tfidf vectors, otherwise nmslib will crashd
     uml_concept_ids = uml_concept_ids[empty_tfidfs_boolean_flags]
     uml_concept_aliases = uml_concept_aliases[empty_tfidfs_boolean_flags]
-    uml_concept_aliase_tfidfs = uml_concept_aliase_tfidfs[empty_tfidfs_boolean_flags]
+    uml_concept_alias_tfidfs = uml_concept_alias_tfidfs[empty_tfidfs_boolean_flags]
     print(deleted_aliases)
     assert len(uml_concept_ids) == len(uml_concept_aliases)
-    assert len(uml_concept_ids) == uml_concept_aliase_tfidfs.shape[0]
+    assert len(uml_concept_ids) == uml_concept_alias_tfidfs.shape[0]
 
     # nmslib hyperparameters (very important)
-    M = 100
-    efC = 2000
-    num_threads = 60
-    efS = 1000
+    # guide: https://github.com/nmslib/nmslib/blob/master/python_bindings/parameters.md
+    # default values resulted in very low recall
+    M = 100  # set to the maximum recommended value. Improves recall at the expense of longer indexing time
+    efC = 2000  # `C` for Construction. Set to the maximum recommended value
+                # Improves recall at the expense of longer indexing time
+    efS = 1000  # `S` for Search. This controls performance at query time. Maximum recommended value is 2000.
+                # It makes the query slow without significant gain in recall.
+
+    num_threads = 60  # set based on the machine
+
     index_params = {'M': M, 'indexThreadQty': num_threads, 'efConstruction': efC, 'post' : 0}
 
     if not os.path.isfile(ann_index_path):
@@ -137,7 +160,7 @@ def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
 
         start_time = datetime.datetime.now()
         ann_index = nmslib.init(method='hnsw', space='cosinesimil_sparse', data_type=nmslib.DataType.SPARSE_VECTOR)
-        ann_index.addDataPointBatch(uml_concept_aliase_tfidfs)
+        ann_index.addDataPointBatch(uml_concept_alias_tfidfs)
         ann_index.createIndex(index_params, print_progress=True)
         ann_index.saveIndex(ann_index_path)
         end_time = datetime.datetime.now()
@@ -146,7 +169,7 @@ def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
 
     print(f'Loading ann index from {ann_index_path}')
     ann_index = nmslib.init(method='hnsw', space='cosinesimil_sparse', data_type=nmslib.DataType.SPARSE_VECTOR)
-    ann_index.addDataPointBatch(uml_concept_aliase_tfidfs)
+    ann_index.addDataPointBatch(uml_concept_alias_tfidfs)
     ann_index.loadIndex(ann_index_path)
     query_time_params = {'efSearch': efS}
     ann_index.setQueryTimeParams(query_time_params)
@@ -186,7 +209,7 @@ def main(medmentions_path: str, umls_path: str, ann_index_path: str, tfidf_vecto
             gold_umls_ids.append(entity.umls_id)
             continue
 
-    k_list = [int(k) for k in args.ks.split(',')]
+    k_list = [int(k) for k in ks.split(',')]
     for k in k_list:
         print(f'for k = {k}')
         entity_correct_links_count = 0  # number of correctly linked entities
