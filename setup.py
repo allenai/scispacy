@@ -41,7 +41,7 @@ setup(
     packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     license="Apache",
     install_requires=[
-        "spacy==2.0.18",
+        "spacy==2.1.3",
         "awscli",
         "conllu",
         "numpy"
@@ -52,5 +52,5 @@ setup(
         "pylint",
         "mypy"
         ],
-    python_requires='>=3.5.0',
+    python_requires='>=3.6.0',
 )
