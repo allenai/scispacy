@@ -92,8 +92,8 @@ def combined_rule_tokenizer(nlp: Language) -> Tokenizer:
                  # previously the lookbehind was (^[0-9]+)
                  r'(?<=[0-9])(?:{u})'.format(u=char_classes.UNITS),
                  r'(?<=[0-9{}{}(?:{})])\.'.format(char_classes.ALPHA_LOWER,
-                                                   r'%²\-\)\]\+',
-                                                   "|".join(quotes)),
+                                                  r'%²\-\)\]\+',
+                                                  "|".join(quotes)),
                  # add |\d to split off the period of a sentence that ends with 1D.
                  r'(?<=[{a}|\d][{a}])\.'.format(a=char_classes.ALPHA_UPPER)
                  ])
