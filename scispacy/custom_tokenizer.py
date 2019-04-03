@@ -6,6 +6,8 @@ from spacy.tokenizer import Tokenizer # pylint: disable-msg=E0611,E0401
 from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 from spacy.language import Language
 
+from collections import OrderedDict
+
 from scispacy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 
 def remove_new_lines(text: str) -> str:
@@ -57,7 +59,7 @@ def combined_rule_tokenizer(nlp: Language) -> Tokenizer:
                char_classes.LIST_ICONS +
                [r'×', # added this special x character to tokenize it separately
                 r'(?<=[0-9])[+\-\*^](?=[0-9-])',
-                r'(?<=[{}])\.(?=[{}])'.format(char_classes.ALPHA_LOWER, char_classes.ALPHA_UPPER),
+                r'(?<=[{al}])\.(?=[{au}])'.format(al=char_classes.ALPHA_LOWER, au=char_classes.ALPHA_UPPER),
                 r'(?<=[{a}]),(?=[{a}])'.format(a=char_classes.ALPHA),
                 r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=char_classes.ALPHA, h=hyphens),
                 # removed / to prevent tokenization of /
@@ -66,29 +68,35 @@ def combined_rule_tokenizer(nlp: Language) -> Tokenizer:
     prefixes = combined_rule_prefixes()
 
     # add the last apostrophe
-    quotes = char_classes.QUOTES.replace('|', ' ') + " ’"
+    quotes = char_classes.LIST_QUOTES.copy() + ["’"]
 
     # add lookbehind assertions for brackets (may not work properly for unbalanced brackets)
     suffix_punct = char_classes.PUNCT.replace('|', ' ')
-    suffix_punct = suffix_punct.replace(r"\)", r"(?<!\S+\([^\)\s]+)\)")
-    suffix_punct = suffix_punct.replace(r"\]", r"(?<!\S+\[[^\]\s]+)\]")
-    suffix_punct = suffix_punct.replace(r"\}", r"(?<!\S+\{[^\}\s]+)\}")
+    # These lookbehinds are commented out because they are variable width lookbehinds, and as of spacy 2.1,
+    # spacy uses the re package instead of the regex package. The re package does not support variable width
+    # lookbehinds. Hacking spacy internals to allow us to use the regex package is doable, but would require
+    # creating our own instance of the language class, with our own Tokenizer class, with the from_bytes method
+    # using the regex package instead of the re package
+    # suffix_punct = suffix_punct.replace(r"\)", r"(?<!\S+\([^\)\s]+)\)")
+    # suffix_punct = suffix_punct.replace(r"\]", r"(?<!\S+\[[^\]\s]+)\]")
+    # suffix_punct = suffix_punct.replace(r"\}", r"(?<!\S+\{[^\}\s]+)\}")
 
     suffixes = (char_classes.split_chars(suffix_punct) +
                 char_classes.LIST_ELLIPSES +
-                char_classes.split_chars(quotes) +
+                quotes +
                 char_classes.LIST_ICONS +
                 ["'s", "'S", "’s", "’S", "’s", "’S"] +
                 [r'(?<=[0-9])\+',
                  r'(?<=°[FfCcKk])\.',
                  r'(?<=[0-9])(?:{})'.format(char_classes.CURRENCY),
-                 # add to look behind to exclude things like h3g from splitting off the g as a unit
-                 r'(?<=(^[0-9]+|\s{p}*[0-9]+))(?:{u})'.format(u=char_classes.UNITS, p=prefixes),
+                 r'(?<=^[0-9])(?:{u})'.format(u=char_classes.UNITS),
                  r'(?<=[0-9{}{}(?:{})])\.'.format(char_classes.ALPHA_LOWER,
-                                                  r'%²\-\)\]\+',
-                                                  char_classes.merge_chars(quotes)),
+                                                   r'%²\-\)\]\+',
+                                                   "|".join(quotes)),
                  # add |\d to split off the period of a sentence that ends with 1D.
-                 r'(?<=[{a}|\d][{a}])\.'.format(a=char_classes.ALPHA_UPPER)])
+                 r'(?<=[{a}|\d][{a}])\.'.format(a=char_classes.ALPHA_UPPER)
+                 ])
+
     infix_re = compile_infix_regex(infixes)
     prefix_re = compile_prefix_regex(prefixes)
     suffix_re = compile_suffix_regex(suffixes)
