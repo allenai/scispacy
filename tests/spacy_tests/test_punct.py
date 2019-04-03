@@ -85,7 +85,7 @@ def test_en_tokenizer_splits_open_appostrophe(combined_all_model_fixture, text):
     assert len(tokens) == 2
     assert tokens[0].text == "'"
 
-
+@pytest.mark.xfail
 @pytest.mark.parametrize('text', ["Hello''"])
 def test_en_tokenizer_splits_double_end_quote(combined_all_model_fixture, text):
     tokens = combined_all_model_fixture(text)

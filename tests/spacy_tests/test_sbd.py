@@ -9,9 +9,9 @@ import spacy
 
 @pytest.mark.parametrize('text', ["A test sentence"])
 @pytest.mark.parametrize('punct', ['.', '!', '?', ''])
-def test_en_sbd_single_punct(combined_all_model_fixture, text, punct):
+def test_en_sbd_single_punct(en_with_combined_rule_tokenizer_and_segmenter_fixture, text, punct):
     heads = [2, 1, 0, -1] if punct else [2, 1, 0]
-    tokens = combined_all_model_fixture(text + punct)
+    tokens = en_with_combined_rule_tokenizer_and_segmenter_fixture(text + punct)
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
     assert len(doc) == 4 if punct else 3
     assert len(list(doc.sents)) == 1
@@ -19,7 +19,7 @@ def test_en_sbd_single_punct(combined_all_model_fixture, text, punct):
 
 
 @pytest.mark.xfail
-def test_en_sentence_breaks(combined_all_model_fixture, en_parser):
+def test_en_sentence_breaks(en_with_combined_rule_tokenizer_and_segmenter_fixture, en_parser):
     text = "This is a sentence . This is another one ."
     heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3]
     deps = ['nsubj', 'ROOT', 'det', 'attr', 'punct', 'nsubj', 'ROOT', 'det',
@@ -27,7 +27,7 @@ def test_en_sentence_breaks(combined_all_model_fixture, en_parser):
     transition = ['L-nsubj', 'S', 'L-det', 'R-attr', 'D', 'R-punct', 'B-ROOT',
                   'L-nsubj', 'S', 'L-attr', 'R-attr', 'D', 'R-punct']
 
-    tokens = combined_all_model_fixture(text)
+    tokens = en_with_combined_rule_tokenizer_and_segmenter_fixture(text)
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
     apply_transition_sequence(en_parser, doc, transition)
 
@@ -42,7 +42,7 @@ def test_en_sentence_breaks(combined_all_model_fixture, en_parser):
 
 @pytest.mark.xfail
 @pytest.mark.models('en')
-def test_en_sbd_serialization_projective(combined_all_model_fixture):
+def test_en_sbd_serialization_projective(en_with_combined_rule_tokenizer_and_segmenter_fixture):
     """Test that before and after serialization, the sentence boundaries are
     the same."""
 
@@ -51,7 +51,7 @@ def test_en_sbd_serialization_projective(combined_all_model_fixture):
                   'B-ROOT', 'L-nsubj', 'R-neg', 'D', 'S', 'L-advmod',
                   'R-acomp', 'D', 'R-punct']
 
-    doc = combined_all_model_fixture.tokenizer(text)
+    doc = en_with_combined_rule_tokenizer_and_segmenter_fixture.tokenizer(text)
     apply_transition_sequence(en_with_combined_rule_tokenizer_fixture.parser, doc, transition)
     doc_serialized = Doc(en_with_combined_rule_tokenizer_fixture.vocab).from_bytes(doc.to_bytes())
     assert doc.is_parsed == True
@@ -123,9 +123,9 @@ TEST_CASES = [
 ]
 
 @pytest.mark.parametrize('text,expected_sents', TEST_CASES)
-def test_en_sbd_prag(combined_all_model_fixture, text, expected_sents):
+def test_en_sbd_prag(en_with_combined_rule_tokenizer_and_segmenter_fixture, text, expected_sents):
     """SBD tests from Pragmatic Segmenter"""
-    doc = combined_all_model_fixture(text)
+    doc = en_with_combined_rule_tokenizer_and_segmenter_fixture(text)
     sents = []
     for sent in doc.sents:
         sents.append(''.join(doc[i].string for i in range(sent.start, sent.end)).strip())

@@ -6,9 +6,10 @@ import shutil
 from tqdm import tqdm
 from spacy import util
 from timeit import default_timer as timer
-from spacy.cli.train import print_progress
+from spacy.cli.train import _get_progress
 from spacy.vocab import Vocab
 from spacy.gold import GoldCorpus
+from wasabi import Printer
 import argparse
 import json
 import random
@@ -36,6 +37,8 @@ def train_parser_and_tagger(train_json_path: str,
        @param ontonotes_path: path to the directory containnig ontonotes in spacy format (optional)
        @param ontonotes_train_percent: percentage of the ontonotes training data to use (optional)
     """
+    msg = Printer()
+
     train_json_path = cached_path(train_json_path)
     dev_json_path = cached_path(dev_json_path)
     test_json_path = cached_path(test_json_path)
@@ -96,16 +99,27 @@ def train_parser_and_tagger(train_json_path: str,
         optimizer = nlp.begin_training(lambda: train_corpus.train_tuples)
     nlp._optimizer = None
 
-    train_docs = train_corpus.train_docs(nlp, projectivize=True)
+    train_docs = train_corpus.train_docs(nlp)
     train_docs = list(train_docs)
 
     train_mixture = train_docs
     if ontonotes_path:
-        onto_train_docs = onto_train_corpus.train_docs(nlp, projectivize=True)
+        onto_train_docs = onto_train_corpus.train_docs(nlp)
         onto_train_docs = list(onto_train_docs)
         num_onto_docs = int(float(ontonotes_train_percent)*len(onto_train_docs))
         randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
         train_mixture += randomly_sampled_onto
+
+    row_head = ("Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS")
+    row_settings = {
+        "widths": (3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7),
+        "aligns": tuple(["r" for i in row_head]),
+        "spacing": 2
+    }
+
+    print("")
+    msg.row(row_head, **row_settings)
+    msg.row(["-" * width for width in row_settings["widths"]], **row_settings)
 
     best_epoch = 0
     best_epoch_uas = 0.0
@@ -148,9 +162,16 @@ def train_parser_and_tagger(train_json_path: str,
         if scorer.scores["uas"] > best_epoch_uas:
             best_epoch_uas = scorer.scores["uas"]
             best_epoch = i
-        print_progress(i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps)
+        progress = _get_progress(
+            i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps
+        )
+        msg.row(progress, **row_settings)
+
         if ontonotes_path:
-            print_progress(i, losses, onto_scorer.scores, cpu_wps=0, gpu_wps=0)
+            progress = _get_progress(
+                i, losses, onto_scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps
+            )
+            msg.row(progress, **row_settings)
 
     # save final model and output results on the test set
     final_model_path = os.path.join(model_output_dir, "best")
