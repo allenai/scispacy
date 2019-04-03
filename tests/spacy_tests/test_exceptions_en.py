@@ -76,7 +76,7 @@ def test_en_tokenizer_excludes_ambiguous(combined_all_model_fixture, exc):
     assert len(tokens) == 1
 
 
-@pytest.mark.parametrize('wo_punct,w_punct', [("We've", "``We've"), ("couldn't", "couldn't)")])
+@pytest.mark.parametrize('wo_punct,w_punct', [("We've", "`We've"), ("couldn't", "couldn't)")])
 def test_en_tokenizer_splits_defined_punct(combined_all_model_fixture, wo_punct, w_punct):
     tokens = combined_all_model_fixture(wo_punct)
     assert len(tokens) == 2

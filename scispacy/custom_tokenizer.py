@@ -87,7 +87,10 @@ def combined_rule_tokenizer(nlp: Language) -> Tokenizer:
                 [r'(?<=[0-9])\+',
                  r'(?<=°[FfCcKk])\.',
                  r'(?<=[0-9])(?:{})'.format(char_classes.CURRENCY),
-                 r'(?<=^[0-9])(?:{u})'.format(u=char_classes.UNITS),
+                 # this is another place where we used a variable width lookbehind
+                 # so now things like 'H3g' will be tokenized as ['H3', 'g']
+                 # previously the lookbehind was (^[0-9]+)
+                 r'(?<=[0-9])(?:{u})'.format(u=char_classes.UNITS),
                  r'(?<=[0-9{}{}(?:{})])\.'.format(char_classes.ALPHA_LOWER,
                                                    r'%²\-\)\]\+',
                                                    "|".join(quotes)),
