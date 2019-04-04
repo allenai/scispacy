@@ -57,6 +57,9 @@ nlp = spacy.load("en_core_sci_sm")
 doc = nlp("Alterations in the hypocretin receptor 2 and preprohypocretin genes produce narcolepsy in some animals.")
 ```
 
+#### Note on upgrading
+If you are upgrading `scispacy`, you will need to download the models again, to get the model versions compatible with the version of `scispacy` that you have. The link to the model that you download should contain the version number of `scispacy` that you have.
+
 ## Available Models
 
 To install a model, click on the link below to download the model, and then run 
