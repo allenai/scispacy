@@ -25,20 +25,20 @@ pip install <Model URL>
 
 ### Performance
 
-Our models achieve performance within 2% of published state of the art dependency parsers and within 0.2% accuracy of state of the art biomedical POS taggers.
+Our models achieve performance within 3% of published state of the art dependency parsers and within 0.4% accuracy of state of the art biomedical POS taggers.
 
 | model          | UAS | LAS   | POS   | Mentions (F1) | Web UAS | 
 |:---------------|:----|:------|:------|:---|:---|
-| en_core_sci_sm | 89.69| 87.67  |  98.38  |  68.19  |  85.85  |
-| en_core_sci_md | 90.60| 88.79  |  98.51  |  68.97  |  84.75  |
+| en_core_sci_sm | 89.47| 87.61  |  98.42  |  67.57  |  85.48  |
+| en_core_sci_md | 89.94| 88.08  |  98.61  |  69.26  |  86.70  |
 
 
 | model          | F1 |   Entity Types|
 |:---------------|:-----|:--------|
-| en_ner_craft_md | 75.78|GGP, SO, TAXON, CHEBI, GO, CL|
-| en_ner_jnlpba_md | 73.48| DNA, CELL_TYPE, CELL_LINE, RNA, PROTEIN |
-| en_ner_bc5cdr_md | 83.62| DISEASE, CHEMICAL|
-| en_ner_bionlp13cg_md | 76.70|CANCER, ORGAN, TISSUE, ORGANISM, CELL, AMINO_ACID, GENE_OR_GENE_PRODUCT, SIMPLE_CHEMICAL, ANATOMICAL_SYSTEM, IMMATERIAL_ANATOMICAL_ENTITY, MULTI-TISSUE_STRUCTURE, DEVELOPING_ANATOMICAL_STRUCTURE, ORGANISM_SUBDIVISION, CELLULAR_COMPONENT|
+| en_ner_craft_md | 77.55|GGP, SO, TAXON, CHEBI, GO, CL|
+| en_ner_jnlpba_md | 74.23| DNA, CELL_TYPE, CELL_LINE, RNA, PROTEIN |
+| en_ner_bc5cdr_md | 84.60| DISEASE, CHEMICAL|
+| en_ner_bionlp13cg_md | 78.11|CANCER, ORGAN, TISSUE, ORGANISM, CELL, AMINO_ACID, GENE_OR_GENE_PRODUCT, SIMPLE_CHEMICAL, ANATOMICAL_SYSTEM, IMMATERIAL_ANATOMICAL_ENTITY, MULTI-TISSUE_STRUCTURE, DEVELOPING_ANATOMICAL_STRUCTURE, ORGANISM_SUBDIVISION, CELLULAR_COMPONENT|
 
 
 ### Example Usage
