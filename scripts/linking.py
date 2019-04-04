@@ -8,7 +8,7 @@ import os.path
 import datetime
 import numpy as np
 from joblib import dump, load
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, HashingVectorizer
 import nmslib
 from nmslib.dist import FloatIndex
 from scispacy import data_util
@@ -110,21 +110,28 @@ def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
     uml_concept_aliases = np.array(uml_concept_aliases)
     assert len(uml_concept_ids) == len(uml_concept_aliases)
 
+    tfidf_vectors_path = f'{tfidf_vectorizer_path}.npy'
     if not os.path.isfile(tfidf_vectorizer_path):
         print(f'No tfidf vectorizer on {tfidf_vectorizer_path}')
         print(f'Fitting tfidf vectorizer on {len(uml_concept_aliases)} aliases')
-        tfidf_vectorizer = TfidfVectorizer(analyzer='char', ngram_range=(3, 4))
-        tfidf_vectorizer.fit(uml_concept_aliases)
+        # tfidf_vectorizer = HashingVectorizer(analyzer='char_wb', ngram_range=(3, 3), n_features=2**16)
+        tfidf_vectorizer = TfidfVectorizer(analyzer='char_wb', ngram_range=(3, 3), min_df=10, max_df=1.0)
+        uml_concept_alias_tfidfs = tfidf_vectorizer.fit_transform(uml_concept_aliases)
         print(f'Saving tfidf vectorizer to {tfidf_vectorizer_path}')
         dump(tfidf_vectorizer, tfidf_vectorizer_path)
+        print(f'Saving tfidf vectors to {tfidf_vectors_path}')
+        np.save(tfidf_vectors_path, uml_concept_alias_tfidfs)
+
+    start_time = datetime.datetime.now()
     print(f'Loading tfidf vectorizer from {tfidf_vectorizer_path}')
     tfidf_vectorizer = load(tfidf_vectorizer_path)
-    print(f'Vectorizing aliases ... ')
-    start_time = datetime.datetime.now()
-    uml_concept_alias_tfidfs = tfidf_vectorizer.transform(uml_concept_aliases)
+    if isinstance(tfidf_vectorizer, TfidfVectorizer):
+        print(f'Tfidf vocab size: {len(tfidf_vectorizer.vocabulary_)}')
+    print(f'Loading tfidf vectors from {tfidf_vectors_path}')
+    uml_concept_alias_tfidfs = np.load(tfidf_vectors_path).tolist()
     end_time = datetime.datetime.now()
     total_time = (end_time - start_time)
-    print(f'Vectorizing aliases took {total_time.total_seconds()} seconds')
+    print(f'Loading vectorizer and vectors took {total_time.total_seconds()} seconds')
 
     # find empty (all zeros) tfidf vectors
     empty_tfidfs_boolean_flags = np.array(uml_concept_alias_tfidfs.sum(axis=1) != 0).reshape(-1,)
