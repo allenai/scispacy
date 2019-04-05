@@ -84,7 +84,7 @@ pip install CMD-V(to paste the copied URL)
 
 ## Citing
 
-If you use ScispaCy in your research, please cite [ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing](https://arxiv.org/abs/1902.07669).
+If you use ScispaCy in your research, please cite [ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing](https://www.semanticscholar.org/paper/ScispaCy%3A-Fast-and-Robust-Models-for-Biomedical-Neumann-King/de28ec1d7bd38c8fc4e8ac59b6133800818b4e29).
 ```
 @inproceedings{Neumann2019ScispaCyFA,
   title={ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing},
