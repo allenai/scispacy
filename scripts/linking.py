@@ -97,9 +97,6 @@ def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
         concept_id = concept['concept_id']
         concept_aliases = concept['aliases'] + [concept['canonical_name']]
 
-        # TODO: remove the following line and rebuild index
-        concept_aliases = [a if len(a) >= 2 else f'{a}00' for a in concept_aliases]
-
         uml_concept_ids.extend([concept_id] * len(concept_aliases))
         uml_concept_aliases.extend(concept_aliases)
 
@@ -114,13 +111,17 @@ def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
     if not os.path.isfile(tfidf_vectorizer_path):
         print(f'No tfidf vectorizer on {tfidf_vectorizer_path}')
         print(f'Fitting tfidf vectorizer on {len(uml_concept_aliases)} aliases')
-        # tfidf_vectorizer = HashingVectorizer(analyzer='char_wb', ngram_range=(3, 3), n_features=2**16)
-        tfidf_vectorizer = TfidfVectorizer(analyzer='char_wb', ngram_range=(3, 3), min_df=10, max_df=1.0)
+        # tfidf_vectorizer = HashingVectorizer(analyzer='char_wb', ngram_range=(3, 3), n_features=2**9)
+        tfidf_vectorizer = TfidfVectorizer(analyzer='char_wb', ngram_range=(3, 3), min_df=10, dtype=np.float32)  # max_df=150000, max_features=10000)
+        start_time = datetime.datetime.now()
         uml_concept_alias_tfidfs = tfidf_vectorizer.fit_transform(uml_concept_aliases)
         print(f'Saving tfidf vectorizer to {tfidf_vectorizer_path}')
         dump(tfidf_vectorizer, tfidf_vectorizer_path)
         print(f'Saving tfidf vectors to {tfidf_vectors_path}')
         np.save(tfidf_vectors_path, uml_concept_alias_tfidfs)
+        end_time = datetime.datetime.now()
+        total_time = (end_time - start_time)
+        print(f'Fitting and saving vectorizer, and saving vectorized aliases took {total_time.total_seconds()} seconds')
 
     start_time = datetime.datetime.now()
     print(f'Loading tfidf vectorizer from {tfidf_vectorizer_path}')
