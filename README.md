@@ -18,7 +18,7 @@ pip install scispacy
 to install a model (see our full selection of available models below), run a command like the following:
 
 ```bash
-pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_core_sci_sm-0.1.0.tar.gz
+pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_core_sci_sm-0.2.0.tar.gz
 ```
 
 Note: We strongly recommend that you use an isolated Python environment (such as virtualenv or conda) to install scispacy.
@@ -57,6 +57,9 @@ nlp = spacy.load("en_core_sci_sm")
 doc = nlp("Alterations in the hypocretin receptor 2 and preprohypocretin genes produce narcolepsy in some animals.")
 ```
 
+#### Note on upgrading
+If you are upgrading `scispacy`, you will need to download the models again, to get the model versions compatible with the version of `scispacy` that you have. The link to the model that you download should contain the version number of `scispacy` that you have.
+
 ## Available Models
 
 To install a model, click on the link below to download the model, and then run 
@@ -72,16 +75,16 @@ pip install CMD-V(to paste the copied URL)
 
 | Model          | Description       | Install URL
 |:---------------|:------------------|:----------|
-| en_core_sci_sm | A full spaCy pipeline for biomedical data. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_core_sci_sm-0.1.0.tar.gz)|
-| en_core_sci_md |  A full spaCy pipeline for biomedical data with a larger vocabulary and word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_core_sci_md-0.1.0.tar.gz)|
-| en_ner_craft_md|  A spaCy NER model trained on the CRAFT corpus.|[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_craft_md-0.1.0.tar.gz)|
-| en_ner_jnlpba_md | A spaCy NER model trained on the JNLPBA corpus.| [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_jnlpba_md-0.1.0.tar.gz)|
-| en_ner_bc5cdr_md |  A spaCy NER model trained on the BC5CDR corpus. | [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_bc5cdr_md-0.1.0.tar.gz)|
-| en_ner_bionlp13cg_md |  A spaCy NER model trained on the BIONLP13CG corpus. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.1.0/en_ner_bionlp13cg_md-0.1.0.tar.gz)|
+| en_core_sci_sm | A full spaCy pipeline for biomedical data. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_core_sci_sm-0.2.0.tar.gz)|
+| en_core_sci_md |  A full spaCy pipeline for biomedical data with a larger vocabulary and word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_core_sci_md-0.2.0.tar.gz)|
+| en_ner_craft_md|  A spaCy NER model trained on the CRAFT corpus.|[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_ner_craft_md-0.2.0.tar.gz)|
+| en_ner_jnlpba_md | A spaCy NER model trained on the JNLPBA corpus.| [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_ner_jnlpba_md-0.2.0.tar.gz)|
+| en_ner_bc5cdr_md |  A spaCy NER model trained on the BC5CDR corpus. | [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_ner_bc5cdr_md-0.2.0.tar.gz)|
+| en_ner_bionlp13cg_md |  A spaCy NER model trained on the BIONLP13CG corpus. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_ner_bionlp13cg_md-0.2.0.tar.gz)|
 
 ## Citing
 
-If you use ScispaCy in your research, please cite [ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing](https://arxiv.org/abs/1902.07669).
+If you use ScispaCy in your research, please cite [ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing](https://www.semanticscholar.org/paper/ScispaCy%3A-Fast-and-Robust-Models-for-Biomedical-Neumann-King/de28ec1d7bd38c8fc4e8ac59b6133800818b4e29).
 ```
 @inproceedings{Neumann2019ScispaCyFA,
   title={ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing},
