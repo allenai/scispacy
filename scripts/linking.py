@@ -8,7 +8,7 @@ import os.path
 import datetime
 import numpy as np
 from joblib import dump, load
-from sklearn.feature_extraction.text import TfidfVectorizer, HashingVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 import nmslib
 from nmslib.dist import FloatIndex
 from scispacy import data_util
@@ -85,69 +85,14 @@ def generate_candidates(mention_texts: List[str], k: int, tfidf_vectorizer: Tfid
         neighbors_by_concept_ids.append(predicted_umls_concept_ids)
     return neighbors_by_concept_ids
 
-def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
-                                umls_concept_list: List) -> Tuple[List[int], TfidfVectorizer, FloatIndex]:
+def create_load_tfidf_ann_index(model_path: str, umls_concept_list: List) -> Tuple[List[int], TfidfVectorizer, FloatIndex]:
     """
     Build or load tfidf vectorizer and ann index
     """
-    uml_concept_ids = []
-    uml_concept_aliases = []
-    print('Collecting aliases ... ')
-    for i, concept in enumerate(umls_concept_list):
-        concept_id = concept['concept_id']
-        concept_aliases = concept['aliases'] + [concept['canonical_name']]
-
-        uml_concept_ids.extend([concept_id] * len(concept_aliases))
-        uml_concept_aliases.extend(concept_aliases)
-
-        if i % 1000000 == 0 and i > 0:
-            print(f'Processed {i} or {len(umls_concept_list)} concepts')
-
-    uml_concept_ids = np.array(uml_concept_ids)
-    uml_concept_aliases = np.array(uml_concept_aliases)
-    assert len(uml_concept_ids) == len(uml_concept_aliases)
-
-    tfidf_vectors_path = f'{tfidf_vectorizer_path}.npy'
-    if not os.path.isfile(tfidf_vectorizer_path):
-        print(f'No tfidf vectorizer on {tfidf_vectorizer_path}')
-        print(f'Fitting tfidf vectorizer on {len(uml_concept_aliases)} aliases')
-        # tfidf_vectorizer = HashingVectorizer(analyzer='char_wb', ngram_range=(3, 3), n_features=2**9)
-        tfidf_vectorizer = TfidfVectorizer(analyzer='char_wb', ngram_range=(3, 3), min_df=10, dtype=np.float32)  # max_df=150000, max_features=10000)
-        start_time = datetime.datetime.now()
-        uml_concept_alias_tfidfs = tfidf_vectorizer.fit_transform(uml_concept_aliases)
-        print(f'Saving tfidf vectorizer to {tfidf_vectorizer_path}')
-        dump(tfidf_vectorizer, tfidf_vectorizer_path)
-        print(f'Saving tfidf vectors to {tfidf_vectors_path}')
-        np.save(tfidf_vectors_path, uml_concept_alias_tfidfs)
-        end_time = datetime.datetime.now()
-        total_time = (end_time - start_time)
-        print(f'Fitting and saving vectorizer, and saving vectorized aliases took {total_time.total_seconds()} seconds')
-
-    start_time = datetime.datetime.now()
-    print(f'Loading tfidf vectorizer from {tfidf_vectorizer_path}')
-    tfidf_vectorizer = load(tfidf_vectorizer_path)
-    if isinstance(tfidf_vectorizer, TfidfVectorizer):
-        print(f'Tfidf vocab size: {len(tfidf_vectorizer.vocabulary_)}')
-    print(f'Loading tfidf vectors from {tfidf_vectors_path}')
-    uml_concept_alias_tfidfs = np.load(tfidf_vectors_path).tolist()
-    end_time = datetime.datetime.now()
-    total_time = (end_time - start_time)
-    print(f'Loading vectorizer and vectors took {total_time.total_seconds()} seconds')
-
-    # find empty (all zeros) tfidf vectors
-    empty_tfidfs_boolean_flags = np.array(uml_concept_alias_tfidfs.sum(axis=1) != 0).reshape(-1,)
-    deleted_aliases = uml_concept_aliases[empty_tfidfs_boolean_flags == False]
-    number_of_non_empty_tfidfs = len(deleted_aliases)
-    total_number_of_tfidfs = uml_concept_alias_tfidfs.shape[0]
-    print(f'Deleting {number_of_non_empty_tfidfs}/{total_number_of_tfidfs} aliases because their tfidf is empty')
-
-    # remove empty tfidf vectors, otherwise nmslib will crashd
-    uml_concept_ids = uml_concept_ids[empty_tfidfs_boolean_flags]
-    uml_concept_aliases = uml_concept_aliases[empty_tfidfs_boolean_flags]
-    uml_concept_alias_tfidfs = uml_concept_alias_tfidfs[empty_tfidfs_boolean_flags]
-    print(deleted_aliases)
-    assert len(uml_concept_ids) == len(uml_concept_aliases)
-    assert len(uml_concept_ids) == uml_concept_alias_tfidfs.shape[0]
+    tfidf_vectorizer_path = f'{model_path}/tfidf_vectorizer.joblib'
+    ann_index_path = f'{model_path}/nmslib_index.bin'
+    tfidf_vectors_path = f'{model_path}/tfidf_vectors.npy'
+    uml_concept_ids_path = f'{model_path}/concept_ids.npy'
 
     # nmslib hyperparameters (very important)
     # guide: https://github.com/nmslib/nmslib/blob/master/python_bindings/parameters.md
@@ -157,15 +102,60 @@ def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
                 # Improves recall at the expense of longer indexing time
     efS = 1000  # `S` for Search. This controls performance at query time. Maximum recommended value is 2000.
                 # It makes the query slow without significant gain in recall.
-
     num_threads = 60  # set based on the machine
-
     index_params = {'M': M, 'indexThreadQty': num_threads, 'efConstruction': efC, 'post' : 0}
 
-    if not os.path.isfile(ann_index_path):
-        print(f'No ann index on {ann_index_path}')
-        print(f'Fitting ann index on {len(uml_concept_aliases)} aliases (takes 2 hours)')
 
+
+    if not os.path.isfile(tfidf_vectorizer_path) or not os.path.isfile(ann_index_path):
+        print(f'No tfidf vectorizer on {tfidf_vectorizer_path} or ann index on {ann_index_path}')
+        uml_concept_ids = []
+        uml_concept_aliases = []
+        print('Collecting aliases ... ')
+        for i, concept in enumerate(umls_concept_list):
+            concept_id = concept['concept_id']
+            concept_aliases = concept['aliases'] + [concept['canonical_name']]
+
+            uml_concept_ids.extend([concept_id] * len(concept_aliases))
+            uml_concept_aliases.extend(concept_aliases)
+
+            if i % 1000000 == 0 and i > 0:
+                print(f'Processed {i} or {len(umls_concept_list)} concepts')
+
+        uml_concept_ids = np.array(uml_concept_ids)
+        uml_concept_aliases = np.array(uml_concept_aliases)
+        assert len(uml_concept_ids) == len(uml_concept_aliases)
+
+        print(f'Fitting tfidf vectorizer on {len(uml_concept_aliases)} aliases')
+        tfidf_vectorizer = TfidfVectorizer(analyzer='char_wb', ngram_range=(3, 3), min_df=10, dtype=np.float32)
+        start_time = datetime.datetime.now()
+        uml_concept_alias_tfidfs = tfidf_vectorizer.fit_transform(uml_concept_aliases)
+        print(f'Saving tfidf vectorizer to {tfidf_vectorizer_path}')
+        dump(tfidf_vectorizer, tfidf_vectorizer_path)
+        end_time = datetime.datetime.now()
+        total_time = (end_time - start_time)
+        print(f'Fitting and saving vectorizer took {total_time.total_seconds()} seconds')
+
+        print(f'Finding empty (all zeros) tfidf vectors')
+        empty_tfidfs_boolean_flags = np.array(uml_concept_alias_tfidfs.sum(axis=1) != 0).reshape(-1,)
+        deleted_aliases = uml_concept_aliases[empty_tfidfs_boolean_flags == False]
+        number_of_non_empty_tfidfs = len(deleted_aliases)
+        total_number_of_tfidfs = uml_concept_alias_tfidfs.shape[0]
+
+        print(f'Deleting {number_of_non_empty_tfidfs}/{total_number_of_tfidfs} aliases because their tfidf is empty')
+        # remove empty tfidf vectors, otherwise nmslib will crash
+        uml_concept_ids = uml_concept_ids[empty_tfidfs_boolean_flags]
+        uml_concept_aliases = uml_concept_aliases[empty_tfidfs_boolean_flags]
+        uml_concept_alias_tfidfs = uml_concept_alias_tfidfs[empty_tfidfs_boolean_flags]
+        print(deleted_aliases)
+
+        print('Saving list of concept ids and tfidfs vectors to {uml_concept_ids_path} and {tfidf_vectors_path}')
+        np.save(uml_concept_ids_path, uml_concept_ids)
+        np.save(tfidf_vectors_path, uml_concept_alias_tfidfs)
+        assert len(uml_concept_ids) == len(uml_concept_aliases)
+        assert len(uml_concept_ids) == uml_concept_alias_tfidfs.shape[0]
+
+        print(f'Fitting ann index on {len(uml_concept_aliases)} aliases (takes 2 hours)')
         start_time = datetime.datetime.now()
         ann_index = nmslib.init(method='hnsw', space='cosinesimil_sparse', data_type=nmslib.DataType.SPARSE_VECTOR)
         ann_index.addDataPointBatch(uml_concept_alias_tfidfs)
@@ -175,6 +165,18 @@ def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
         elapsed_time = end_time - start_time
         print(f'Fitting ann index took {elapsed_time.total_seconds()} seconds')
 
+    start_time = datetime.datetime.now()
+    print(f'Loading list of concepted ids from {uml_concept_ids_path}')
+    uml_concept_ids = np.load(uml_concept_ids_path).tolist()
+
+    print(f'Loading tfidf vectorizer from {tfidf_vectorizer_path}')
+    tfidf_vectorizer = load(tfidf_vectorizer_path)
+    if isinstance(tfidf_vectorizer, TfidfVectorizer):
+        print(f'Tfidf vocab size: {len(tfidf_vectorizer.vocabulary_)}')
+
+    print(f'Loading tfidf vectors from {tfidf_vectors_path}')
+    uml_concept_alias_tfidfs = np.load(tfidf_vectors_path).tolist()
+
     print(f'Loading ann index from {ann_index_path}')
     ann_index = nmslib.init(method='hnsw', space='cosinesimil_sparse', data_type=nmslib.DataType.SPARSE_VECTOR)
     ann_index.addDataPointBatch(uml_concept_alias_tfidfs)
@@ -182,15 +184,19 @@ def create_load_tfidf_ann_index(ann_index_path: str, tfidf_vectorizer_path: str,
     query_time_params = {'efSearch': efS}
     ann_index.setQueryTimeParams(query_time_params)
 
+    end_time = datetime.datetime.now()
+    total_time = (end_time - start_time)
+
+    print(f'Loading concept ids, vectorizer, tfidf vectors and ann index took {total_time.total_seconds()} seconds')
     return uml_concept_ids, tfidf_vectorizer, ann_index
 
-def main(medmentions_path: str, umls_path: str, ann_index_path: str, tfidf_vectorizer_path: str, ks: str):
+def main(medmentions_path: str, umls_path: str, model_path: str, ks: str):
 
     umls_concept_list = load_umls_kb(umls_path)
     umls_concept_dict_by_id = dict((c['concept_id'], c) for c in umls_concept_list)
 
     ann_concept_id_list, tfidf_vectorizer, ann_index = \
-            create_load_tfidf_ann_index(ann_index_path, tfidf_vectorizer_path, umls_concept_list)
+            create_load_tfidf_ann_index(model_path, umls_concept_list)
 
     print('Reading MedMentions ... ')
     train_examples, dev_examples, test_examples = data_util.read_full_med_mentions(medmentions_path,
@@ -256,12 +262,8 @@ if __name__ == "__main__":
             help='Path to the json UMLS release.'
     )
     parser.add_argument(
-            '--ann_index_path',
-            help='Path to the nmslib ann index.'
-    )
-    parser.add_argument(
-            '--tfidf_vectorizer_path',
-            help='Path to sklearn tfidf char-ngram vectorizer.'
+            '--model_path',
+            help='Path to a directory with tfidf vectorizer and nmslib ann index.'
     )
     parser.add_argument(
             '--ks',
@@ -269,4 +271,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    main(args.medmentions_path, args.umls_path, args.ann_index_path, args.tfidf_vectorizer_path, args.ks)
+    main(args.medmentions_path, args.umls_path, args.model_path, args.ks)
