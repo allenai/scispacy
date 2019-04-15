@@ -65,7 +65,6 @@ class MentionCandidate(NamedTuple):
     distances: List[float]
     aliases: List[str]
 
-
 class CandidateGenerator:
 
     def __init__(self,
@@ -155,8 +154,6 @@ class CandidateGenerator:
             for n, d in zip(neighbors, distances):
                 predicted_umls_concept_ids[self.ann_concept_id_list[n]].append(d)
             neighbors_by_concept_ids.append({**predicted_umls_concept_ids})
-            #neighbors_by_concept_ids.append({concept_id: np.mean(values)
-            #                                 for concept_id, values in predicted_umls_concept_ids.items()})
         return neighbors_by_concept_ids
 
 def create_tfidf_ann_index(model_path: str, umls_concept_list: List) -> None:
@@ -165,8 +162,8 @@ def create_tfidf_ann_index(model_path: str, umls_concept_list: List) -> None:
     """
     tfidf_vectorizer_path = f'{model_path}/tfidf_vectorizer.joblib'
     ann_index_path = f'{model_path}/nmslib_index.bin'
-    tfidf_vectors_path = f'{model_path}/tfidf_vectors.npy'
-    uml_concept_ids_path = f'{model_path}/concept_ids.npy'
+    tfidf_vectors_path = f'{model_path}/tfidf_vectors_sparse.npz'
+    uml_concept_ids_path = f'{model_path}/concept_ids.json'
 
     # nmslib hyperparameters (very important)
     # guide: https://github.com/nmslib/nmslib/blob/master/python_bindings/parameters.md
@@ -186,7 +183,9 @@ def create_tfidf_ann_index(model_path: str, umls_concept_list: List) -> None:
     for i, concept in enumerate(umls_concept_list):
         concept_id = concept['concept_id']
 
-        # TODO Add set call here, should compress index by 15%
+        # Alias lists for concepts are not unique, so calling set here means
+        # we don't duplicate items in the index. In practice this reduces the size
+        # of the index by 15%.
         concept_aliases = list(set(concept['aliases'])) + [concept['canonical_name']]
 
         uml_concept_ids.extend([concept_id] * len(concept_aliases))
@@ -222,8 +221,8 @@ def create_tfidf_ann_index(model_path: str, umls_concept_list: List) -> None:
     uml_concept_alias_tfidfs = uml_concept_alias_tfidfs[empty_tfidfs_boolean_flags]
     print(deleted_aliases)
 
-    print('Saving list of concept ids and tfidfs vectors to {uml_concept_ids_path} and {tfidf_vectors_path}')
-    np.save(uml_concept_ids_path, uml_concept_ids)
+    print(f'Saving list of concept ids and tfidfs vectors to {uml_concept_ids_path} and {tfidf_vectors_path}')
+    json.dump(uml_concept_ids.tolist(), open(uml_concept_ids_path, "w"))
     scipy.sparse.save_npz(tfidf_vectors_path, uml_concept_alias_tfidfs.astype(np.float16))
     assert len(uml_concept_ids) == len(uml_concept_aliases)
     assert len(uml_concept_ids) == uml_concept_alias_tfidfs.shape[0]
@@ -239,17 +238,17 @@ def create_tfidf_ann_index(model_path: str, umls_concept_list: List) -> None:
     print(f'Fitting ann index took {elapsed_time.total_seconds()} seconds')
 
 def load_tfidf_ann_index(model_path: str):
-
-    efS = 10  # `S` for Search. This controls performance at query time. Maximum recommended value is 2000.
-                # It makes the query slow without significant gain in recall.
+    # `S` for Search. This controls performance at query time. Maximum recommended value is 2000.
+    # It makes the query slow without significant gain in recall.
+    efS = 100
     tfidf_vectorizer_path = f'{model_path}/tfidf_vectorizer.joblib'
     ann_index_path = f'{model_path}/nmslib_index.bin'
     tfidf_vectors_path = f'{model_path}/tfidf_vectors_sparse.npz'
-    uml_concept_ids_path = f'{model_path}/concept_ids.npy'
+    uml_concept_ids_path = f'{model_path}/concept_ids.json'
 
     start_time = datetime.datetime.now()
     print(f'Loading list of concepted ids from {uml_concept_ids_path}')
-    uml_concept_ids = np.load(uml_concept_ids_path).tolist()
+    uml_concept_ids = json.load(open(uml_concept_ids_path))
 
     print(f'Loading tfidf vectorizer from {tfidf_vectorizer_path}')
     tfidf_vectorizer = load(tfidf_vectorizer_path)
@@ -257,7 +256,6 @@ def load_tfidf_ann_index(model_path: str):
         print(f'Tfidf vocab size: {len(tfidf_vectorizer.vocabulary_)}')
 
     print(f'Loading tfidf vectors from {tfidf_vectors_path}')
-    #uml_concept_alias_tfidfs = np.load(tfidf_vectors_path).tolist()
     uml_concept_alias_tfidfs = scipy.sparse.load_npz(tfidf_vectors_path).astype(np.float32)
 
     print(f'Loading ann index from {ann_index_path}')
