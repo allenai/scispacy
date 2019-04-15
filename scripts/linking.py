@@ -32,7 +32,7 @@ import os
 import os.path
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, NamedTuple
 import json
 import argparse
 import datetime
@@ -59,6 +59,13 @@ def load_umls_kb(umls_path: str) -> List[Dict]:
     print(f'Number of umls concepts: {len(umls_concept_list)}')
     return umls_concept_list
 
+
+class MentionCandidate(NamedTuple):
+    concept_id: str
+    distances: List[float]
+    aliases: List[str]
+
+
 class CandidateGenerator:
 
     def __init__(self,
@@ -70,14 +77,14 @@ class CandidateGenerator:
         self.vectorizer = tfidf_vectorizer
         self.ann_concept_id_list = ann_concept_id_list
 
-    def nmslib_knn_with_zero_vectors(self, vectors: np.ndarray, k: int) -> List[List]:
+    def nmslib_knn_with_zero_vectors(self, vectors: np.ndarray, k: int) -> Tuple[np.ndarray, np.ndarray]:
         """ ann_index.knnQueryBatch crashes if any of the vectors is all zeros.
         This function is a wrapper around `ann_index.knnQueryBatch` that solves this problem. It works as follows:
         - remove empty vectors from `vectors`
         - call `ann_index.knnQueryBatch` with the non-empty vectors only. This returns `neighbors`,
         a list of list of neighbors. `len(neighbors)` equals the length of the non-empty vectors.
         - extend the list `neighbors` with `None`s in place of empty vectors.
-        - return the extended list of neighbors
+        - return the extended list of neighbors and distances.
         """
         empty_vectors_boolean_flags = np.array(vectors.sum(axis=1) != 0).reshape(-1,)
         empty_vectors_count = vectors.shape[0] - sum(empty_vectors_boolean_flags)
@@ -108,7 +115,7 @@ class CandidateGenerator:
 
         return extended_neighbors, extended_distances
 
-    def generate_candidates(self, mention_texts: List[str], k: int) -> List[List[int]]:
+    def generate_candidates(self, mention_texts: List[str], k: int) -> List[Dict[str, List[int]]]:
         """
         Given a list of mention texts, returns a list of candidate neighbors.
 
@@ -120,6 +127,12 @@ class CandidateGenerator:
             mention_texts: list of mention texts
             k: number of ann neighbors
             ann_concept_id_list: a list of concept ids that the ann_index is referencing.
+
+        returns:
+            A list of dictionaries, each containing the mapping from umls concept ids -> a list of
+            the cosine distances between them. Note that these are lists for each concept id, because
+            the index contains aliases which are canonicalized, so multiple values may map to the same
+            canonical id.
         """
         print(f'Generating candidates for {len(mention_texts)} mentions')
         tfidfs = self.vectorizer.transform(mention_texts)
@@ -136,6 +149,8 @@ class CandidateGenerator:
             if neighbors is None:
                 neighbors = []
 
+            if distances is None:
+                distances = []
             predicted_umls_concept_ids = defaultdict(list)
             for n, d in zip(neighbors, distances):
                 predicted_umls_concept_ids[self.ann_concept_id_list[n]].append(d)
@@ -185,7 +200,7 @@ def create_tfidf_ann_index(model_path: str, umls_concept_list: List) -> None:
     assert len(uml_concept_ids) == len(uml_concept_aliases)
 
     print(f'Fitting tfidf vectorizer on {len(uml_concept_aliases)} aliases')
-    tfidf_vectorizer = TfidfVectorizer(analyzer='char_wb', ngram_range=(3, 3), min_df=10, dtype=np.float16)
+    tfidf_vectorizer = TfidfVectorizer(analyzer='char_wb', ngram_range=(3, 3), min_df=10, dtype=np.float32)
     start_time = datetime.datetime.now()
     uml_concept_alias_tfidfs = tfidf_vectorizer.fit_transform(uml_concept_aliases)
     print(f'Saving tfidf vectorizer to {tfidf_vectorizer_path}')
@@ -209,7 +224,7 @@ def create_tfidf_ann_index(model_path: str, umls_concept_list: List) -> None:
 
     print('Saving list of concept ids and tfidfs vectors to {uml_concept_ids_path} and {tfidf_vectors_path}')
     np.save(uml_concept_ids_path, uml_concept_ids)
-    scipy.sparse.save_npz(tfidf_vectors_path, uml_concept_alias_tfidfs)
+    scipy.sparse.save_npz(tfidf_vectors_path, uml_concept_alias_tfidfs.astype(np.float16))
     assert len(uml_concept_ids) == len(uml_concept_aliases)
     assert len(uml_concept_ids) == uml_concept_alias_tfidfs.shape[0]
 
@@ -225,11 +240,11 @@ def create_tfidf_ann_index(model_path: str, umls_concept_list: List) -> None:
 
 def load_tfidf_ann_index(model_path: str):
 
-    efS = 1000  # `S` for Search. This controls performance at query time. Maximum recommended value is 2000.
+    efS = 10  # `S` for Search. This controls performance at query time. Maximum recommended value is 2000.
                 # It makes the query slow without significant gain in recall.
     tfidf_vectorizer_path = f'{model_path}/tfidf_vectorizer.joblib'
     ann_index_path = f'{model_path}/nmslib_index.bin'
-    tfidf_vectors_path = f'{model_path}/tfidf_vectors.npy'
+    tfidf_vectors_path = f'{model_path}/tfidf_vectors_sparse.npz'
     uml_concept_ids_path = f'{model_path}/concept_ids.npy'
 
     start_time = datetime.datetime.now()
@@ -242,7 +257,8 @@ def load_tfidf_ann_index(model_path: str):
         print(f'Tfidf vocab size: {len(tfidf_vectorizer.vocabulary_)}')
 
     print(f'Loading tfidf vectors from {tfidf_vectors_path}')
-    uml_concept_alias_tfidfs = scipy.sparse.load_npz(tfidf_vectors_path).tolist()
+    #uml_concept_alias_tfidfs = np.load(tfidf_vectors_path).tolist()
+    uml_concept_alias_tfidfs = scipy.sparse.load_npz(tfidf_vectors_path).astype(np.float32)
 
     print(f'Loading ann index from {ann_index_path}')
     ann_index = nmslib.init(method='hnsw', space='cosinesimil_sparse', data_type=nmslib.DataType.SPARSE_VECTOR)
@@ -327,29 +343,28 @@ def main(medmentions_path: str, umls_path: str, model_path: str, ks: str, train:
         print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(gold_umls_ids)))
 
 if __name__ == "__main__":
-    pass
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument(
-    #         '--medmentions_path',
-    #         help='Path to the MedMentions dataset.'
-    # )
-    # parser.add_argument(
-    #         '--umls_path',
-    #         help='Path to the json UMLS release.'
-    # )
-    # parser.add_argument(
-    #         '--model_path',
-    #         help='Path to a directory with tfidf vectorizer and nmslib ann index.'
-    # )
-    # parser.add_argument(
-    #         '--ks',
-    #         help='Comma separated list of number of candidates.',
-    # )
-    # parser.add_argument(
-    #         '--train',
-    #         action="store_true",
-    #         help='Comma separated list of number of candidates.',
-    # )
+     parser = argparse.ArgumentParser()
+     parser.add_argument(
+             '--medmentions_path',
+             help='Path to the MedMentions dataset.'
+     )
+     parser.add_argument(
+             '--umls_path',
+             help='Path to the json UMLS release.'
+     )
+     parser.add_argument(
+             '--model_path',
+             help='Path to a directory with tfidf vectorizer and nmslib ann index.'
+     )
+     parser.add_argument(
+             '--ks',
+             help='Comma separated list of number of candidates.',
+     )
+     parser.add_argument(
+             '--train',
+             action="store_true",
+             help='Comma separated list of number of candidates.',
+     )
 
-    # args = parser.parse_args()
-    # main(args.medmentions_path, args.umls_path, args.model_path, args.ks, args.train)
+     args = parser.parse_args()
+     main(args.medmentions_path, args.umls_path, args.model_path, args.ks, args.train)
