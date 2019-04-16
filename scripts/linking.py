@@ -288,7 +288,6 @@ def get_mention_text_and_ids(data: List[data_util.MedMentionsExample],
     mention_texts = []
     gold_umls_ids = []
 
-    # only loop over the dev examples for now because we don't have a trained model
     for example in data:
         for entity in example.entities:
             if entity.umls_id not in umls:
@@ -316,6 +315,7 @@ def main(medmentions_path: str, umls_path: str, model_path: str, ks: str, train:
     train_examples, dev_examples, test_examples = data_util.read_full_med_mentions(medmentions_path,
                                                                                    spacy_format=False)
 
+    # only loop over the dev examples for now because we don't have a trained model
     mention_texts, gold_umls_ids, missing_entity_ids = get_mention_text_and_ids(dev_examples,
                                                                                 umls_concept_dict_by_id)
 
