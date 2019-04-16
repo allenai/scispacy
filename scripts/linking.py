@@ -1,38 +1,11 @@
 """
 Linking using char-n-gram with approximate nearest neighbors.
-
-IDEAS:
-
-
-Compress index by deduplicating alias terms.
-In [72]: len(umls_concept_dict_by_id["C0006826"]["aliases"])
-Out[72]: 93
-
-In [73]: len(set(umls_concept_dict_by_id["C0006826"]["aliases"]))
-Out[73]: 43
-
-aliases
-mean, std, sum
-(1.2762667187768288, 3.6899733345584425, 3552930)
-set(aliases)
-mean, std, sum
-(1.08901462221689, 2.6062454661711856, 3031649)
-
-full precision
-9.49 s to load using scipy.sparse.load_npz("tmp.npz")
-file size: 686M
-
-half precision
-7.73 s to load using scipy.sparse.load_npz("tmp.npz")
-file size: 395MB
-
-
 """
 import os
 import os.path
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
-from typing import List, Dict, Tuple, NamedTuple
+from typing import List, Dict, Tuple, NamedTuple, Any
 import json
 import argparse
 import datetime
@@ -67,6 +40,39 @@ class MentionCandidate(NamedTuple):
 
 class CandidateGenerator:
 
+    """
+    A candidate generator for entity linking to the Unified Medical Language System (UMLS).
+
+    It uses a sklearn.TfidfVectorizer to embed mention text into a sparse embedding of character 3-grams.
+    These are then compared via cosine distance in a pre-indexed approximate nearest neighbours index of
+    a subset of all entities and aliases in UMLS.
+
+    Once the K nearest neighbours have been retrieved, they are canonicalized to their UMLS canonical ids.
+    This step is required because the index also includes entity aliases, which map to a particular canonical
+    entity. This point is important for two reasons:
+
+    1. K nearest neighbours will return a list of Y possible neighbours, where Y < K, because the entity ids
+    are canonicalized.
+
+    2. A single string may be an alias for multiple canonical entities. For example, "Jefferson County" may be an
+    alias for both the canonical ids "Jefferson County, Iowa" and "Jefferson County, Texas". These are completely
+    valid and important aliases to include, but it means that using the candidate generator to implement a naive
+    k-nn baseline linker results in very poor performance, because there are multiple entities for some strings
+    which have an exact char3-gram match, as these entities contain the same alias string. This situation results
+    in multiple entities returned with a distance of 0.0, because they exactly match an alias, making a k-nn baseline
+    effectively a random choice between these candidates. However, this doesn't matter if you have a classifier
+    on top of the candidate generator, as is intended! 
+
+    Parameters
+    ----------
+    ann_index: FloatIndex
+        An nmslib approximate nearest neighbours index.
+    tfidf_vectorizer: TfidfVectorizer
+        The vectorizer used to encode mentions.
+    ann_concept_id_list: List[str]
+        A list of strings, mapping the indices used in the ann_index to canonical UMLS ids.
+
+    """
     def __init__(self,
                  ann_index: FloatIndex,
                  tfidf_vectorizer: TfidfVectorizer,
@@ -77,9 +83,10 @@ class CandidateGenerator:
         self.ann_concept_id_list = ann_concept_id_list
 
     def nmslib_knn_with_zero_vectors(self, vectors: np.ndarray, k: int) -> Tuple[np.ndarray, np.ndarray]:
-        """ ann_index.knnQueryBatch crashes if any of the vectors is all zeros.
+        """ 
+        ann_index.knnQueryBatch crashes if any of the vectors is all zeros.
         This function is a wrapper around `ann_index.knnQueryBatch` that solves this problem. It works as follows:
-        - remove empty vectors from `vectors`
+        - remove empty vectors from `vectors`.
         - call `ann_index.knnQueryBatch` with the non-empty vectors only. This returns `neighbors`,
         a list of list of neighbors. `len(neighbors)` equals the length of the non-empty vectors.
         - extend the list `neighbors` with `None`s in place of empty vectors.
@@ -125,7 +132,6 @@ class CandidateGenerator:
         args:
             mention_texts: list of mention texts
             k: number of ann neighbors
-            ann_concept_id_list: a list of concept ids that the ann_index is referencing.
 
         returns:
             A list of dictionaries, each containing the mapping from umls concept ids -> a list of
@@ -156,7 +162,7 @@ class CandidateGenerator:
             neighbors_by_concept_ids.append({**predicted_umls_concept_ids})
         return neighbors_by_concept_ids
 
-def create_tfidf_ann_index(model_path: str, umls_concept_list: List) -> None:
+def create_tfidf_ann_index(model_path: str, umls_concept_list: List[str]) -> None:
     """
     Build tfidf vectorizer and ann index.
     """
@@ -272,7 +278,8 @@ def load_tfidf_ann_index(model_path: str):
     return uml_concept_ids, tfidf_vectorizer, ann_index
 
 
-def get_mention_text_and_ids(data, umls):
+def get_mention_text_and_ids(data: List[data_util.MedMentionsExample],
+                             umls: Dict[str, Any]):
     missing_entity_ids = []  # entities in MedMentions but not in UMLS
 
     # don't care about context for now. Just do the processing based on mention text only
