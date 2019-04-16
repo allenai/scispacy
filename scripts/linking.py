@@ -368,7 +368,7 @@ if __name__ == "__main__":
      parser.add_argument(
              '--train',
              action="store_true",
-             help='Comma separated list of number of candidates.',
+             help='Fit the tfidf vectorizer and create the ANN index.',
      )
 
      args = parser.parse_args()
