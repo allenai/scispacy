@@ -5,7 +5,7 @@ import os
 import os.path
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
-from typing import List, Dict, Tuple, NamedTuple, Any
+from typing import List, Dict, Tuple, NamedTuple, Any, Set
 import json
 import argparse
 import datetime
@@ -61,7 +61,7 @@ class CandidateGenerator:
     which have an exact char3-gram match, as these entities contain the same alias string. This situation results
     in multiple entities returned with a distance of 0.0, because they exactly match an alias, making a k-nn baseline
     effectively a random choice between these candidates. However, this doesn't matter if you have a classifier
-    on top of the candidate generator, as is intended! 
+    on top of the candidate generator, as is intended!
 
     Parameters
     ----------
@@ -76,14 +76,17 @@ class CandidateGenerator:
     def __init__(self,
                  ann_index: FloatIndex,
                  tfidf_vectorizer: TfidfVectorizer,
-                 ann_concept_id_list: List[str]) -> None:
+                 ann_concept_aliases_list: List[str],
+                 mention_to_concept: Dict[str, Set[str]]) -> None:
 
         self.ann_index = ann_index
         self.vectorizer = tfidf_vectorizer
-        self.ann_concept_id_list = ann_concept_id_list
+        self.ann_concept_aliases_list = ann_concept_aliases_list
+        self.mention_to_concept = self.mention_to_concept
+
 
     def nmslib_knn_with_zero_vectors(self, vectors: np.ndarray, k: int) -> Tuple[np.ndarray, np.ndarray]:
-        """ 
+        """
         ann_index.knnQueryBatch crashes if any of the vectors is all zeros.
         This function is a wrapper around `ann_index.knnQueryBatch` that solves this problem. It works as follows:
         - remove empty vectors from `vectors`.
@@ -158,18 +161,22 @@ class CandidateGenerator:
                 distances = []
             predicted_umls_concept_ids = defaultdict(list)
             for n, d in zip(neighbors, distances):
-                predicted_umls_concept_ids[self.ann_concept_id_list[n]].append(d)
+
+                mention = self.ann_concept_aliases_list[n]
+                concepts_for_mention = self.mention_to_concept[mention]
+                for concept_id in concepts_for_mention:
+                    predicted_umls_concept_ids[concept_id].append((mention, d))
             neighbors_by_concept_ids.append({**predicted_umls_concept_ids})
         return neighbors_by_concept_ids
 
-def create_tfidf_ann_index(model_path: str, umls_concept_list: List[str]) -> None:
+def create_tfidf_ann_index(model_path: str, text_to_concept: Dict[str, Set[str]]) -> None:
     """
     Build tfidf vectorizer and ann index.
     """
     tfidf_vectorizer_path = f'{model_path}/tfidf_vectorizer.joblib'
     ann_index_path = f'{model_path}/nmslib_index.bin'
     tfidf_vectors_path = f'{model_path}/tfidf_vectors_sparse.npz'
-    uml_concept_ids_path = f'{model_path}/concept_ids.json'
+    uml_concept_aliases_path = f'{model_path}/concept_aliases.json'
 
     # nmslib hyperparameters (very important)
     # guide: https://github.com/nmslib/nmslib/blob/master/python_bindings/parameters.md
@@ -183,26 +190,9 @@ def create_tfidf_ann_index(model_path: str, umls_concept_list: List[str]) -> Non
     index_params = {'M': M, 'indexThreadQty': num_threads, 'efConstruction': efC, 'post' : 0}
 
     print(f'No tfidf vectorizer on {tfidf_vectorizer_path} or ann index on {ann_index_path}')
-    uml_concept_ids = []
-    uml_concept_aliases = []
-    print('Collecting aliases ... ')
-    for i, concept in enumerate(umls_concept_list):
-        concept_id = concept['concept_id']
+    uml_concept_aliases = list(text_to_concept.keys())
 
-        # Alias lists for concepts are not unique, so calling set here means
-        # we don't duplicate items in the index. In practice this reduces the size
-        # of the index by 15%.
-        concept_aliases = list(set(concept['aliases'])) + [concept['canonical_name']]
-
-        uml_concept_ids.extend([concept_id] * len(concept_aliases))
-        uml_concept_aliases.extend(concept_aliases)
-
-        if i % 1000000 == 0 and i > 0:
-            print(f'Processed {i} or {len(umls_concept_list)} concepts')
-
-    uml_concept_ids = np.array(uml_concept_ids)
     uml_concept_aliases = np.array(uml_concept_aliases)
-    assert len(uml_concept_ids) == len(uml_concept_aliases)
 
     print(f'Fitting tfidf vectorizer on {len(uml_concept_aliases)} aliases')
     tfidf_vectorizer = TfidfVectorizer(analyzer='char_wb', ngram_range=(3, 3), min_df=10, dtype=np.float32)
@@ -222,16 +212,13 @@ def create_tfidf_ann_index(model_path: str, umls_concept_list: List[str]) -> Non
 
     print(f'Deleting {number_of_non_empty_tfidfs}/{total_number_of_tfidfs} aliases because their tfidf is empty')
     # remove empty tfidf vectors, otherwise nmslib will crash
-    uml_concept_ids = uml_concept_ids[empty_tfidfs_boolean_flags]
     uml_concept_aliases = uml_concept_aliases[empty_tfidfs_boolean_flags]
     uml_concept_alias_tfidfs = uml_concept_alias_tfidfs[empty_tfidfs_boolean_flags]
     print(deleted_aliases)
 
-    print(f'Saving list of concept ids and tfidfs vectors to {uml_concept_ids_path} and {tfidf_vectors_path}')
-    json.dump(uml_concept_ids.tolist(), open(uml_concept_ids_path, "w"))
+    print(f'Saving list of concept ids and tfidfs vectors to {uml_concept_aliases_path} and {tfidf_vectors_path}')
+    json.dump(uml_concept_aliases.tolist(), open(uml_concept_aliases_path, "w"))
     scipy.sparse.save_npz(tfidf_vectors_path, uml_concept_alias_tfidfs.astype(np.float16))
-    assert len(uml_concept_ids) == len(uml_concept_aliases)
-    assert len(uml_concept_ids) == uml_concept_alias_tfidfs.shape[0]
 
     print(f'Fitting ann index on {len(uml_concept_aliases)} aliases (takes 2 hours)')
     start_time = datetime.datetime.now()
@@ -246,15 +233,15 @@ def create_tfidf_ann_index(model_path: str, umls_concept_list: List[str]) -> Non
 def load_tfidf_ann_index(model_path: str):
     # `S` for Search. This controls performance at query time. Maximum recommended value is 2000.
     # It makes the query slow without significant gain in recall.
-    efS = 100
+    efS = 1000
     tfidf_vectorizer_path = f'{model_path}/tfidf_vectorizer.joblib'
     ann_index_path = f'{model_path}/nmslib_index.bin'
     tfidf_vectors_path = f'{model_path}/tfidf_vectors_sparse.npz'
-    uml_concept_ids_path = f'{model_path}/concept_ids.json'
+    uml_concept_aliases_path = f'{model_path}/concept_aliases.json'
 
     start_time = datetime.datetime.now()
-    print(f'Loading list of concepted ids from {uml_concept_ids_path}')
-    uml_concept_ids = json.load(open(uml_concept_ids_path))
+    print(f'Loading list of concepted ids from {uml_concept_aliases_path}')
+    uml_concept_aliases = json.load(open(uml_concept_aliases_path))
 
     print(f'Loading tfidf vectorizer from {tfidf_vectorizer_path}')
     tfidf_vectorizer = load(tfidf_vectorizer_path)
@@ -275,10 +262,10 @@ def load_tfidf_ann_index(model_path: str):
     total_time = (end_time - start_time)
 
     print(f'Loading concept ids, vectorizer, tfidf vectors and ann index took {total_time.total_seconds()} seconds')
-    return uml_concept_ids, tfidf_vectorizer, ann_index
+    return uml_concept_aliases, tfidf_vectorizer, ann_index
 
 
-def get_mention_text_and_ids(data: List[data_util.MedMentionsExample],
+def get_mention_text_and_ids(data: List[data_util.MedMentionExample],
                              umls: Dict[str, Any]):
     missing_entity_ids = []  # entities in MedMentions but not in UMLS
 
@@ -304,13 +291,22 @@ def get_mention_text_and_ids(data: List[data_util.MedMentionsExample],
 def main(medmentions_path: str, umls_path: str, model_path: str, ks: str, train: bool = False):
 
     umls_concept_list = load_umls_kb(umls_path)
-    umls_concept_dict_by_id = dict((c['concept_id'], c) for c in umls_concept_list)
+    umls_concept_dict_by_id = {c['concept_id']: c for c in umls_concept_list}
+
+
+    # We need to keep around a map from text to possible canonical ids that they map to.
+    text_to_concept_id: Dict[str, Set[str]] = defaultdict(set)
+
+    for concept in umls_concept_list:
+        for alias in set(concept["aliases"]).union({concept["canonical_name"]}):
+            text_to_concept_id[alias].add(concept["concept_id"])
+
 
     if train:
-        create_tfidf_ann_index(model_path, umls_concept_list)
-    ann_concept_id_list, tfidf_vectorizer, ann_index = load_tfidf_ann_index(model_path)
+        create_tfidf_ann_index(model_path, text_to_concept_id)
+    ann_concept_aliases_list, tfidf_vectorizer, ann_index = load_tfidf_ann_index(model_path)
 
-    candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, ann_concept_id_list)
+    candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, ann_concept_aliases_list, text_to_concept_id)
     print('Reading MedMentions ... ')
     train_examples, dev_examples, test_examples = data_util.read_full_med_mentions(medmentions_path,
                                                                                    spacy_format=False)
@@ -322,30 +318,55 @@ def main(medmentions_path: str, umls_path: str, model_path: str, ks: str, train:
     k_list = [int(k) for k in ks.split(',')]
     for k in k_list:
         print(f'for k = {k}')
-        entity_correct_links_count = 0  # number of correctly linked entities
-        entity_wrong_links_count = 0  # number of wrongly linked entities
-        entity_no_links_count = 0  # number of entities that are not linked
-
-        candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
-
-        for mention_text, gold_umls_id, candidate_neighbor_ids in zip(mention_texts, gold_umls_ids, candidate_neighbor_ids):
-            gold_canonical_name = umls_concept_dict_by_id[gold_umls_id]['canonical_name']
-            if len(candidate_neighbor_ids) == 0:
-                entity_no_links_count += 1
-                # print(f'No candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
-            elif gold_umls_id in candidate_neighbor_ids:
-                entity_correct_links_count += 1
-            else:
-                entity_wrong_links_count += 1
-                # print(f'Wrong candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
 
 
-        print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
-        print(f'MedMentions entities found in UMLS: {len(gold_umls_ids)}')
-        print(f'K: {k}')
-        print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(gold_umls_ids)))
-        print('Gold concept not in candidates: {0:.2f}%'.format(100 * entity_wrong_links_count / len(gold_umls_ids)))
-        print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(gold_umls_ids)))
+        batch_candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
+
+
+        results_dict = defaultdict(dict)
+        for threshold in ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"]:
+
+            entity_correct_links_count = 0  # number of correctly linked entities
+            entity_wrong_links_count = 0  # number of wrongly linked entities
+            entity_no_links_count = 0  # number of entities that are not linked
+            num_candidates = []
+            num_filtered_candidates = []
+            float_threshold = float(threshold)
+            for mention_text, gold_umls_id, candidate_neighbor_ids in zip(mention_texts, gold_umls_ids, batch_candidate_neighbor_ids):
+                gold_canonical_name = umls_concept_dict_by_id[gold_umls_id]['canonical_name']
+
+                # Keep only canonical entities for which at least one mention has a score less than the threshold.
+                filtered_ids = {k: v for k, v in candidate_neighbor_ids.items() if any([z[1] <= float_threshold for z in v])}
+                num_candidates.append(len(candidate_neighbor_ids))
+                num_filtered_candidates.append(len(filtered_ids))
+                if len(filtered_ids) == 0:
+                    entity_no_links_count += 1
+                    # print(f'No candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
+                elif gold_umls_id in filtered_ids:
+                    entity_correct_links_count += 1
+                else:
+                    entity_wrong_links_count += 1
+                    # print(f'Wrong candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
+
+            results_dict[threshold]["recall"] = entity_correct_links_count / len(gold_umls_ids)
+            results_dict[threshold]["missed"] = entity_wrong_links_count / len(gold_umls_ids)
+            results_dict[threshold]["failed"] = entity_no_links_count / len(gold_umls_ids)
+            results_dict[threshold]["num_candidates"] = num_candidates
+            results_dict[threshold]["num_filtered_candidates"] = num_filtered_candidates
+
+            print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
+            print(f'MedMentions entities found in UMLS: {len(gold_umls_ids)}')
+            print(f'K: {k}')
+            print(f'Filtered threshold : {threshold}')
+            print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(gold_umls_ids)))
+            print('Gold concept not in candidates: {0:.2f}%'.format(100 * entity_wrong_links_count / len(gold_umls_ids)))
+            print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(gold_umls_ids)))
+            print("Mean, std, min, max candidate ids: ", np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates))
+            print("Mean, std, min, max filtered candidate ids: ", np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates))
+
+        results_dict = {**results_dict}
+        import json
+        json.dump(results_dict, open("results.json", "w+"), indent=4)
 
 if __name__ == "__main__":
      parser = argparse.ArgumentParser()
