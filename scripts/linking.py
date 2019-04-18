@@ -69,7 +69,7 @@ class CandidateGenerator:
         An nmslib approximate nearest neighbours index.
     tfidf_vectorizer: TfidfVectorizer
         The vectorizer used to encode mentions.
-    ann_concept_id_list: List[str]
+    ann_concept_aliases_list: List[str]
         A list of strings, mapping the indices used in the ann_index to canonical UMLS ids.
     mention_to_concept: Dict[str, Set[str]], required.
         A mapping from aliases to canonical ids that they are aliases of.
