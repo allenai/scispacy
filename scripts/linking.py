@@ -71,6 +71,8 @@ class CandidateGenerator:
         The vectorizer used to encode mentions.
     ann_concept_id_list: List[str]
         A list of strings, mapping the indices used in the ann_index to canonical UMLS ids.
+    mention_to_concept: Dict[str, Set[str]], required.
+        A mapping from aliases to canonical ids that they are aliases of.
 
     """
     def __init__(self,
@@ -82,7 +84,7 @@ class CandidateGenerator:
         self.ann_index = ann_index
         self.vectorizer = tfidf_vectorizer
         self.ann_concept_aliases_list = ann_concept_aliases_list
-        self.mention_to_concept = self.mention_to_concept
+        self.mention_to_concept = mention_to_concept
 
 
     def nmslib_knn_with_zero_vectors(self, vectors: np.ndarray, k: int) -> Tuple[np.ndarray, np.ndarray]:
@@ -161,11 +163,11 @@ class CandidateGenerator:
                 distances = []
             predicted_umls_concept_ids = defaultdict(list)
             for n, d in zip(neighbors, distances):
-
                 mention = self.ann_concept_aliases_list[n]
                 concepts_for_mention = self.mention_to_concept[mention]
                 for concept_id in concepts_for_mention:
                     predicted_umls_concept_ids[concept_id].append((mention, d))
+
             neighbors_by_concept_ids.append({**predicted_umls_concept_ids})
         return neighbors_by_concept_ids
 
@@ -288,11 +290,10 @@ def get_mention_text_and_ids(data: List[data_util.MedMentionExample],
     return mention_texts, gold_umls_ids, missing_entity_ids
 
 
-def main(medmentions_path: str, umls_path: str, model_path: str, ks: str, train: bool = False):
+def main(medmentions_path: str, umls_path: str, model_path: str, ks: str, thresholds, train: bool = False):
 
     umls_concept_list = load_umls_kb(umls_path)
     umls_concept_dict_by_id = {c['concept_id']: c for c in umls_concept_list}
-
 
     # We need to keep around a map from text to possible canonical ids that they map to.
     text_to_concept_id: Dict[str, Set[str]] = defaultdict(set)
@@ -300,7 +301,6 @@ def main(medmentions_path: str, umls_path: str, model_path: str, ks: str, train:
     for concept in umls_concept_list:
         for alias in set(concept["aliases"]).union({concept["canonical_name"]}):
             text_to_concept_id[alias].add(concept["concept_id"])
-
 
     if train:
         create_tfidf_ann_index(model_path, text_to_concept_id)
@@ -316,29 +316,29 @@ def main(medmentions_path: str, umls_path: str, model_path: str, ks: str, train:
                                                                                 umls_concept_dict_by_id)
 
     k_list = [int(k) for k in ks.split(',')]
+    if thresholds is None:
+        thresholds = [1.0]
+    else:
+        thresholds = [float(x) for x in thresholds.split(",")]
+
     for k in k_list:
-        print(f'for k = {k}')
-
-
         batch_candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
-
-
-        results_dict = defaultdict(dict)
-        for threshold in ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"]:
+        for threshold in thresholds:
 
             entity_correct_links_count = 0  # number of correctly linked entities
             entity_wrong_links_count = 0  # number of wrongly linked entities
             entity_no_links_count = 0  # number of entities that are not linked
             num_candidates = []
             num_filtered_candidates = []
-            float_threshold = float(threshold)
+
             for mention_text, gold_umls_id, candidate_neighbor_ids in zip(mention_texts, gold_umls_ids, batch_candidate_neighbor_ids):
                 gold_canonical_name = umls_concept_dict_by_id[gold_umls_id]['canonical_name']
 
                 # Keep only canonical entities for which at least one mention has a score less than the threshold.
-                filtered_ids = {k: v for k, v in candidate_neighbor_ids.items() if any([z[1] <= float_threshold for z in v])}
+                filtered_ids = {k: v for k, v in candidate_neighbor_ids.items() if any([z[1] <= threshold for z in v])}
                 num_candidates.append(len(candidate_neighbor_ids))
                 num_filtered_candidates.append(len(filtered_ids))
+
                 if len(filtered_ids) == 0:
                     entity_no_links_count += 1
                     # print(f'No candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
@@ -348,25 +348,14 @@ def main(medmentions_path: str, umls_path: str, model_path: str, ks: str, train:
                     entity_wrong_links_count += 1
                     # print(f'Wrong candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
 
-            results_dict[threshold]["recall"] = entity_correct_links_count / len(gold_umls_ids)
-            results_dict[threshold]["missed"] = entity_wrong_links_count / len(gold_umls_ids)
-            results_dict[threshold]["failed"] = entity_no_links_count / len(gold_umls_ids)
-            results_dict[threshold]["num_candidates"] = num_candidates
-            results_dict[threshold]["num_filtered_candidates"] = num_filtered_candidates
-
             print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
             print(f'MedMentions entities found in UMLS: {len(gold_umls_ids)}')
-            print(f'K: {k}')
-            print(f'Filtered threshold : {threshold}')
+            print(f'K: {k}, Filtered threshold : {threshold}')
             print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(gold_umls_ids)))
             print('Gold concept not in candidates: {0:.2f}%'.format(100 * entity_wrong_links_count / len(gold_umls_ids)))
             print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(gold_umls_ids)))
             print("Mean, std, min, max candidate ids: ", np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates))
             print("Mean, std, min, max filtered candidate ids: ", np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates))
-
-        results_dict = {**results_dict}
-        import json
-        json.dump(results_dict, open("results.json", "w+"), indent=4)
 
 if __name__ == "__main__":
      parser = argparse.ArgumentParser()
@@ -387,10 +376,15 @@ if __name__ == "__main__":
              help='Comma separated list of number of candidates.',
      )
      parser.add_argument(
+             '--thresholds',
+             default=None,
+             help='Comma separated list of threshold values.',
+     )
+     parser.add_argument(
              '--train',
              action="store_true",
              help='Fit the tfidf vectorizer and create the ANN index.',
      )
 
      args = parser.parse_args()
-     main(args.medmentions_path, args.umls_path, args.model_path, args.ks, args.train)
+     main(args.medmentions_path, args.umls_path, args.model_path, args.ks, args.thresholds, args.train)
