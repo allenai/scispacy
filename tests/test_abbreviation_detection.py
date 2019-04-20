@@ -54,7 +54,8 @@ class TestAbbreviationDetector(unittest.TestCase):
     def test_filter_matches(self):
         doc = self.nlp(self.text)
         matches = self.detector.matcher(doc)
-        filtered = filter_matches(matches, doc)
+        matches_no_brackets = [(x[0], x[1] + 1, x[2] -1) for x in matches]
+        filtered = filter_matches(matches_no_brackets, doc)
 
         assert len(filtered) == 2
         long, short  = filtered[0]
@@ -81,3 +82,12 @@ class TestAbbreviationDetector(unittest.TestCase):
         assert len(shorts) == 1
         assert shorts.pop().string == "AR"
 
+    def test_find(self):
+        doc = self.nlp(self.text)
+        long, shorts = self.detector.find(doc[6:7], doc)
+        assert long.string == "Spinal and bulbar muscular atrophy "
+        assert len(shorts) == 2
+        assert {x.string for x in shorts} == {"SBMA", "SBMA "}
+
+        long, shorts = self.detector.find(doc[7:13], doc)
+        assert shorts == set()

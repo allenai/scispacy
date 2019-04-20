@@ -77,24 +77,24 @@ def filter_matches(matcher_output: List[Tuple[int, int, int]],
     for match in matcher_output:
         start = match[1]
         end = match[2]
-        # Ignore spans with more than 8 words in (+ 2 for parens).
-        if end - start > 10:
+        # Ignore spans with more than 8 words in.
+        if end - start > 8:
             continue
-        if end - start > 5:
+        if end - start > 3:
             # Long form is inside the parens.
             # Take two words before.
-            short_form_candidate = doc[start - 2: start]
+            short_form_candidate = doc[start - 3: start - 1]
             if short_form_filter(short_form_candidate):
-                candidates.append((doc[start +1: end - 1], short_form_candidate))
+                candidates.append((doc[start: end], short_form_candidate))
         else:
             # Normal case.
             # Short form is inside the parens.
             # Sum character lengths of contents of parens.
-            abbreviation_length = sum([len(x) for x in  doc[start + 1: end -1]])
+            abbreviation_length = sum([len(x) for x in  doc[start: end]])
             max_words = min(abbreviation_length + 5, abbreviation_length * 2)
             # Look up to max_words backwards
-            long_form_candidate = doc[max(start - max_words, 0): start]
-            candidates.append((long_form_candidate, doc[start + 1: end - 1]))
+            long_form_candidate = doc[max(start - max_words - 1, 0): start - 1]
+            candidates.append((long_form_candidate, doc[start: end]))
     return candidates
 
 
@@ -123,13 +123,35 @@ class AbbreviationDetector:
         Doc.set_extension("abbreviations", default=[], force=True)
         self.matcher = Matcher(nlp.vocab)
         self.matcher.add("parenthesis", None, [{'ORTH': '('}, {'OP': '+'}, {'ORTH': ')'}])
-
         self.global_matcher = Matcher(nlp.vocab)
+
+    def find(self, span: Span, doc: Doc) -> Tuple[Span, Set[Span]]:
+        """
+        Functional version of calling the matcher for a single span.
+        This method is helpful if you already have an abbreviation which
+        you want to find a definition for.
+        """
+        dummy_matches = [(-1, int(span.start), int(span.end))]
+        filtered = filter_matches(dummy_matches, doc)
+        abbreviations = self.find_matches_for(filtered, doc)
+
+        if not abbreviations:
+            return span, set()
+        else:
+            return abbreviations[0]
+
 
     def __call__(self, doc: Doc) -> Doc:
         matches = self.matcher(doc)
-        filtered = filter_matches(matches, doc)
+        matches_no_brackets = [(x[0], x[1] + 1, x[2] - 1) for x in matches]
+        filtered = filter_matches(matches_no_brackets, doc)
+        occurences = self.find_matches_for(filtered, doc)
+        doc._.abbreviations = occurences
+        return doc
 
+    def find_matches_for(self,
+                         filtered: List[Tuple[Span, Span]],
+                         doc: Doc) -> List[Tuple[Span, Set[Span]]]:
         rules = {}
         all_occurences: Dict[Span, Set[Span]] = defaultdict(set)
         already_seen_long: Set[str] = set()
@@ -142,7 +164,7 @@ class AbbreviationDetector:
             # defined twice in a document. There's not much we can do about this,
             # but at least the case which is discarded will be picked up below by
             # the global matcher. So it's likely that things will work out ok most of the time.
-            new_long = long.string not in already_seen_long
+            new_long = long.string not in already_seen_long if long else False
             new_short = short.string not in already_seen_short
             if long is not None and new_long and new_short:
                 already_seen_long.add(long.string)
@@ -161,5 +183,4 @@ class AbbreviationDetector:
             # Clean up the global matcher.
             self.global_matcher.remove(key)
 
-        doc._.abbreviations = [(k, v) for k, v in all_occurences.items()]
-        return doc
+        return [(k, v) for k, v in all_occurences.items()]
