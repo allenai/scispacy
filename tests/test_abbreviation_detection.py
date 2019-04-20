@@ -6,10 +6,8 @@ from scispacy.abbreviation import AbbreviationDetector, find_abbreviation, filte
 
 class TestAbbreviationDetector(unittest.TestCase):
 
-
     def setUp(self):
         super().setUp()
-
         self.nlp = spacy.load("en_core_web_sm")
         self.detector = AbbreviationDetector(self.nlp)
         self.text = "Spinal and bulbar muscular atrophy (SBMA) is an \
@@ -53,7 +51,6 @@ class TestAbbreviationDetector(unittest.TestCase):
         _, long_form = find_abbreviation(long, short)
         assert long_form.text == "aaaabbreviation"
 
-
     def test_filter_matches(self):
         doc = self.nlp(self.text)
         matches = self.detector.matcher(doc)
@@ -83,3 +80,4 @@ class TestAbbreviationDetector(unittest.TestCase):
         assert long.string == "androgen receptor "
         assert len(shorts) == 1
         assert shorts.pop().string == "AR"
+

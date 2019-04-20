@@ -1,7 +1,6 @@
 
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Set, Dict
 from collections import defaultdict
-import spacy
 from spacy.tokens import Span, Doc
 from spacy.matcher import Matcher
 
@@ -34,7 +33,7 @@ def find_abbreviation(long_form_candidate: Span,
     long_index = len(long_form) - 1
     short_index = len(short_form) - 1
 
-    while short_index >=0:
+    while short_index >= 0:
         current_char = short_form[short_index].lower()
         # We don't check non alpha-numeric characters.
         if not current_char.isalnum():
@@ -43,9 +42,9 @@ def find_abbreviation(long_form_candidate: Span,
 
                 # Does the character match at this position? ...
         while ((long_index >= 0 and long_form[long_index].lower() != current_char) or
-                # .... or if we are checking the first character of the abbreviation, we enforce
-                # to be the _starting_ character of a span.
-                (short_index == 0 and long_index > 0 and long_form[long_index -1].isalnum())):
+               # .... or if we are checking the first character of the abbreviation, we enforce
+               # to be the _starting_ character of a span.
+               (short_index == 0 and long_index > 0 and long_form[long_index -1].isalnum())):
             long_index -= 1
             if long_index < 0:
                 return short_form_candidate, None
@@ -69,7 +68,8 @@ def find_abbreviation(long_form_candidate: Span,
 
     return short_form_candidate, long_form_candidate[starting_index:]
 
-def filter_matches(matcher_output, doc: Doc) -> List[Tuple[Span, Span]]:
+def filter_matches(matcher_output: List[Tuple[int, int, int]],
+                   doc: Doc) -> List[Tuple[Span, Span]]:
     # Filter into two cases:
     # 1. <Short Form> ( <Long Form> )
     # 2. <Long Form> (<Short Form>) [this case is most common].
@@ -119,21 +119,21 @@ class AbbreviationDetector:
 
     Note that this class does not replace the spans, or merge them.
     """
-    def __init__(self, nlp):
+    def __init__(self, nlp) -> None:
         Doc.set_extension("abbreviations", default=[], force=True)
         self.matcher = Matcher(nlp.vocab)
         self.matcher.add("parenthesis", None, [{'ORTH': '('}, {'OP': '+'}, {'ORTH': ')'}])
 
         self.global_matcher = Matcher(nlp.vocab)
 
-    def __call__(self, doc: Doc):
+    def __call__(self, doc: Doc) -> Doc:
         matches = self.matcher(doc)
         filtered = filter_matches(matches, doc)
 
         rules = {}
-        all_occurences = defaultdict(set)
-        already_seen_long = set()
-        already_seen_short = set()
+        all_occurences: Dict[Span, Set[Span]] = defaultdict(set)
+        already_seen_long: Set[str] = set()
+        already_seen_short: Set[str] = set()
         for (long_candidate, short_candidate) in filtered:
             short, long = find_abbreviation(long_candidate, short_candidate)
             # We need the long and short form definitions to be unique, because we need
@@ -142,10 +142,9 @@ class AbbreviationDetector:
             # defined twice in a document. There's not much we can do about this,
             # but at least the case which is discarded will be picked up below by
             # the global matcher. So it's likely that things will work out ok most of the time.
-            if (long is not None and
-                long.string not in already_seen_long and
-                short.string not in already_seen_short):
-
+            new_long = long.string not in already_seen_long
+            new_short = short.string not in already_seen_short
+            if long is not None and new_long and new_short:
                 already_seen_long.add(long.string)
                 already_seen_short.add(short.string)
                 all_occurences[long].add(short)
@@ -155,28 +154,12 @@ class AbbreviationDetector:
         to_remove = set()
         global_matches = self.global_matcher(doc)
         for match, start, end in global_matches:
-            string_key = self.global_matcher.vocab.strings[match]
+            string_key = self.global_matcher.vocab.strings[match] # pylint: disable=no-member
             to_remove.add(string_key)
             all_occurences[rules[string_key]].add(doc[start:end])
         for key in to_remove:
             # Clean up the global matcher.
             self.global_matcher.remove(key)
 
-        doc._.abbreviations = [(k,v) for k,v in all_occurences.items()]
+        doc._.abbreviations = [(k, v) for k, v in all_occurences.items()]
         return doc
-
-
-if __name__ == "__main__":
-
-    nlp = spacy.load("en_core_web_sm")
-
-    nlp.add_pipe(AbbreviationDetector(nlp), last=True)
-    text = "Spinal and bulbar muscular atrophy (SBMA) is an inherited motor neuron disease caused by the expansion of a polyglutamine tract within the androgen receptor (AR). The pathologic features of SBMA are motor neuron loss in the spinal cord and brainstem and diffuse nuclear accumulation and nuclear inclusions of the mutant AR in the residual motor neurons and certain visceral organs. Many components of the ubiquitin-proteasome and molecular chaperones are also sequestered in the inclusions, suggesting that they may be actively engaged in an attempt to degrade or refold the mutant AR. C terminus of Hsc70 (heat shock cognate protein 70)-interacting protein (CHIP), a U-box type E3 ubiquitin ligase, has been shown to interact with heat shock protein 90 (Hsp90) or Hsp70 and ubiquitylates unfolded proteins trapped by molecular chaperones and degrades them. Here, we demonstrate that transient overexpression of CHIP in a neuronal cell model reduces the monomeric mutant AR more effectively than it does the wild type, suggesting that the mutant AR is more sensitive to CHIP than is the wild type. High expression of CHIP in an SBMA transgenic mouse model also ameliorated motor symptoms and inhibited neuronal nuclear accumulation of the mutant AR. When CHIP was overexpressed in transgenic SBMA mice, mutant AR was also preferentially degraded over wild-type AR. These findings suggest that CHIP overexpression ameliorates SBMA phenotypes in mice by reducing nuclear-localized mutant AR via enhanced mutant AR degradation. Thus, CHIP overexpression would provide a potential therapeutic avenue for SBMA."
-
-    doc  = nlp(text)
-    for long, shorts in doc._.abbreviations.items():
-        print(long, shorts)
-
-
-
-
