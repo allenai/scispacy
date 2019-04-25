@@ -74,18 +74,22 @@ class CandidateGenerator:
         A list of strings, mapping the indices used in the ann_index to canonical UMLS ids.
     mention_to_concept: Dict[str, Set[str]], required.
         A mapping from aliases to canonical ids that they are aliases of.
+    verbose: bool
+        Setting to true will print extra information about the generated candidates
 
     """
     def __init__(self,
                  ann_index: FloatIndex,
                  tfidf_vectorizer: TfidfVectorizer,
                  ann_concept_aliases_list: List[str],
-                 mention_to_concept: Dict[str, Set[str]]) -> None:
+                 mention_to_concept: Dict[str, Set[str]],
+                 verbose: bool = True) -> None:
 
         self.ann_index = ann_index
         self.vectorizer = tfidf_vectorizer
         self.ann_concept_aliases_list = ann_concept_aliases_list
         self.mention_to_concept = mention_to_concept
+        self.verbose = verbose
 
 
     def nmslib_knn_with_zero_vectors(self, vectors: np.ndarray, k: int) -> Tuple[np.ndarray, np.ndarray]:
@@ -100,7 +104,8 @@ class CandidateGenerator:
         """
         empty_vectors_boolean_flags = np.array(vectors.sum(axis=1) != 0).reshape(-1,)
         empty_vectors_count = vectors.shape[0] - sum(empty_vectors_boolean_flags)
-        # print(f'Number of empty vectors: {empty_vectors_count}')
+        if self.verbose:
+            print(f'Number of empty vectors: {empty_vectors_count}')
 
         # remove empty vectors before calling `ann_index.knnQueryBatch`
         vectors = vectors[empty_vectors_boolean_flags]
@@ -145,7 +150,8 @@ class CandidateGenerator:
             the index contains aliases which are canonicalized, so multiple values may map to the same
             canonical id.
         """
-        # print(f'Generating candidates for {len(mention_texts)} mentions')
+        if self.verbose:
+            print(f'Generating candidates for {len(mention_texts)} mentions')
         tfidfs = self.vectorizer.transform(mention_texts)
         start_time = datetime.datetime.now()
 
@@ -154,7 +160,8 @@ class CandidateGenerator:
         batch_neighbors, batch_distances = self.nmslib_knn_with_zero_vectors(tfidfs, k)
         end_time = datetime.datetime.now()
         total_time = end_time - start_time
-        # print(f'Finding neighbors took {total_time.total_seconds()} seconds')
+        if self.verbose:
+            print(f'Finding neighbors took {total_time.total_seconds()} seconds')
         neighbors_by_concept_ids = []
         for neighbors, distances in zip(batch_neighbors, batch_distances):
             if neighbors is None:
