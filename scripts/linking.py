@@ -301,6 +301,13 @@ def get_mention_text_and_ids_by_doc(data: List[data_util.MedMentionExample],
                                     umls: Dict[str, Any]):
     """
     Returns a list of tuples containing a MedMentionExample and the texts and ids contianed in it
+
+    Parameters
+    ----------
+    data: List[data_util.MedMentionExample]
+        A list of MedMentionExamples being evaluated
+    umls: Dict[str, Any]
+        A dictionary of UMLS concepts
     """
     missing_entity_ids = []  # entities in MedMentions but not in UMLS
 
@@ -330,6 +337,21 @@ def eval_spacy_mentions(examples: List[data_util.MedMentionExample],
     """
     Evaluates candidate generation using mentions produced by a spacy model. This means that an entity is considered
     correct if that entity appears anywhere in the abstract
+
+    Parameters
+    ----------
+    examples: List[data_util.MedMentionExample]
+        An list of MedMentionExamples being evaluted
+    umls_concept_dict_by_id: Dict[str, Dict]
+        A dictionary of UMLS concepts
+    candidate_generator: CandidateGenerator
+        A CandidateGenerator instance for generating linking candidates for mentions
+    k_list: List[int]
+        A list of k values determining how many candidates are generated
+    thresholds: List[float]
+        A list of threshold values determining the cutoff score for candidates
+    spacy_model: str
+        The name of a spacy model to load and use for detecting mentions
     """
     nlp = spacy.load(spacy_model)
 
@@ -389,16 +411,29 @@ def eval_spacy_mentions(examples: List[data_util.MedMentionExample],
             print("Mean, std, min, max candidate ids: ", np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates))
             print("Mean, std, min, max filtered candidate ids: ", np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates))
 
-def eval_gold_mentions(dev_examples: List[data_util.MedMentionExample],
+def eval_gold_mentions(examples: List[data_util.MedMentionExample],
                        umls_concept_dict_by_id: Dict[str, Dict],
                        candidate_generator: CandidateGenerator,
                        k_list: List[int],
                        thresholds: List[float]):
     """
     Evaluate candidate generation using gold mentions. This evaluation is at the mention level.
+
+    Parameters
+    ----------
+    examples: List[data_util.MedMentionExample]
+        An list of MedMentionExamples being evaluted
+    umls_concept_dict_by_id: Dict[str, Dict]
+        A dictionary of UMLS concepts
+    candidate_generator: CandidateGenerator
+        A CandidateGenerator instance for generating linking candidates for mentions
+    k_list: List[int]
+        A list of k values determining how many candidates are generated
+    thresholds: List[float]
+        A list of threshold values determining the cutoff score for candidates
     """
     # only loop over the dev examples for now because we don't have a trained model
-    mention_texts, gold_umls_ids, missing_entity_ids = get_mention_text_and_ids(dev_examples,
+    mention_texts, gold_umls_ids, missing_entity_ids = get_mention_text_and_ids(examples,
                                                                                 umls_concept_dict_by_id)
 
     for k in k_list:
