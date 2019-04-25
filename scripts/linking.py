@@ -365,6 +365,7 @@ def eval_spacy_mentions(examples: List[data_util.MedMentionExample],
             num_candidates = []
             num_filtered_candidates = []
 
+            all_golds_per_doc_set = []
             all_golds = []
             all_mentions = []
             for example, mention_texts, gold_umls_ids in examples_with_labels:
@@ -376,7 +377,8 @@ def eval_spacy_mentions(examples: List[data_util.MedMentionExample],
                 # it is possible that a spacy model does not find any entities in an abstract
                 if ner_mentions == []:
                     entity_missed_count += len(doc_golds)
-                    all_golds += list(doc_golds)
+                    all_golds_per_doc_set += list(doc_golds)
+                    all_golds += gold_umls_ids
                     continue
 
                 batch_candidate_neighbor_ids = candidate_generator.generate_candidates(ner_mentions, k)
@@ -399,14 +401,15 @@ def eval_spacy_mentions(examples: List[data_util.MedMentionExample],
                 # produced for that document
                 entity_missed_count += len(doc_golds - doc_candidates)
                 
-                all_golds += list(doc_golds)
+                all_golds_per_doc_set += list(doc_golds)
+                all_golds += gold_umls_ids
                 all_mentions += ner_mentions
 
             print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
             print(f'MedMentions entities found in UMLS: {len(all_golds)}')
             print(f'K: {k}, Filtered threshold : {threshold}')
-            print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(all_golds)))
-            print('Gold concepts missed: {0:.2f}%'.format(100 * entity_missed_count / len(all_golds)))
+            print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(all_golds_per_doc_set)))
+            print('Gold concepts missed: {0:.2f}%'.format(100 * entity_missed_count / len(all_golds_per_doc_set)))
             print('Candidate generation failed: {0:.2f}%'.format(100 * mention_no_links_count / len(all_mentions)))
             print("Mean, std, min, max candidate ids: ", np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates))
             print("Mean, std, min, max filtered candidate ids: ", np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates))
@@ -495,8 +498,9 @@ def main(medmentions_path: str,
         create_tfidf_ann_index(model_path, text_to_concept_id)
     ann_concept_aliases_list, tfidf_vectorizer, ann_index = load_tfidf_ann_index(model_path)
 
-    candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, ann_concept_aliases_list, text_to_concept_id)
-    print('Reading MedMentions ... ')
+    verbose = use_gold_mentions
+    candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, ann_concept_aliases_list, text_to_concept_id, verbose)
+    print('Reading MedMentions...')
     train_examples, dev_examples, test_examples = data_util.read_full_med_mentions(medmentions_path,
                                                                                    spacy_format=False)
 
