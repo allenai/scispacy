@@ -336,7 +336,11 @@ def eval_candidate_generation(examples: List[data_util.MedMentionExample],
                               use_gold_mentions: bool,
                               spacy_model: str):
     """
-    Evaluate candidate generation using gold mentions. This evaluation is at the mention level.
+    Evaluate candidate generation using either gold mentions or spacy mentions.
+    The evaluation is done both at the mention level and at the document level. If the evaluation
+    is done with spacy mentions at the mention level, a pair is only considered correct if
+    both the mention and the entity are exactly correct. This could potentially be relaxed, but this 
+    matches the evaluation setup from the MedMentions paper.
 
     Parameters
     ----------
