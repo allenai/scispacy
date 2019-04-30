@@ -10,7 +10,7 @@ import json
 import argparse
 import datetime
 from collections import defaultdict
-
+from tqdm import tqdm
 
 import scipy
 import numpy as np
@@ -382,7 +382,7 @@ def eval_candidate_generation(examples: List[data_util.MedMentionExample],
             all_golds = []
             all_mentions = []
 
-            for i, example in enumerate(examples):
+            for i, example in tqdm(enumerate(examples), desc="Iterating over examples"):
                 entities = [entity for entity in example.entities if entity.umls_id in umls_concept_dict_by_id]
                 gold_umls_ids = [entity.umls_id for entity in entities]
                 mention_texts = [entity.mention_text for entity in entities]
