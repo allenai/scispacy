@@ -328,97 +328,13 @@ def get_mention_text_and_ids_by_doc(data: List[data_util.MedMentionExample],
 
     return examples_with_labels, missing_entity_ids
 
-def eval_spacy_mentions(examples: List[data_util.MedMentionExample],
-                        umls_concept_dict_by_id: Dict[str, Dict],
-                        candidate_generator: CandidateGenerator,
-                        k_list: List[int],
-                        thresholds: List[float],
-                        spacy_model: str):
-    """
-    Evaluates candidate generation using mentions produced by a spacy model. This means that an entity is considered
-    correct if that entity appears anywhere in the abstract
-
-    Parameters
-    ----------
-    examples: List[data_util.MedMentionExample]
-        An list of MedMentionExamples being evaluted
-    umls_concept_dict_by_id: Dict[str, Dict]
-        A dictionary of UMLS concepts
-    candidate_generator: CandidateGenerator
-        A CandidateGenerator instance for generating linking candidates for mentions
-    k_list: List[int]
-        A list of k values determining how many candidates are generated
-    thresholds: List[float]
-        A list of threshold values determining the cutoff score for candidates
-    spacy_model: str
-        The name of a spacy model to load and use for detecting mentions
-    """
-    nlp = spacy.load(spacy_model)
-
-    # only loop over the dev examples for now because we don't have a trained model
-    examples_with_labels, missing_entity_ids = get_mention_text_and_ids_by_doc(examples, umls_concept_dict_by_id)
-    for k in k_list:
-        for threshold in thresholds:
-            entity_correct_links_count = 0  # number of correctly linked entities
-            entity_missed_count = 0  # number of gold entities missed
-            mention_no_links_count = 0  # number of ner mentions that did not have any linking candidates
-            num_candidates = []
-            num_filtered_candidates = []
-
-            all_golds_per_doc_set = []
-            all_golds = []
-            all_mentions = []
-            for example, mention_texts, gold_umls_ids in examples_with_labels:
-                doc = nlp(example.text)
-                ner_mentions = [ent.text for ent in doc.ents]
-                doc_candidates = set()
-                doc_golds = set(gold_umls_ids)
-
-                # it is possible that a spacy model does not find any entities in an abstract
-                if ner_mentions == []:
-                    entity_missed_count += len(doc_golds)
-                    all_golds_per_doc_set += list(doc_golds)
-                    all_golds += gold_umls_ids
-                    continue
-
-                batch_candidate_neighbor_ids = candidate_generator.generate_candidates(ner_mentions, k)
-
-                for ner_mention, candidate_neighbor_ids in zip(ner_mentions, batch_candidate_neighbor_ids):
-                    # Keep only canonical entities for which at least one mention has a score less than the threshold.
-                    filtered_ids = {k: v for k, v in candidate_neighbor_ids.items() if any([z[1] <= threshold for z in v])}
-                    num_candidates.append(len(candidate_neighbor_ids))
-                    num_filtered_candidates.append(len(filtered_ids))
-
-                    doc_candidates.update(filtered_ids)
-
-                    if len(filtered_ids) == 0:
-                        mention_no_links_count += 1
-
-                # the number of correct entities for a given document is the number of gold entities contained in the candidates
-                # produced for that document
-                entity_correct_links_count += len(doc_candidates.intersection(doc_golds))
-                # the number of incorrect entities for a given document is the number of gold entities not contained in the candidates
-                # produced for that document
-                entity_missed_count += len(doc_golds - doc_candidates)
-                
-                all_golds_per_doc_set += list(doc_golds)
-                all_golds += gold_umls_ids
-                all_mentions += ner_mentions
-
-            print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
-            print(f'MedMentions entities found in UMLS: {len(all_golds)}')
-            print(f'K: {k}, Filtered threshold : {threshold}')
-            print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(all_golds_per_doc_set)))
-            print('Gold concepts missed: {0:.2f}%'.format(100 * entity_missed_count / len(all_golds_per_doc_set)))
-            print('Candidate generation failed: {0:.2f}%'.format(100 * mention_no_links_count / len(all_mentions)))
-            print("Mean, std, min, max candidate ids: ", np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates))
-            print("Mean, std, min, max filtered candidate ids: ", np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates))
-
-def eval_gold_mentions(examples: List[data_util.MedMentionExample],
-                       umls_concept_dict_by_id: Dict[str, Dict],
-                       candidate_generator: CandidateGenerator,
-                       k_list: List[int],
-                       thresholds: List[float]):
+def eval_candidate_generation(examples: List[data_util.MedMentionExample],
+                              umls_concept_dict_by_id: Dict[str, Dict],
+                              candidate_generator: CandidateGenerator,
+                              k_list: List[int],
+                              thresholds: List[float],
+                              use_gold_mentions: bool,
+                              spacy_model: str):
     """
     Evaluate candidate generation using gold mentions. This evaluation is at the mention level.
 
@@ -436,11 +352,13 @@ def eval_gold_mentions(examples: List[data_util.MedMentionExample],
         A list of threshold values determining the cutoff score for candidates
     """
     # only loop over the dev examples for now because we don't have a trained model
-    mention_texts, gold_umls_ids, missing_entity_ids = get_mention_text_and_ids(examples,
-                                                                                umls_concept_dict_by_id)
+    examples_with_text_and_ids, missing_entity_ids = get_mention_text_and_ids_by_doc(examples,
+                                                                   umls_concept_dict_by_id)
+
+    if not use_gold_mentions:
+        nlp = spacy.load(spacy_model)
 
     for k in k_list:
-        batch_candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
         for threshold in thresholds:
 
             entity_correct_links_count = 0  # number of correctly linked entities
@@ -449,29 +367,105 @@ def eval_gold_mentions(examples: List[data_util.MedMentionExample],
             num_candidates = []
             num_filtered_candidates = []
 
-            for mention_text, gold_umls_id, candidate_neighbor_ids in zip(mention_texts, gold_umls_ids, batch_candidate_neighbor_ids):
-                gold_canonical_name = umls_concept_dict_by_id[gold_umls_id]['canonical_name']
+            doc_entity_correct_links_count = 0  # number of correctly linked entities
+            doc_entity_missed_count = 0  # number of gold entities missed
+            doc_mention_no_links_count = 0  # number of ner mentions that did not have any linking candidates
+            doc_num_candidates = []
+            doc_num_filtered_candidates = []
 
-                # Keep only canonical entities for which at least one mention has a score less than the threshold.
-                filtered_ids = {k: v for k, v in candidate_neighbor_ids.items() if any([z[1] <= threshold for z in v])}
-                num_candidates.append(len(candidate_neighbor_ids))
-                num_filtered_candidates.append(len(filtered_ids))
+            all_golds_per_doc_set = []
+            all_golds = []
+            all_mentions = []
 
-                if len(filtered_ids) == 0:
-                    entity_no_links_count += 1
-                    # print(f'No candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
-                elif gold_umls_id in filtered_ids:
-                    entity_correct_links_count += 1
+            for example in examples:
+                entities = [entity for entity in example.entities if entity.umls_id in umls_concept_dict_by_id]
+                gold_umls_ids = [entity.umls_id for entity in entities]
+                mention_texts = [entity.mention_text for entity in entities]
+                doc_golds = set(gold_umls_ids)
+                doc_candidates = set()
+                batch_candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
+
+                if use_gold_mentions:
+                    for entity, candidates in zip(entities, batch_candidate_neighbor_ids):
+                        gold_canonical_name = umls_concept_dict_by_id[entity.umls_id]['canonical_name']
+                        # Keep only canonical entities for which at least one mention has a score less than the threshold.
+                        filtered_ids = {k: v for k, v in candidates.items() if any([z[1] <= threshold for z in v])}
+                        num_candidates.append(len(candidates))
+                        num_filtered_candidates.append(len(filtered_ids))
+
+                        doc_candidates.update(filtered_ids)
+
+                        if len(filtered_ids) == 0:
+                            entity_no_links_count += 1
+                        elif entity.umls_id in filtered_ids:
+                            entity_correct_links_count += 1
+                        else:
+                            entity_wrong_links_count += 1
                 else:
-                    entity_wrong_links_count += 1
-                    # print(f'Wrong candidates. Mention Text: {mention_text}, Canonical Name: {gold_canonical_name}')
+                    doc = nlp(example.text)
+                    ner_entities = [ent for ent in doc.ents]
+                    ner_mentions = [ent.text for ent in doc.ents]
+
+                    doc_candidates = set()
+                    doc_golds = set(gold_umls_ids)
+
+                    # it is possible that a spacy model does not find any entities in an abstract
+                    if ner_mentions == []:
+                        doc_entity_missed_count += len(doc_golds)
+                        all_golds_per_doc_set += list(doc_golds)
+                        all_golds += gold_umls_ids
+                        continue
+
+                    batch_candidate_neighbor_ids = candidate_generator.generate_candidates(ner_mentions, k)
+                    for ner_mention, candidate_neighbor_ids in zip(ner_mentions, batch_candidate_neighbor_ids):
+                        # Keep only canonical entities for which at least one mention has a score less than the threshold.
+                        filtered_ids = {k: v for k, v in candidate_neighbor_ids.items() if any([z[1] <= threshold for z in v])}
+                        num_candidates.append(len(candidate_neighbor_ids))
+                        num_filtered_candidates.append(len(filtered_ids))
+
+                        doc_candidates.update(filtered_ids)
+
+                    for gold_entity in entities:
+                        span_from_doc = doc.char_span(gold_entity.start, gold_entity.end)
+                        candidates = {}
+                        for i, predicted_entity in enumerate(ner_entities):
+                            if predicted_entity == span_from_doc:
+                                candidates = batch_candidate_neighbor_ids[i]
+                                break
+
+                        # Keep only canonical entities for which at least one mention has a score less than the threshold.
+                        filtered_ids = {k: v for k, v in candidates.items() if any([z[1] <= threshold for z in v])}
+                        num_candidates.append(len(candidates))
+                        num_filtered_candidates.append(len(filtered_ids))
+
+                        doc_candidates.update(filtered_ids)
+
+                        if len(filtered_ids) == 0:
+                            entity_no_links_count += 1
+                        elif gold_entity.umls_id in candidates:
+                            entity_correct_links_count += 1
+                        else:
+                            entity_wrong_links_count += 1
+
+                # the number of correct entities for a given document is the number of gold entities contained in the candidates
+                # produced for that document
+                doc_entity_correct_links_count += len(doc_candidates.intersection(doc_golds))
+                # the number of incorrect entities for a given document is the number of gold entities not contained in the candidates
+                # produced for that document
+                doc_entity_missed_count += len(doc_golds - doc_candidates)
+
+                all_golds_per_doc_set += list(doc_golds)
+                all_golds += gold_umls_ids
+                all_mentions += mention_texts
 
             print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
             print(f'MedMentions entities found in UMLS: {len(gold_umls_ids)}')
             print(f'K: {k}, Filtered threshold : {threshold}')
-            print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(gold_umls_ids)))
-            print('Gold concept not in candidates: {0:.2f}%'.format(100 * entity_wrong_links_count / len(gold_umls_ids)))
-            print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(gold_umls_ids)))
+            print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(all_golds)))
+            print('Gold concept not in candidates: {0:.2f}%'.format(100 * entity_wrong_links_count / len(all_golds)))
+            print('Doc level gold concept in candidates: {0:.2f}%'.format(100 * doc_entity_correct_links_count / len(all_golds_per_doc_set)))
+            print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
+            print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
             print("Mean, std, min, max candidate ids: ", np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates))
             print("Mean, std, min, max filtered candidate ids: ", np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates))
 
@@ -498,8 +492,7 @@ def main(medmentions_path: str,
         create_tfidf_ann_index(model_path, text_to_concept_id)
     ann_concept_aliases_list, tfidf_vectorizer, ann_index = load_tfidf_ann_index(model_path)
 
-    verbose = use_gold_mentions
-    candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, ann_concept_aliases_list, text_to_concept_id, verbose)
+    candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, ann_concept_aliases_list, text_to_concept_id, False)
     print('Reading MedMentions...')
     train_examples, dev_examples, test_examples = data_util.read_full_med_mentions(medmentions_path,
                                                                                    spacy_format=False)
@@ -510,10 +503,7 @@ def main(medmentions_path: str,
     else:
         thresholds = [float(x) for x in thresholds.split(",")]
 
-    if use_gold_mentions:
-        eval_gold_mentions(dev_examples, umls_concept_dict_by_id, candidate_generator, k_list, thresholds)
-    else:
-        eval_spacy_mentions(dev_examples, umls_concept_dict_by_id, candidate_generator, k_list, thresholds, spacy_model)
+    eval_candidate_generation(dev_examples, umls_concept_dict_by_id, candidate_generator, k_list, thresholds, use_gold_mentions, spacy_model)
 
 if __name__ == "__main__":
      parser = argparse.ArgumentParser()
