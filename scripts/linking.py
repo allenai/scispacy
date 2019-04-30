@@ -361,6 +361,7 @@ def eval_candidate_generation(examples: List[data_util.MedMentionExample],
 
     if not use_gold_mentions:
         nlp = spacy.load(spacy_model)
+        docs = [nlp(example.text) for example in examples]
 
     for k in k_list:
         for threshold in thresholds:
@@ -381,7 +382,7 @@ def eval_candidate_generation(examples: List[data_util.MedMentionExample],
             all_golds = []
             all_mentions = []
 
-            for example in examples:
+            for i, example in enumerate(examples):
                 entities = [entity for entity in example.entities if entity.umls_id in umls_concept_dict_by_id]
                 gold_umls_ids = [entity.umls_id for entity in entities]
                 mention_texts = [entity.mention_text for entity in entities]
@@ -406,7 +407,7 @@ def eval_candidate_generation(examples: List[data_util.MedMentionExample],
                         else:
                             entity_wrong_links_count += 1
                 else:
-                    doc = nlp(example.text)
+                    doc = docs[i]
                     ner_entities = [ent for ent in doc.ents]
                     ner_mentions = [ent.text for ent in doc.ents]
 
@@ -432,9 +433,9 @@ def eval_candidate_generation(examples: List[data_util.MedMentionExample],
                     for gold_entity in entities:
                         span_from_doc = doc.char_span(gold_entity.start, gold_entity.end)
                         candidates = {}
-                        for i, predicted_entity in enumerate(ner_entities):
+                        for j, predicted_entity in enumerate(ner_entities):
                             if predicted_entity == span_from_doc:
-                                candidates = batch_candidate_neighbor_ids[i]
+                                candidates = batch_candidate_neighbor_ids[j]
                                 break
 
                         # Keep only canonical entities for which at least one mention has a score less than the threshold.
