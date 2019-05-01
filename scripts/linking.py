@@ -421,6 +421,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                 else:
                     doc = docs[i]
                     ner_entities = [ent for ent in doc.ents]
+                    predicted_mention_types = [ent.label_ for ent in doc.ents]
                     mention_texts = [ent.text for ent in doc.ents]
 
                 batch_candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
@@ -437,6 +438,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                 for i, gold_entity in enumerate(entities):
                     if use_gold_mentions:
                         candidates = filtered_batch_candidate_neighbor_ids[i]  # for gold mentions, len(entities) == len(filtered_batch_candidate_neighbor_ids)
+                        mention_types = umls_concept_dict_by_id[gold_entity.umls_id]['types']  # use gold types
                     else:
                         # for each gold entity, search for a corresponding predicted entity that has the same span
                         span_from_doc = doc.char_span(gold_entity.start, gold_entity.end)
@@ -444,6 +446,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                         for j, predicted_entity in enumerate(ner_entities):
                             if predicted_entity == span_from_doc:
                                 candidates = filtered_batch_candidate_neighbor_ids[j]
+                                mention_types = predicted_mention_types[j]
                                 break
 
                     # Evaluating candidate generation
@@ -461,7 +464,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                         has_definition = 'definition' in umls_concept_dict_by_id[candidate_id]
                         cosine_scores = [cosine for alias, cosine in candidates[candidate_id]]
                         classifier_example = ({'has_definition': has_definition, 'cosines': cosine_scores,
-                                               'mention_types': umls_concept_dict_by_id[gold_entity.umls_id]['types'],
+                                               'mention_types': mention_types,
                                                'candidate_types': umls_concept_dict_by_id[candidate_id]['types'],})
                         features.append(featurizer(classifier_example))
                     if len(features) > 0:
