@@ -352,13 +352,13 @@ def featurizer(example: Dict):
     return features
 
 def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExample],
-                              umls_concept_dict_by_id: Dict[str, Dict],
-                              candidate_generator: CandidateGenerator,
-                              linking_classifier: ClassifierMixin,
-                              k_list: List[int],
-                              thresholds: List[float],
-                              use_gold_mentions: bool,
-                              spacy_model: str):
+                                          umls_concept_dict_by_id: Dict[str, Dict],
+                                          candidate_generator: CandidateGenerator,
+                                          linking_classifier: ClassifierMixin,
+                                          k_list: List[int],
+                                          thresholds: List[float],
+                                          use_gold_mentions: bool,
+                                          spacy_model: str):
     """
     Evaluate candidate generation and linking using either gold mentions or spacy mentions.
     The evaluation is done both at the mention level and at the document level. If the evaluation
@@ -532,7 +532,7 @@ def main(medmentions_path: str,
         thresholds = [float(x) for x in thresholds.split(",")]
 
     # only evaluate on the dev examples for now because we don't have a trained model
-    eval_candidate_generation(dev_examples, umls_concept_dict_by_id, candidate_generator, linking_classifier, k_list, thresholds, use_gold_mentions, spacy_model)
+    eval_candidate_generation_and_linking(dev_examples, umls_concept_dict_by_id, candidate_generator, linking_classifier, k_list, thresholds, use_gold_mentions, spacy_model)
 
 if __name__ == "__main__":
      parser = argparse.ArgumentParser()
