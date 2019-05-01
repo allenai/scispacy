@@ -11,7 +11,7 @@ import argparse
 import datetime
 from collections import defaultdict
 from tqdm import tqdm
-
+import jsonlines
 import scipy
 import numpy as np
 from joblib import dump, load
@@ -358,7 +358,8 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                                           k_list: List[int],
                                           thresholds: List[float],
                                           use_gold_mentions: bool,
-                                          spacy_model: str):
+                                          spacy_model: str,
+                                          generate_linking_classifier_training_data: bool):
     """
     Evaluate candidate generation and linking using either gold mentions or spacy mentions.
     The evaluation is done both at the mention level and at the document level. If the evaluation
@@ -388,6 +389,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
         nlp = spacy.load(spacy_model)
         docs = [nlp(example.text) for example in examples]
 
+    linking_classifier_training_data = []
     for k in k_list:
         for threshold in thresholds:
 
@@ -463,9 +465,13 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                     for candidate_id in candidate_ids:
                         has_definition = 'definition' in umls_concept_dict_by_id[candidate_id]
                         cosine_scores = [cosine for alias, cosine in candidates[candidate_id]]
-                        classifier_example = ({'has_definition': has_definition, 'cosines': cosine_scores,
+                        label = int(gold_entity.umls_id == candidate_id)
+                        classifier_example = ({'label': label,
+                                               'has_definition': has_definition, 'cosines': cosine_scores,
                                                'mention_types': mention_types,
                                                'candidate_types': umls_concept_dict_by_id[candidate_id]['types'],})
+                        if generate_linking_classifier_training_data:
+                            linking_classifier_training_data.append(classifier_example)
                         features.append(featurizer(classifier_example))
                     if len(features) > 0:
                         scores = linking_classifier.predict(features)
@@ -507,7 +513,8 @@ def main(medmentions_path: str,
          thresholds,
          use_gold_mentions: bool = False,
          train: bool = False,
-         spacy_model: str = ""):
+         spacy_model: str = "",
+         generate_linker_data: bool = False):
 
     umls_concept_list = load_umls_kb(umls_path)
     umls_concept_dict_by_id = {c['concept_id']: c for c in umls_concept_list}
@@ -534,8 +541,23 @@ def main(medmentions_path: str,
     else:
         thresholds = [float(x) for x in thresholds.split(",")]
 
-    # only evaluate on the dev examples for now because we don't have a trained model
-    eval_candidate_generation_and_linking(dev_examples, umls_concept_dict_by_id, candidate_generator, linking_classifier, k_list, thresholds, use_gold_mentions, spacy_model)
+    if generate_linker_data:
+        examples_list = [train_examples, dev_examples, test_examples]
+        filenames = [f'{model_path}/train.jsonl', f'{model_path}/dev.jsonl', f'{model_path}/test.jsonl']
+        for examples, filename in zip(examples_list, filenames):
+            supervised_data = eval_candidate_generation_and_linking(examples, umls_concept_dict_by_id, candidate_generator, linking_classifier, k_list, thresholds,
+                                                                    use_gold_mentions, spacy_model, generate_linker_data)
+            with jsonlines.open(filename, 'w') as f:
+                for d in supervised_data:
+                    f.write(d)
+    else:
+        print('Results on the DEV set')
+        eval_candidate_generation_and_linking(dev_examples, umls_concept_dict_by_id, candidate_generator, linking_classifier, k_list, thresholds,
+                                              use_gold_mentions, spacy_model, generate_linker_data)
+
+        print('Results on the TEST set')
+        eval_candidate_generation_and_linking(dev_examples, umls_concept_dict_by_id, candidate_generator, linking_classifier, k_list, thresholds,
+                                              use_gold_mentions, spacy_model, generate_linker_data)
 
 if __name__ == "__main__":
      parser = argparse.ArgumentParser()
@@ -575,6 +597,11 @@ if __name__ == "__main__":
              default="",
              help="The name of the spacy model to use for evaluation (when not using gold mentions)"
      )
+     parser.add_argument(
+             '--generate_linker_data',
+             action="store_true",
+             help="Collect and save training data for the classifier."
+     )
 
      args = parser.parse_args()
-     main(args.medmentions_path, args.umls_path, args.model_path, args.ks, args.thresholds, args.use_gold_mentions, args.train, args.spacy_model)
+     main(args.medmentions_path, args.umls_path, args.model_path, args.ks, args.thresholds, args.use_gold_mentions, args.train, args.spacy_model, args.generate_linker_data)
