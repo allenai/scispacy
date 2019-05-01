@@ -16,6 +16,7 @@ import scipy
 import numpy as np
 from joblib import dump, load
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.base import ClassifierMixin
 import nmslib
 from nmslib.dist import FloatIndex
 import spacy
@@ -331,7 +332,8 @@ def get_mention_text_and_ids_by_doc(data: List[data_util.MedMentionExample],
 
     return examples_with_labels, missing_entity_ids
 
-def featurizer(example: dict):
+def featurizer(example: Dict):
+    """Featurize a dictionary of values for the linking classifier."""
     features = []
     features.append(int(example['has_definition']))  # 0 if candidate doesn't have definition, 1 otherwise
 
@@ -349,16 +351,16 @@ def featurizer(example: dict):
 
     return features
 
-def eval_candidate_generation(examples: List[data_util.MedMentionExample],
+def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExample],
                               umls_concept_dict_by_id: Dict[str, Dict],
                               candidate_generator: CandidateGenerator,
-                              linking_classifier,
+                              linking_classifier: ClassifierMixin,
                               k_list: List[int],
                               thresholds: List[float],
                               use_gold_mentions: bool,
                               spacy_model: str):
     """
-    Evaluate candidate generation using either gold mentions or spacy mentions.
+    Evaluate candidate generation and linking using either gold mentions or spacy mentions.
     The evaluation is done both at the mention level and at the document level. If the evaluation
     is done with spacy mentions at the mention level, a pair is only considered correct if
     both the mention and the entity are exactly correct. This could potentially be relaxed, but this 
@@ -372,6 +374,8 @@ def eval_candidate_generation(examples: List[data_util.MedMentionExample],
         A dictionary of UMLS concepts
     candidate_generator: CandidateGenerator
         A CandidateGenerator instance for generating linking candidates for mentions
+    linking_classifier: ClassifierMixin
+        An sklearn classifier
     k_list: List[int]
         A list of k values determining how many candidates are generated
     thresholds: List[float]
