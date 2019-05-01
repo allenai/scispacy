@@ -505,6 +505,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             print('Correct mention-level linking: {0:.2f}%'.format(100 * classifier_correct_predictions / (classifier_correct_predictions + classifier_wrong_predictions)))
             print('Mean, std, min, max candidate ids: {0:.2f}%, {1:.2f}%, {2}, {3}'.format(np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates)))
             print('Mean, std, min, max filtered candidate ids: {0:.2f}%, {1:.2f}%, {2}, {3}'.format(np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates)))
+    return linking_classifier_training_data
 
 def main(medmentions_path: str,
          umls_path: str,
