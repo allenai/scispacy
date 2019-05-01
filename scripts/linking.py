@@ -19,7 +19,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import nmslib
 from nmslib.dist import FloatIndex
 import spacy
-
 from scispacy import data_util
 
 def load_umls_kb(umls_path: str) -> List[Dict]:
@@ -245,6 +244,7 @@ def load_tfidf_ann_index(model_path: str):
     # It makes the query slow without significant gain in recall.
     efS = 1000
     tfidf_vectorizer_path = f'{model_path}/tfidf_vectorizer.joblib'
+    linking_classifier_path = f'{model_path}/linking_classifier.joblib'
     ann_index_path = f'{model_path}/nmslib_index.bin'
     tfidf_vectors_path = f'{model_path}/tfidf_vectors_sparse.npz'
     uml_concept_aliases_path = f'{model_path}/concept_aliases.json'
@@ -257,6 +257,9 @@ def load_tfidf_ann_index(model_path: str):
     tfidf_vectorizer = load(tfidf_vectorizer_path)
     if isinstance(tfidf_vectorizer, TfidfVectorizer):
         print(f'Tfidf vocab size: {len(tfidf_vectorizer.vocabulary_)}')
+
+    print(f'Loading linking classifier from {linking_classifier_path}')
+    linking_classifier = load(linking_classifier_path)
 
     print(f'Loading tfidf vectors from {tfidf_vectors_path}')
     uml_concept_alias_tfidfs = scipy.sparse.load_npz(tfidf_vectors_path).astype(np.float32)
@@ -271,8 +274,8 @@ def load_tfidf_ann_index(model_path: str):
     end_time = datetime.datetime.now()
     total_time = (end_time - start_time)
 
-    print(f'Loading concept ids, vectorizer, tfidf vectors and ann index took {total_time.total_seconds()} seconds')
-    return uml_concept_aliases, tfidf_vectorizer, ann_index
+    print(f'Loading concept ids, vectorizer, linking classifier, tfidf vectors and ann index took {total_time.total_seconds()} seconds')
+    return uml_concept_aliases, tfidf_vectorizer, linking_classifier, ann_index
 
 
 def get_mention_text_and_ids(data: List[data_util.MedMentionExample],
@@ -328,9 +331,28 @@ def get_mention_text_and_ids_by_doc(data: List[data_util.MedMentionExample],
 
     return examples_with_labels, missing_entity_ids
 
+def featurizer(example: dict):
+    features = []
+    features.append(int(example['has_definition']))  # 0 if candidate doesn't have definition, 1 otherwise
+
+    features.append(min(example['cosines']))
+    features.append(max(example['cosines']))
+    features.append(len(example['cosines']))
+    features.append(np.mean(example['cosines']))
+
+    gold_types = set(example['mention_types'])
+    candidate_types = set(example['candidate_types'])
+
+    features.append(len(gold_types))
+    features.append(len(candidate_types))
+    features.append(len(candidate_types.intersection(gold_types)))
+
+    return features
+
 def eval_candidate_generation(examples: List[data_util.MedMentionExample],
                               umls_concept_dict_by_id: Dict[str, Dict],
                               candidate_generator: CandidateGenerator,
+                              linking_classifier,
                               k_list: List[int],
                               thresholds: List[float],
                               use_gold_mentions: bool,
@@ -381,6 +403,9 @@ def eval_candidate_generation(examples: List[data_util.MedMentionExample],
             all_golds = []
             all_mentions = []
 
+            classifier_correct_predictions = 0
+            classifier_wrong_predictions = 0
+
             for i, example in tqdm(enumerate(examples), desc="Iterating over examples", total=len(examples)):
                 entities = [entity for entity in example.entities if entity.umls_id in umls_concept_dict_by_id]
                 gold_umls_ids = [entity.umls_id for entity in entities]
@@ -396,34 +421,54 @@ def eval_candidate_generation(examples: List[data_util.MedMentionExample],
 
                 batch_candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
 
+                filtered_batch_candidate_neighbor_ids = []
                 for candidate_neighbor_ids in batch_candidate_neighbor_ids:
                     # Keep only canonical entities for which at least one mention has a score less than the threshold.
                     filtered_ids = {k: v for k, v in candidate_neighbor_ids.items() if any([z[1] <= threshold for z in v])}
+                    filtered_batch_candidate_neighbor_ids.append(filtered_ids)
                     num_candidates.append(len(candidate_neighbor_ids))
                     num_filtered_candidates.append(len(filtered_ids))
                     doc_candidates.update(filtered_ids)
 
                 for i, gold_entity in enumerate(entities):
                     if use_gold_mentions:
-                        candidates = batch_candidate_neighbor_ids[i]  # for gold mentions, len(entities) == len(batch_candidate_neighbor_ids)
+                        candidates = filtered_batch_candidate_neighbor_ids[i]  # for gold mentions, len(entities) == len(filtered_batch_candidate_neighbor_ids)
                     else:
                         # for each gold entity, search for a corresponding predicted entity that has the same span
                         span_from_doc = doc.char_span(gold_entity.start, gold_entity.end)
                         candidates = {}
                         for j, predicted_entity in enumerate(ner_entities):
                             if predicted_entity == span_from_doc:
-                                candidates = batch_candidate_neighbor_ids[j]
+                                candidates = filtered_batch_candidate_neighbor_ids[j]
                                 break
 
-                    # Keep only canonical entities for which at least one mention has a score less than the threshold.
-                    filtered_ids = {k: v for k, v in candidates.items() if any([z[1] <= threshold for z in v])}
-
-                    if len(filtered_ids) == 0:
+                    # Evaluating candidate generation
+                    if len(candidates) == 0:
                         entity_no_links_count += 1
                     elif gold_entity.umls_id in candidates:
                         entity_correct_links_count += 1
                     else:
                         entity_wrong_links_count += 1
+
+                    # Evaluating linking
+                    features = []
+                    candidate_ids = list(candidates.keys())
+                    for candidate_id in candidate_ids:
+                        has_definition = 'definition' in umls_concept_dict_by_id[candidate_id]
+                        cosine_scores = [cosine for alias, cosine in candidates[candidate_id]]
+                        classifier_example = ({'has_definition': has_definition, 'cosines': cosine_scores,
+                                               'mention_types': umls_concept_dict_by_id[gold_entity.umls_id]['types'],
+                                               'candidate_types': umls_concept_dict_by_id[candidate_id]['types'],})
+                        features.append(featurizer(classifier_example))
+                    if len(features) > 0:
+                        scores = linking_classifier.predict(features)
+                        pred_id = candidate_ids[np.argmax(scores)]
+                    else:
+                        pred_id = -1
+                    if pred_id == gold_entity.umls_id:
+                        classifier_correct_predictions += 1
+                    else:
+                        classifier_wrong_predictions += 1
 
                 # the number of correct entities for a given document is the number of gold entities contained in the candidates
                 # produced for that document
@@ -444,8 +489,9 @@ def eval_candidate_generation(examples: List[data_util.MedMentionExample],
             print('Doc level gold concept in candidates: {0:.2f}%'.format(100 * doc_entity_correct_links_count / len(all_golds_per_doc_set)))
             print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
             print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
-            print('Mean, std, min, max candidate ids: ', np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates))
-            print('Mean, std, min, max filtered candidate ids: ', np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates))
+            print('Correct mention-level linking: {0:.2f}%'.format(100 * classifier_correct_predictions / (classifier_correct_predictions + classifier_wrong_predictions)))
+            print('Mean, std, min, max candidate ids: {0:.2f}%, {1:.2f}%, {2}, {3}'.format(np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates)))
+            print('Mean, std, min, max filtered candidate ids: {0:.2f}%, {1:.2f}%, {2}, {3}'.format(np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates)))
 
 def main(medmentions_path: str,
          umls_path: str,
@@ -468,7 +514,7 @@ def main(medmentions_path: str,
 
     if train:
         create_tfidf_ann_index(model_path, text_to_concept_id)
-    ann_concept_aliases_list, tfidf_vectorizer, ann_index = load_tfidf_ann_index(model_path)
+    ann_concept_aliases_list, tfidf_vectorizer, linking_classifier, ann_index = load_tfidf_ann_index(model_path)
 
     candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, ann_concept_aliases_list, text_to_concept_id, False)
     print('Reading MedMentions...')
@@ -482,7 +528,7 @@ def main(medmentions_path: str,
         thresholds = [float(x) for x in thresholds.split(",")]
 
     # only evaluate on the dev examples for now because we don't have a trained model
-    eval_candidate_generation(dev_examples, umls_concept_dict_by_id, candidate_generator, k_list, thresholds, use_gold_mentions, spacy_model)
+    eval_candidate_generation(dev_examples, umls_concept_dict_by_id, candidate_generator, linking_classifier, k_list, thresholds, use_gold_mentions, spacy_model)
 
 if __name__ == "__main__":
      parser = argparse.ArgumentParser()
