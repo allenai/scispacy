@@ -409,11 +409,25 @@ def eval_candidate_generation(examples: List[data_util.MedMentionExample],
                     else:
                         # for each gold entity, search for a corresponding predicted entity that has the same span
                         span_from_doc = doc.char_span(gold_entity.start, gold_entity.end)
+                        if span_from_doc is None:
+                            # one case is that the spacy span has an extra period attached to the end of it
+                            span_from_doc = doc.char_span(gold_entity.start, gold_entity.end+1)
+
                         candidates = {}
-                        for j, predicted_entity in enumerate(ner_entities):
-                            if predicted_entity == span_from_doc:
-                                candidates = batch_candidate_neighbor_ids[j]
-                                break
+                        if span_from_doc is not None:
+                            for j, predicted_entity in enumerate(ner_entities):
+                                # gold span within spacy span
+                                if span_from_doc.start_char >= predicted_entity.start_char and span_from_doc.end_char <= predicted_entity.end_char \
+                                    and predicted_entity != span_from_doc:
+                                    candidates.update(batch_candidate_neighbor_ids[j])
+                                # spacy span within gold span
+                                if predicted_entity.start_char >= span_from_doc.start_char and predicted_entity.end_char <= span_from_doc.end_char \
+                                    and predicted_entity != span_from_doc:
+                                    candidates.update(batch_candidate_neighbor_ids[j])
+                                # endpoint overlap between gold span and spacy span
+                                if predicted_entity.start_char <= span_from_doc.start_char and predicted_entity.end_char >= span_from_doc.start_char \
+                                    or predicted_entity.start_char <= span_from_doc.end_char and predicted_entity.end_char >= span_from_doc.end_char:
+                                    candidates.update(batch_candidate_neighbor_ids[j])
 
                     # Keep only canonical entities for which at least one mention has a score less than the threshold.
                     filtered_ids = {k: v for k, v in candidates.items() if any([z[1] <= threshold for z in v])}
