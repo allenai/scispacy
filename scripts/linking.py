@@ -557,7 +557,7 @@ def main(medmentions_path: str,
                                               use_gold_mentions, spacy_model, generate_linker_data)
 
         print('Results on the TEST set')
-        eval_candidate_generation_and_linking(dev_examples, umls_concept_dict_by_id, candidate_generator, linking_classifier, k_list, thresholds,
+        eval_candidate_generation_and_linking(test_examples, umls_concept_dict_by_id, candidate_generator, linking_classifier, k_list, thresholds,
                                               use_gold_mentions, spacy_model, generate_linker_data)
 
 if __name__ == "__main__":
