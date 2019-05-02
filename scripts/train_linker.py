@@ -2,11 +2,12 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from joblib import dump, load
 import jsonlines
-from statistics import mean
 import datetime
 from scispacy import umls_semantic_type_tree
 from linking import featurizer
 import argparse
+from tqdm import tqdm
+
 
 def main(data_path: str):
     train = []
@@ -23,27 +24,17 @@ def main(data_path: str):
     # load data from files
     for filename, data, limit in zip(files, lists, limits):
         with jsonlines.open(filename) as f:
-            for line in f:
+            for line in tqdm(f, total=limit):
                 data.append(line)
-                if len(data) % 100000 == 0:
-                    print(len(data))
                 if len(data) >= limit:
                     break
-
-    end_time = datetime.datetime.now()
-    total_time = end_time - start_time
-    print(f'Time: {total_time.total_seconds()} seconds')
-
     x = []
     y = []
-    for data in lists:
+    for data in tqdm(lists):
         features  = [featurizer(d) for d in data]
         x.append(features)
         y.append([d['label'] for d in data])
 
-    end_time = datetime.datetime.now()
-    total_time = end_time - start_time
-    print(f'Time: {total_time.total_seconds()} seconds')
 
     cls = GradientBoostingClassifier(verbose=1)
 

@@ -423,7 +423,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                 else:
                     doc = docs[i]
                     ner_entities = [ent for ent in doc.ents]
-                    predicted_mention_types = [ent.label_ for ent in doc.ents]
+                    predicted_mention_types = [[ent.label_] for ent in doc.ents]
                     mention_texts = [ent.text for ent in doc.ents]
 
                 batch_candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
