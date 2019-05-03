@@ -1,62 +1,56 @@
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from joblib import dump, load
-import jsonlines
 import datetime
 from scispacy import umls_semantic_type_tree
-from linking import featurizer
+from linking import Linker
 import argparse
 from tqdm import tqdm
+import json
 
+def read_file(filename, limit):
+        x = []
+        y = []
+        with open(filename) as f:
+            for line in tqdm(f, total=limit):
+                d = json.loads(line)
+                x.append(Linker.featurizer(d))
+                y.append(d['label'])
+                if len(x) >= limit:
+                    break
+        return x, y
 
 def main(data_path: str):
-    train = []
-    dev = []
-    test = []
-    root = ''
-    files = [f'{data_path}/train.jsonl', f'{data_path}/dev.jsonl', f'{data_path}/test.jsonl']
-    lists = [train, dev, test]
-    # limits = [40000000, 4000000, 4000000]
-    limits = [4000000, 0, 4000000]
-
     start_time = datetime.datetime.now()
 
-    # load data from files
-    for filename, data, limit in zip(files, lists, limits):
-        with jsonlines.open(filename) as f:
-            for line in tqdm(f, total=limit):
-                data.append(line)
-                if len(data) >= limit:
-                    break
-    x = []
-    y = []
-    for data in tqdm(lists):
-        features  = [featurizer(d) for d in data]
-        x.append(features)
-        y.append([d['label'] for d in data])
+    x_train, y_train = read_file(f'{data_path}/train.jsonl', 5000000)  # the full set is unnecessarily large
+    x_dev, y_dev = read_file(f'{data_path}/dev.jsonl', 1)  # the full set is unnecessarily large
+    x_test, y_test = read_file(f'{data_path}/test.jsonl', 5000000)
 
+    # sklearn classifier already splits the training set into train and dev, so we don't need separate sets
+    x_train.extend(x_dev)
+    y_train.extend(y_dev)
 
-    cls = GradientBoostingClassifier(verbose=1)
+    classifier = GradientBoostingClassifier(verbose=1)
 
-    cls.fit(x[0] + x[1], y[0] + y[1])
-    linking_cls_path = f'{data_path}/linking_classifier.joblib'
-    dump(cls, linking_cls_path)
-    cls = load(linking_cls_path)
-
-    pred = cls.predict(x[0] + x[1])
-    accuracy = accuracy_score(y[0] + y[1], pred)
-    cls_report = classification_report(y[0] + y[1], pred)
+    classifier.fit(x_train, y_train)
+    linking_classifier_path = f'{data_path}/linking_classifier.joblib'
+    dump(classifier, linking_classifier_path)
+    classifier = load(linking_classifier_path)
+    pred = classifier.predict(x_train)
+    accuracy = accuracy_score(y_train, pred)
+    report = classification_report(y_train, pred)
 
     print('Train+Dev results:')
     print(accuracy)
-    print(cls_report)
+    print(report)
 
-    pred = cls.predict(x[2])
-    accuracy = accuracy_score(y[2], pred)
-    cls_report = classification_report(y[2], pred)
+    pred = classifier.predict(x_test)
+    accuracy = accuracy_score(y_test, pred)
+    report = classification_report(y_test, pred)
     print('Test results:')
     print(accuracy)
-    print(cls_report)
+    print(report)
 
     end_time = datetime.datetime.now()
     total_time = end_time - start_time
