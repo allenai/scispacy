@@ -459,7 +459,6 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
     if (len(thresholds) > 1 or len(k_list) > 1):
         assert not generate_linking_classifier_training_data, \
             'generating linker training data should be for a single threshold and k'
-
     examples_with_text_and_ids, missing_entity_ids = get_mention_text_and_ids_by_doc(examples,
                                                                    umls_concept_dict_by_id)
 
@@ -487,8 +486,8 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             all_golds = []
             all_mentions = []
 
-            classifier_correct_predictions = 0 # defaultdict(int)
-            classifier_wrong_predictions = 0 # defaultdict(int)
+            classifier_correct_predictions = defaultdict(int)
+            classifier_wrong_predictions = defaultdict(int)
 
             for i, example in tqdm(enumerate(examples), desc="Iterating over examples", total=len(examples)):
                 entities = [entity for entity in example.entities if entity.umls_id in umls_concept_dict_by_id]
@@ -542,10 +541,11 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                     # Evaluating linking
                     if linker:
                         sorted_candidate_ids = linker.link(candidates, mention_text, mention_types)
-                        if len(sorted_candidate_ids) == 0 or sorted_candidate_ids[0] != gold_entity.umls_id:
-                            classifier_wrong_predictions += 1
-                        else:
-                            classifier_correct_predictions += 1
+                        for linker_k in [1, 3, 5, 10]:
+                            if gold_entity.umls_id not in sorted_candidate_ids[:linker_k]:
+                                classifier_wrong_predictions[linker_k] += 1
+                            else:
+                                classifier_correct_predictions[linker_k] += 1
 
                     # Generate training data for the linking classifier
                     if generate_linking_classifier_training_data:
@@ -573,7 +573,10 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             print('Doc level gold concept in candidates: {0:.2f}%'.format(100 * doc_entity_correct_links_count / len(all_golds_per_doc_set)))
             print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
             print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
-            print('Correct mention-level linking: {0:.2f}%'.format(100 * classifier_correct_predictions / (classifier_correct_predictions + classifier_wrong_predictions)))
+            for linker_k in classifier_correct_predictions.keys():
+                correct = classifier_correct_predictions[linker_k]
+                total = classifier_wrong_predictions[linker_k] + correct
+                print('Linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / total))
             print('Mean, std, min, max candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates)))
             print('Mean, std, min, max filtered candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates)))
     return linking_classifier_training_data
