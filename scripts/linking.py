@@ -531,6 +531,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                             span_from_doc = doc.char_span(gold_entity.start, gold_entity.end+1)
 
                         candidates = {}
+                        mention_types = []
                               
                         if span_from_doc is not None:
                             for j, predicted_entity in enumerate(ner_entities):
