@@ -192,6 +192,9 @@ class Linker:
         A dictionary of the UMLS concepts.
     classifier: ClassifierMixin
         An sklearn classifier that takes a mention and a candidate and evaluate them.
+        If classifier is None, the linking function returns the same list with no sorting.
+        Also, `classifier_example` and `featurizer` functions are still useful for generating
+        classifier training data.
     """
 
     def __init__(self,
@@ -322,7 +325,6 @@ def load_tfidf_ann_index(model_path: str):
     efS = 1000
 
     tfidf_vectorizer_path = f'{model_path}/tfidf_vectorizer.joblib'
-    linking_classifier_path = f'{model_path}/linking_classifier.joblib'
     ann_index_path = f'{model_path}/nmslib_index.bin'
     tfidf_vectors_path = f'{model_path}/tfidf_vectors_sparse.npz'
     uml_concept_aliases_path = f'{model_path}/concept_aliases.json'
@@ -335,9 +337,6 @@ def load_tfidf_ann_index(model_path: str):
     tfidf_vectorizer = load(tfidf_vectorizer_path)
     if isinstance(tfidf_vectorizer, TfidfVectorizer):
         print(f'Tfidf vocab size: {len(tfidf_vectorizer.vocabulary_)}')
-
-    print(f'Loading linking classifier from {linking_classifier_path}')
-    linking_classifier = load(linking_classifier_path)
 
     print(f'Loading tfidf vectors from {tfidf_vectors_path}')
     uml_concept_alias_tfidfs = scipy.sparse.load_npz(tfidf_vectors_path).astype(np.float32)
@@ -352,9 +351,20 @@ def load_tfidf_ann_index(model_path: str):
     end_time = datetime.datetime.now()
     total_time = (end_time - start_time)
 
-    print(f'Loading concept ids, vectorizer, linking classifier, tfidf vectors and ann index took {total_time.total_seconds()} seconds')
-    return uml_concept_aliases, tfidf_vectorizer, linking_classifier, ann_index
+    print(f'Loading concept ids, vectorizer, tfidf vectors and ann index took {total_time.total_seconds()} seconds')
+    return uml_concept_aliases, tfidf_vectorizer, ann_index
 
+
+def load_linking_classifier(model_path: str):
+    linking_classifier_path = f'{model_path}/linking_classifier.joblib'
+
+    print(f'Loading linking classifier from {linking_classifier_path}')
+    try:
+        linking_classifier = load(linking_classifier_path)
+    except:
+        print('Loading linking classifier failed')
+        return None
+    return linking_classifier
 
 def get_mention_text_and_ids(data: List[data_util.MedMentionExample],
                              umls: Dict[str, Any]):
@@ -563,8 +573,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             print('Doc level gold concept in candidates: {0:.2f}%'.format(100 * doc_entity_correct_links_count / len(all_golds_per_doc_set)))
             print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
             print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
-            if linker:
-                print('Correct mention-level linking: {0:.2f}%'.format(100 * classifier_correct_predictions / (classifier_correct_predictions + classifier_wrong_predictions)))
+            print('Correct mention-level linking: {0:.2f}%'.format(100 * classifier_correct_predictions / (classifier_correct_predictions + classifier_wrong_predictions)))
             print('Mean, std, min, max candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates)))
             print('Mean, std, min, max filtered candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates)))
     return linking_classifier_training_data
@@ -591,9 +600,10 @@ def main(medmentions_path: str,
 
     if train:
         create_tfidf_ann_index(model_path, text_to_concept_id)
-    ann_concept_aliases_list, tfidf_vectorizer, linking_classifier, ann_index = load_tfidf_ann_index(model_path)
-
+    ann_concept_aliases_list, tfidf_vectorizer, ann_index = load_tfidf_ann_index(model_path)
     candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, ann_concept_aliases_list, text_to_concept_id, False)
+
+    linking_classifier = load_linking_classifier(model_path)
     linker = Linker(umls_concept_dict_by_id, linking_classifier)
 
     print('Reading MedMentions...')
