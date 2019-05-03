@@ -17,7 +17,6 @@ import itertools
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
-from scispacy import spacy_convert
 
 def train_parser_and_tagger(train_json_path: str,
                             dev_json_path: str,
