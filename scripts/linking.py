@@ -550,7 +550,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                                     overlaps = True
                                 if overlaps:
                                     candidates.update(filtered_batch_candidate_neighbor_ids[j])
-                                    mention_types.extend(predicted_mention_types[j])
+                                    mention_types.update(predicted_mention_types[j])
                             mention_text = ""  # not used 
 
                     # Evaluating candidate generation
