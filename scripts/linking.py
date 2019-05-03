@@ -249,6 +249,9 @@ class Linker:
         """
         features = []
         candidate_ids = list(candidates.keys())
+        if self.classifier is None:
+            return candidate_ids
+
         for candidate_id in candidate_ids:
             candidate = candidates[candidate_id]
             classifier_example = self.classifier_example(candidate_id, candidate, mention_text, mention_types)
