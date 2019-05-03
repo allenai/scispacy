@@ -548,10 +548,9 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                                     or predicted_entity.start_char <= span_from_doc.end_char and predicted_entity.end_char >= span_from_doc.end_char:
                                     overlaps = True
                                 if overlaps:
-                                    candidates = filtered_batch_candidate_neighbor_ids[j]
-                                    mention_text = mention_texts[j]
-                                    mention_types = predicted_mention_types[j]
-                                    break
+                                    candidates.update(filtered_batch_candidate_neighbor_ids[j])
+                                    mention_types.extend(predicted_mention_types[j])
+                            mention_text = ""  # not used 
 
                     # Evaluating candidate generation
                     if len(candidates) == 0:
