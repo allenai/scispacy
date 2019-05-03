@@ -462,6 +462,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
     if (len(thresholds) > 1 or len(k_list) > 1):
         assert not generate_linking_classifier_training_data, \
             'generating linker training data should be for a single threshold and k'
+        
     examples_with_text_and_ids, missing_entity_ids = get_mention_text_and_ids_by_doc(examples,
                                                                    umls_concept_dict_by_id)
 
@@ -525,13 +526,32 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                     else:
                         # for each gold entity, search for a corresponding predicted entity that has the same span
                         span_from_doc = doc.char_span(gold_entity.start, gold_entity.end)
+                        if span_from_doc is None:
+                            # one case is that the spacy span has an extra period attached to the end of it
+                            span_from_doc = doc.char_span(gold_entity.start, gold_entity.end+1)
+
                         candidates = {}
-                        for j, predicted_entity in enumerate(ner_entities):
-                            if predicted_entity == span_from_doc:
-                                candidates = filtered_batch_candidate_neighbor_ids[j]
-                                mention_text = mention_texts[j]
-                                mention_types = predicted_mention_types[j]
-                                break
+                        mention_types = set()
+                              
+                        if span_from_doc is not None:
+                            for j, predicted_entity in enumerate(ner_entities):
+                                overlaps = False
+                                # gold span within spacy span
+                                if span_from_doc.start_char >= predicted_entity.start_char and span_from_doc.end_char <= predicted_entity.end_char \
+                                    and predicted_entity != span_from_doc:
+                                    overlaps = True
+                                # spacy span within gold span
+                                if predicted_entity.start_char >= span_from_doc.start_char and predicted_entity.end_char <= span_from_doc.end_char \
+                                    and predicted_entity != span_from_doc:
+                                    overlaps = True
+                                # endpoint overlap between gold span and spacy span
+                                if predicted_entity.start_char <= span_from_doc.start_char and predicted_entity.end_char >= span_from_doc.start_char \
+                                    or predicted_entity.start_char <= span_from_doc.end_char and predicted_entity.end_char >= span_from_doc.end_char:
+                                    overlaps = True
+                                if overlaps:
+                                    candidates.update(filtered_batch_candidate_neighbor_ids[j])
+                                    mention_types.update(predicted_mention_types[j])
+                            mention_text = ""  # not used 
 
                     # Evaluating candidate generation
                     if len(candidates) == 0:
