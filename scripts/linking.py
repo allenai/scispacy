@@ -258,8 +258,9 @@ class Linker:
             features.append(self.featurizer(classifier_example))
         if len(features) == 0:
             return []
-        scores = self.classifier.predict(features)
-        return [candidate_ids[i] for i in np.argsort(-scores, kind='mergesort')]  # mergesort is stable
+        scores = self.classifier.predict_proba(features)
+        return [candidate_ids[i] for i in np.argsort(-scores[:, 1], kind='mergesort')]  # mergesort is stable
+
 
 def create_tfidf_ann_index(model_path: str, text_to_concept: Dict[str, Set[str]]) -> None:
     """
@@ -600,6 +601,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                 correct = classifier_correct_predictions[linker_k]
                 total = classifier_wrong_predictions[linker_k] + correct
                 print('Linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / total))
+                print('Normalized linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / entity_correct_links_count))
             print('Mean, std, min, max candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates)))
             print('Mean, std, min, max filtered candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates)))
     return linking_classifier_training_data
