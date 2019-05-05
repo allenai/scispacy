@@ -65,6 +65,8 @@ def main(data_path: str, train:bool):
         classifier.fit(x_train, y_train)
         print(f'Save classifier to: {linking_classifier_path}')
         dump(classifier, linking_classifier_path)
+        for i, fimp in enumerate(classifier.feature_importances_):
+            print('{0}: {1:.24f}'.format(i, fimp))
 
         pred = classifier.predict(x_train)
         accuracy = accuracy_score(y_train, pred)

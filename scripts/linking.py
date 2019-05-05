@@ -203,6 +203,13 @@ class Linker:
         self.umls_concept_dict_by_id = umls_concept_dict_by_id
         self.classifier = classifier
 
+    from scispacy import umls_semantic_type_tree
+    label_mappings = []
+    umls_tree = umls_semantic_type_tree.construct_umls_tree_from_tsv("data/umls_semantic_type_tree.tsv")
+    for level in range(7):
+        label_mappings.append(umls_tree.get_collapsed_type_id_map_at_level(level))
+    values = list(set(label_mappings[3].values()))
+
     @classmethod
     def featurizer(cls, example: Dict):
         """Featurize a dictionary of values for the linking classifier."""
@@ -214,14 +221,34 @@ class Linker:
         features.append(len(example['distances']))
         features.append(np.mean(example['distances']))
 
-        gold_types = set(example['mention_types'])
+        mention_types = set(example['mention_types'])
         candidate_types = set(example['candidate_types'])
 
-        features.append(len(gold_types))
+        features.append(len(mention_types))
         features.append(len(candidate_types))
-        features.append(len(candidate_types.intersection(gold_types)))
+        features.append(len(candidate_types.intersection(mention_types)))
 
         features.append(example['mention_text'] in example['aliases'])
+
+        for t in cls.values:
+            found = False
+            for mention_type in mention_types:
+                mapped_mention_type = cls.label_mappings[0][mention_type]
+                if t == mapped_mention_type:
+                    found = True
+                    break
+            features.append(int(found))
+
+        for t in cls.values:
+            found = False
+            for mention_type in candidate_types:
+                mapped_mention_type = cls.label_mappings[0][mention_type]
+                if t == mapped_mention_type:
+                    found = True
+                    break
+            features.append(int(found))
+
+        # add features based on example['definition'] and example['aliases'] and example['mention_context']
 
         return features
 
@@ -615,7 +642,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
             for linker_k in sorted(classifier_correct_predictions.keys()):
                 correct = classifier_correct_predictions[linker_k]
-                total = classifier_wrong_predictions[linker_k] + correct
+                total = classifier_total_predictions[linker_k]
                 print('Linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / total))
                 print('Normalized linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / entity_correct_links_count))
             print('Mean, std, min, max candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates)))
