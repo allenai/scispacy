@@ -221,20 +221,31 @@ class Linker:
         features.append(len(candidate_types))
         features.append(len(candidate_types.intersection(gold_types)))
 
+        features.append(example['mention_text'] in example['aliases'])
+
         return features
 
-    def classifier_example(self, candidate_id: str, candidate: List[Tuple[str, float]], mention_text: str, mention_types: List[str]):
+    def classifier_example(self, candidate_id: str, candidate: List[Tuple[str, float]], mention_text: str, mention_types: List[str], mention_context: str, candidate_index):
         """Given a candidate and a mention, return a dictionary summarizing relevant information for classification."""
         has_definition = 'definition' in self.umls_concept_dict_by_id[candidate_id]
+        definition = ''
+        if has_definition:
+            definition = self.umls_concept_dict_by_id[candidate_id]['definition']
         distances = [distance for aliase, distance in candidate]
         candidate_types = self.umls_concept_dict_by_id[candidate_id]['types']
+        aliases = [aliase for aliase, distance in candidate]
 
         return {'has_definition': has_definition,
                 'distances': distances,
                 'mention_types': mention_types,
-                'candidate_types': candidate_types}
+                'candidate_types': candidate_types,
+                'mention_text': mention_text,
+                'aliases': aliases,
+                'mention_context': mention_context,
+                'candidate_index': candidate_index,
+                'definition': definition}
 
-    def link(self, candidates: Dict[str, List[Tuple[str, float]]], mention_text: str, mention_types: List[str]):
+    def link(self, candidates: Dict[str, List[Tuple[str, float]]], mention_text: str, mention_types: List[str], mention_context: str):
         """
         Given a dictionary of candidates and a mention, return a list of candidate ids sorted by
         probability it is the right entity for the mention.
@@ -252,9 +263,9 @@ class Linker:
         if self.classifier is None:
             return candidate_ids
 
-        for candidate_id in candidate_ids:
+        for candidate_index, candidate_id in enumerate(candidate_ids):
             candidate = candidates[candidate_id]
-            classifier_example = self.classifier_example(candidate_id, candidate, mention_text, mention_types)
+            classifier_example = self.classifier_example(candidate_id, candidate, mention_text, mention_types, mention_context, candidate_index)
             features.append(self.featurizer(classifier_example))
         if len(features) == 0:
             return []
@@ -492,7 +503,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             all_mentions = []
 
             classifier_correct_predictions = defaultdict(int)
-            classifier_wrong_predictions = defaultdict(int)
+            classifier_total_predictions = defaultdict(int)
 
             for i, example in tqdm(enumerate(examples), desc="Iterating over examples", total=len(examples)):
                 entities = [entity for entity in example.entities if entity.umls_id in umls_concept_dict_by_id]
@@ -524,6 +535,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                         candidates = filtered_batch_candidate_neighbor_ids[i]  # for gold mentions, len(entities) == len(filtered_batch_candidate_neighbor_ids)
                         mention_types = umls_concept_dict_by_id[gold_entity.umls_id]['types']  # use gold types
                         mention_text = gold_entity.mention_text
+                        mention_context = ""
                     else:
                         # for each gold entity, search for a corresponding predicted entity that has the same span
                         span_from_doc = doc.char_span(gold_entity.start, gold_entity.end)
@@ -533,6 +545,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
 
                         candidates = {}
                         mention_types = set()
+                        mention_texts = []
                               
                         if span_from_doc is not None:
                             for j, predicted_entity in enumerate(ner_entities):
@@ -552,7 +565,10 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                                 if overlaps:
                                     candidates.update(filtered_batch_candidate_neighbor_ids[j])
                                     mention_types.update(predicted_mention_types[j])
-                            mention_text = ""  # not used 
+                                    mention_texts.append(predicted_entity.text)
+                                    mention_context = doc.text
+                        mention_text = ' # '.join(mention_texts)
+                        mention_types = list(mention_types)  # sets are not serializable
 
                     # Evaluating candidate generation
                     if len(candidates) == 0:
@@ -564,17 +580,17 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
 
                     # Evaluating linking
                     if linker:
-                        sorted_candidate_ids = linker.link(candidates, mention_text, mention_types)
+                        sorted_candidate_ids = linker.link(candidates, mention_text, mention_types, mention_context)
                         for linker_k in [1, 3, 5, 10]:
-                            if gold_entity.umls_id not in sorted_candidate_ids[:linker_k]:
-                                classifier_wrong_predictions[linker_k] += 1
-                            else:
+                            if gold_entity.umls_id in sorted_candidate_ids[:linker_k]:
                                 classifier_correct_predictions[linker_k] += 1
+                            classifier_total_predictions[linker_k] += 1
 
                     # Generate training data for the linking classifier
                     if generate_linking_classifier_training_data:
-                        for candidate_id, candidate in candidates.items():
-                            classifier_example = linker.classifier_example(candidate_id, candidate, mention_text, mention_types)
+                        for candidate_index, candidate_id in enumerate(candidates.keys()):
+                            candidate = candidates[candidate_id]
+                            classifier_example = linker.classifier_example(candidate_id, candidate, mention_text, mention_types, mention_context, candidate_index)
                             classifier_example['label'] = int(gold_entity.umls_id == candidate_id)
                             linking_classifier_training_data.append(classifier_example)
 
@@ -597,7 +613,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             print('Doc level gold concept in candidates: {0:.2f}%'.format(100 * doc_entity_correct_links_count / len(all_golds_per_doc_set)))
             print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
             print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
-            for linker_k in classifier_correct_predictions.keys():
+            for linker_k in sorted(classifier_correct_predictions.keys()):
                 correct = classifier_correct_predictions[linker_k]
                 total = classifier_wrong_predictions[linker_k] + correct
                 print('Linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / total))
