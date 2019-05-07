@@ -589,9 +589,10 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             all_golds = []
             all_mentions = []
 
-            classifier_correct_predictions = defaultdict(int)
-            classifier_wrong_predictions = defaultdict(int)
-
+            gold_entities_linker_correct = defaultdict(int)
+            gold_entities_linker_incorrect = defaultdict(int)
+            predicted_entities_linker_correct = defaultdict(int)
+            predicted_entities_linker_incorrect = defaultdict(int)
 
             for doc, example, gold_entities, predicted_entities, gold_umls_ids in tqdm(examples_with_text_and_ids,
                                                                                     desc="Iterating over examples",
@@ -636,9 +637,9 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                             # one case is that the spacy span has an extra period attached to the end of it
                             span_from_doc = doc.char_span(gold_entity.start, gold_entity.end+1)
 
-                        candidates, mention_types = get_predicted_mention_candidates_and_types(span_from_doc, predicted_entities,
-                                                                                                filtered_batch_candidate_neighbor_ids,
-                                                                                                predicted_mention_types, use_soft_matching)
+                        candidates_by_mention, mention_types_by_mention = get_predicted_mention_candidates_and_types(span_from_doc, predicted_entities,
+                                                                                                                     filtered_batch_candidate_neighbor_ids,
+                                                                                                                     predicted_mention_types, use_soft_matching)
                         mention_text = ""  # not used 
 
                     # Evaluating candidate generation
@@ -651,19 +652,28 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
 
                     # Evaluating linking
                     if linker:
-                        for candidates_by_mention, types_by_mention in zip(candidates, mention_types):
-                            sorted_candidate_ids = linker.link(candidates_by_mention, mention_text, types_by_mention)
-                            for linker_k in [1, 3, 5, 10]:
-                                if gold_entity.umls_id not in sorted_candidate_ids[:linker_k]:
-                                    classifier_wrong_predictions[linker_k] += 1
+                        linking_predictions_by_mention = []
+                        for candidates, mention_type in zip(candidates_by_mention, mention_types_by_mention):
+                            sorted_candidate_ids = linker.link(candidates, mention_text, mention_type)
+                            linking_predictions_by_mention.append(sorted_candidate_ids)
+
+                        for linker_k in [1, 3, 5, 10]:
+                            if gold_entity.umls_id in any(linking_predictions for linking_predictions[:linker_k] in linking_predictions_by_mention):
+                                gold_entities_linker_correct[linker_k] += 1
+                            else:
+                                gold_entities_linker_incorrect[linker_k] += 1
+
+                            for linking_predictions in linking_predictions_by_mention:
+                                if gold_entity.umls_id in linking_predictions[:linker_k]:
+                                    predicted_entities_linker_correct[linker_k] += 1
                                 else:
-                                    classifier_correct_predictions[linker_k] += 1
+                                    predicted_entities_linker_incorrect[linker_k] += 1
 
                     # Generate training data for the linking classifier
                     if generate_linking_classifier_training_data:
-                        for candidates_by_mention, types_by_mention in zip(candidates, mention_types):
+                        for candidates, mention_types in zip(candidates_by_mention, mention_types_by_mention):
                             for candidate_id, candidate in candidates.items():
-                                classifier_example = linker.classifier_example(candidate_id, candidate, mention_text, types_by_mention)
+                                classifier_example = linker.classifier_example(candidate_id, candidate, mention_text, mention_types)
                                 classifier_example['label'] = int(gold_entity.umls_id == candidate_id)
                                 linking_classifier_training_data.append(classifier_example)
 
@@ -687,10 +697,10 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
             print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
             if linker:
-                print('Linking precision {0:.2f}%'.format(100 * classifier_correct_predictions[1] / (len(mention_texts))))
-            for linker_k in classifier_correct_predictions.keys():
-                correct = classifier_correct_predictions[linker_k]
-                total = classifier_wrong_predictions[linker_k] + correct
+                print('Linking precision {0:.2f}%'.format(100 * predicted_entities_linker_correct[1] / (len(predicted_entities))))
+            for linker_k in [1, 3, 5, 10]:
+                correct = gold_entities_linker_correct[linker_k]
+                total = len(all_golds)
                 print('Linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / total))
                 print('Normalized linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / entity_correct_links_count))
             print('Mean, std, min, max candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates)))
