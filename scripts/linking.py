@@ -503,6 +503,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                 gold_umls_ids = [entity.umls_id for entity in entities]
                 doc_golds = set(gold_umls_ids)
                 doc_candidates = set()
+                doc_linker_predictions = set()
 
                 if use_gold_mentions:
                     mention_texts = [entity.mention_text for entity in entities]
@@ -571,10 +572,10 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                     else:
                         entity_wrong_links_count += 1
 
-                    # TODO: do work here
                     # Evaluating linking
                     if linker:
                         sorted_candidate_ids = linker.link(candidates, mention_text, mention_types)
+                        doc_linker_predictions.update(sorted_candidate_ids[0])
                         for linker_k in [1, 3, 5, 10]:
                             if gold_entity.umls_id not in sorted_candidate_ids[:linker_k]:
                                 classifier_wrong_predictions[linker_k] += 1
@@ -608,7 +609,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
             print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
             if linker:
-                print('Linking precision {0:.2f}%'.format(100 * classifier_correct_predictions[1] / (classifier_correct_predictions[1] + classifier_wrong_predictions[1])))
+                print('Linking precision {0:.2f}%'.format(100 * classifier_correct_predictions[1] / (len(mention_texts))))
             for linker_k in classifier_correct_predictions.keys():
                 correct = classifier_correct_predictions[linker_k]
                 total = classifier_wrong_predictions[linker_k] + correct
