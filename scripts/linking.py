@@ -431,7 +431,8 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                                           use_gold_mentions: bool,
                                           spacy_model: str,
                                           generate_linking_classifier_training_data: bool,
-                                          linker: Linker = None,):
+                                          linker: Linker = None,
+                                          use_soft_matching: bool = False):
     """
     Evaluate candidate generation and linking using either gold mentions or spacy mentions.
     The evaluation is done both at the mention level and at the document level. If the evaluation
@@ -459,6 +460,9 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
         If true, collect training data for the linking classifier
     linker: Linker
         A linker to evaluate. If None, skip linking evaluation
+    use_soft_matching:
+        If true, allow predicted mentions with any overlap with the gold mention to count as correct,
+        else only count exact matches as correct
     """
     if (len(thresholds) > 1 or len(k_list) > 1):
         assert not generate_linking_classifier_training_data, \
@@ -536,22 +540,27 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                               
                         if span_from_doc is not None:
                             for j, predicted_entity in enumerate(ner_entities):
-                                overlaps = False
-                                # gold span within spacy span
-                                if span_from_doc.start_char >= predicted_entity.start_char and span_from_doc.end_char <= predicted_entity.end_char \
-                                    and predicted_entity != span_from_doc:
-                                    overlaps = True
-                                # spacy span within gold span
-                                if predicted_entity.start_char >= span_from_doc.start_char and predicted_entity.end_char <= span_from_doc.end_char \
-                                    and predicted_entity != span_from_doc:
-                                    overlaps = True
-                                # endpoint overlap between gold span and spacy span
-                                if predicted_entity.start_char <= span_from_doc.start_char and predicted_entity.end_char >= span_from_doc.start_char \
-                                    or predicted_entity.start_char <= span_from_doc.end_char and predicted_entity.end_char >= span_from_doc.end_char:
-                                    overlaps = True
-                                if overlaps:
-                                    candidates.update(filtered_batch_candidate_neighbor_ids[j])
-                                    mention_types.update(predicted_mention_types[j])
+                                if use_soft_matching and span_from_doc == predicted_entity:
+                                    candidates = filtered_batch_candidate_neighbor_ids[j]
+                                    mention_types = predicted_mention_types[j]
+                                    break
+                                elif not use_soft_matching:
+                                    overlaps = False
+                                    # gold span within spacy span
+                                    if span_from_doc.start_char >= predicted_entity.start_char and span_from_doc.end_char <= predicted_entity.end_char \
+                                        and predicted_entity != span_from_doc:
+                                        overlaps = True
+                                    # spacy span within gold span
+                                    if predicted_entity.start_char >= span_from_doc.start_char and predicted_entity.end_char <= span_from_doc.end_char \
+                                        and predicted_entity != span_from_doc:
+                                        overlaps = True
+                                    # endpoint overlap between gold span and spacy span
+                                    if predicted_entity.start_char <= span_from_doc.start_char and predicted_entity.end_char >= span_from_doc.start_char \
+                                        or predicted_entity.start_char <= span_from_doc.end_char and predicted_entity.end_char >= span_from_doc.end_char:
+                                        overlaps = True
+                                    if overlaps:
+                                        candidates.update(filtered_batch_candidate_neighbor_ids[j])
+                                        mention_types.update(predicted_mention_types[j])
                             mention_text = ""  # not used 
 
                     # Evaluating candidate generation
@@ -562,6 +571,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                     else:
                         entity_wrong_links_count += 1
 
+                    # TODO: do work here
                     # Evaluating linking
                     if linker:
                         sorted_candidate_ids = linker.link(candidates, mention_text, mention_types)
@@ -597,6 +607,8 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             print('Doc level gold concept in candidates: {0:.2f}%'.format(100 * doc_entity_correct_links_count / len(all_golds_per_doc_set)))
             print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
             print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
+            if linker:
+                print('Linking precision ')
             for linker_k in classifier_correct_predictions.keys():
                 correct = classifier_correct_predictions[linker_k]
                 total = classifier_wrong_predictions[linker_k] + correct
@@ -614,7 +626,8 @@ def main(medmentions_path: str,
          use_gold_mentions: bool = False,
          train: bool = False,
          spacy_model: str = "",
-         generate_linker_data: bool = False):
+         generate_linker_data: bool = False,
+         use_soft_matching: bool = True):
 
     umls_concept_list = load_umls_kb(umls_path)
     umls_concept_dict_by_id = {c['concept_id']: c for c in umls_concept_list}
@@ -656,7 +669,7 @@ def main(medmentions_path: str,
     else:
         print('Results on the DEV set')
         eval_candidate_generation_and_linking(dev_examples, umls_concept_dict_by_id, candidate_generator, k_list, thresholds,
-                                              use_gold_mentions, spacy_model, generate_linker_data, linker)
+                                              use_gold_mentions, spacy_model, generate_linker_data, linker, use_soft_matching)
 
 if __name__ == "__main__":
      parser = argparse.ArgumentParser()
@@ -701,6 +714,20 @@ if __name__ == "__main__":
              action="store_true",
              help="Collect and save training data for the classifier."
      )
+     parser.add_argument(
+             '--use_soft_matching',
+             action="store_true",
+             help="When using predicted mentions, use soft matching to allow mentions with any overlap with the gold mention to count as correct"
+     )
 
      args = parser.parse_args()
-     main(args.medmentions_path, args.umls_path, args.model_path, args.ks, args.thresholds, args.use_gold_mentions, args.train, args.spacy_model, args.generate_linker_data)
+     main(args.medmentions_path,
+          args.umls_path,
+          args.model_path,
+          args.ks,
+          args.thresholds,
+          args.use_gold_mentions,
+          args.train,
+          args.spacy_model, 
+          args.generate_linker_data,
+          args.user_soft_matching)
