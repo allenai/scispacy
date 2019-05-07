@@ -395,6 +395,17 @@ def get_mention_text_and_ids(data: List[data_util.MedMentionExample],
 
     return mention_texts, gold_umls_ids, missing_entity_ids
 
+
+
+def maybe_substitute_span(doc, entity, abbreviations):
+    maybe_ent_span = doc.char_span(entity.start, entity.end)
+    if maybe_ent_span is None:
+        maybe_ent_span = doc.char_span(entity.start, entity.end + 1)
+    if maybe_ent_span in abbreviations:
+        return maybe_ent_span, str(abbreviations[maybe_ent_span])
+    else:
+        return None, None
+
 def get_mention_text_and_ids_by_doc(data: List[data_util.MedMentionExample],
                                     umls: Dict[str, Any],
                                     nlp: Language,
@@ -415,16 +426,6 @@ def get_mention_text_and_ids_by_doc(data: List[data_util.MedMentionExample],
     substituted = 0
     total = 0
 
-
-    def maybe_substitute_span(doc, entity, abbreviations):
-        maybe_ent_span = doc.char_span(entity.start, entity.end)
-        if maybe_ent_span is None:
-            maybe_ent_span = doc.char_span(entity.start, entity.end + 1)
-        if maybe_ent_span in abbreviations:
-            return maybe_ent_span, str(abbreviations[maybe_ent_span])
-        else:
-            return None, entity.mention_text
-
     for example in data:
 
         doc = nlp(example.text)
@@ -443,6 +444,9 @@ def get_mention_text_and_ids_by_doc(data: List[data_util.MedMentionExample],
                 continue
 
             _, mention_string = maybe_substitute_span(doc, entity, abbreviations)
+            if mention_string is None:
+                mention_string = entity.mention_text
+
             if mention_string != entity.mention_text:
                 substituted += 1
             mention_texts.append(mention_string)
@@ -451,15 +455,18 @@ def get_mention_text_and_ids_by_doc(data: List[data_util.MedMentionExample],
             total += 1
 
         for entity in doc.ents:
-            new_span, mention_string = maybe_substitute_span(doc, entity, abbreviations)
-            # We have to manually create a new span with the new start and end points, but with the old label,
-            # as spans are read only views of a document.
-            span_with_label = Span(doc, start=new_span.start, end=new_span.end, label=entity.label_)
-            predicted_mention_texts.append(span_with_label)
+            new_span, _ = maybe_substitute_span(doc, entity, abbreviations)
+            if new_span is None:
+                predicted_mention_texts.append(entity)
+            else:
+                # We have to manually create a new span with the new start and end points, but with the old label,
+                # as spans are read only views of a document.
+                span_with_label = Span(doc, start=new_span.start, end=new_span.end, label=entity.label_)
+                predicted_mention_texts.append(span_with_label)
 
-        print(f"Substituted {100 * substituted/total} percent of entities")
         examples_with_labels.append((doc, example, mention_texts, predicted_mention_texts, gold_umls_ids))
 
+    print(f"Substituted {100 * substituted/total} percent of entities")
     return examples_with_labels, missing_entity_ids
 
 
@@ -495,12 +502,11 @@ def get_predicted_mention_candidates_and_types(span,
 def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExample],
                                           umls_concept_dict_by_id: Dict[str, Dict],
                                           candidate_generator: CandidateGenerator,
-                                          k: int,
-                                          threshold: float,
+                                          k_list: int,
+                                          thresholds: float,
                                           use_gold_mentions: bool,
-                                          spacy_model: str,
-                                          generate_linking_classifier_training_data: bool,
                                           nlp: Language,
+                                          generate_linking_classifier_training_data: bool,
                                           linker: Linker = None,
                                           substitute_abbreviations: bool = False):
     """
@@ -519,9 +525,9 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
     candidate_generator: CandidateGenerator
         A CandidateGenerator instance for generating linking candidates for mentions
     k_list: List[int]
-        A value determining how many candidates are generated.
-    threshold: float
-        A threshold value determining the cutoff score for candidates
+        A list of values determining how many candidates are generated.
+    thresholds: float
+        A list of threshold values determining the cutoff score for candidates
     use_gold_mentions: bool
         Evalute using gold mentions and types or predicted spacy ner mentions and types
     spacy_model: str
@@ -560,100 +566,104 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
     classifier_correct_predictions = defaultdict(int)
     classifier_wrong_predictions = defaultdict(int)
 
-    for doc, example, mention_texts, predicted_entities, gold_umls_ids in tqdm(examples_with_text_and_ids,
-                                                                                desc="Iterating over examples",
-                                                                                total=len(examples_with_text_and_ids)):
+
+    for k in k_list:
+        for threshold in thresholds:
+
+            for doc, example, gold_entities, predicted_entities, gold_umls_ids in tqdm(examples_with_text_and_ids,
+                                                                                    desc="Iterating over examples",
+                                                                                    total=len(examples_with_text_and_ids)):
 
 
-        entities = [entity for entity in example.entities if entity.umls_id in umls_concept_dict_by_id]
-        gold_umls_ids = [entity.umls_id for entity in entities]
-        doc_golds = set(gold_umls_ids)
-        doc_candidates = set()
+                entities = [entity for entity in example.entities if entity.umls_id in umls_concept_dict_by_id]
+                gold_umls_ids = [entity.umls_id for entity in entities]
+                doc_golds = set(gold_umls_ids)
+                doc_candidates = set()
 
-        if use_gold_mentions:
-            mention_texts = [entity.mention_text for entity in entities]
-        else:
-            predicted_mention_types = [[ent.label_] for ent in predicted_entities]
-            mention_texts = [ent.text for ent in predicted_entities]
+                if use_gold_mentions:
+                    mention_texts = gold_entities
+                else:
+                    predicted_mention_types = [[ent.label_] for ent in predicted_entities]
+                    mention_texts = [ent.text for ent in predicted_entities]
 
-        batch_candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
+                batch_candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
 
-        filtered_batch_candidate_neighbor_ids = []
-        for candidate_neighbor_ids in batch_candidate_neighbor_ids:
-            # Keep only canonical entities for which at least one mention has a score less than the threshold.
-            filtered_ids = {k: v for k, v in candidate_neighbor_ids.items() if any([z[1] <= threshold for z in v])}
-            filtered_batch_candidate_neighbor_ids.append(filtered_ids)
-            num_candidates.append(len(candidate_neighbor_ids))
-            num_filtered_candidates.append(len(filtered_ids))
-            doc_candidates.update(filtered_ids)
+                filtered_batch_candidate_neighbor_ids = []
+                for candidate_neighbor_ids in batch_candidate_neighbor_ids:
+                    # Keep only canonical entities for which at least one mention has a score less than the threshold.
+                    filtered_ids = {k: v for k, v in candidate_neighbor_ids.items() if any([z[1] <= threshold for z in v])}
+                    filtered_batch_candidate_neighbor_ids.append(filtered_ids)
+                    num_candidates.append(len(candidate_neighbor_ids))
+                    num_filtered_candidates.append(len(filtered_ids))
+                    doc_candidates.update(filtered_ids)
 
-        for i, gold_entity in enumerate(entities):
-            if use_gold_mentions:
-                candidates = filtered_batch_candidate_neighbor_ids[i]  # for gold mentions, len(entities) == len(filtered_batch_candidate_neighbor_ids)
-                mention_types = umls_concept_dict_by_id[gold_entity.umls_id]['types']  # use gold types
-                mention_text = gold_entity.mention_text
-            else:
-                # for each gold entity, search for a corresponding predicted entity that has the same span
-                span_from_doc = doc.char_span(gold_entity.start, gold_entity.end)
-                if span_from_doc is None:
-                    # one case is that the spacy span has an extra period attached to the end of it
-                    span_from_doc = doc.char_span(gold_entity.start, gold_entity.end+1)
-
-                candidates, mention_types = get_predicted_mention_candidates_and_types(span_from_doc, predicted_entities,
-                                                                                        filtered_batch_candidate_neighbor_ids,
-                                                                                        predicted_mention_types)
-                mention_text = ""  # not used 
-
-            # Evaluating candidate generation
-            if len(candidates) == 0:
-                entity_no_links_count += 1
-            elif gold_entity.umls_id in candidates:
-                entity_correct_links_count += 1
-            else:
-                entity_wrong_links_count += 1
-
-            # Evaluating linking
-            if linker:
-                sorted_candidate_ids = linker.link(candidates, mention_text, mention_types)
-                for linker_k in [1, 3, 5, 10]:
-                    if gold_entity.umls_id not in sorted_candidate_ids[:linker_k]:
-                        classifier_wrong_predictions[linker_k] += 1
+                for i, gold_entity in enumerate(entities):
+                    if use_gold_mentions:
+                        candidates = filtered_batch_candidate_neighbor_ids[i]  # for gold mentions, len(entities) == len(filtered_batch_candidate_neighbor_ids)
+                        mention_types = umls_concept_dict_by_id[gold_entity.umls_id]['types']  # use gold types
+                        mention_text = gold_entity.mention_text
                     else:
-                        classifier_correct_predictions[linker_k] += 1
+                        # for each gold entity, search for a corresponding predicted entity that has the same span
+                        span_from_doc = doc.char_span(gold_entity.start, gold_entity.end)
+                        if span_from_doc is None:
+                            # one case is that the spacy span has an extra period attached to the end of it
+                            span_from_doc = doc.char_span(gold_entity.start, gold_entity.end+1)
 
-            # Generate training data for the linking classifier
-            if generate_linking_classifier_training_data:
-                for candidate_id, candidate in candidates.items():
-                    classifier_example = linker.classifier_example(candidate_id, candidate, mention_text, mention_types)
-                    classifier_example['label'] = int(gold_entity.umls_id == candidate_id)
-                    linking_classifier_training_data.append(classifier_example)
+                        candidates, mention_types = get_predicted_mention_candidates_and_types(span_from_doc, predicted_entities,
+                                                                                                filtered_batch_candidate_neighbor_ids,
+                                                                                                predicted_mention_types)
+                        mention_text = ""  # not used 
 
-        # the number of correct entities for a given document is the number of gold entities contained in the candidates
-        # produced for that document
-        doc_entity_correct_links_count += len(doc_candidates.intersection(doc_golds))
-        # the number of incorrect entities for a given document is the number of gold entities not contained in the candidates
-        # produced for that document
-        doc_entity_missed_count += len(doc_golds - doc_candidates)
+                    # Evaluating candidate generation
+                    if len(candidates) == 0:
+                        entity_no_links_count += 1
+                    elif gold_entity.umls_id in candidates:
+                        entity_correct_links_count += 1
+                    else:
+                        entity_wrong_links_count += 1
 
-        all_golds_per_doc_set += list(doc_golds)
-        all_golds += gold_umls_ids
-        all_mentions += mention_texts
+                    # Evaluating linking
+                    if linker:
+                        sorted_candidate_ids = linker.link(candidates, mention_text, mention_types)
+                        for linker_k in [1, 3, 5, 10]:
+                            if gold_entity.umls_id not in sorted_candidate_ids[:linker_k]:
+                                classifier_wrong_predictions[linker_k] += 1
+                            else:
+                                classifier_correct_predictions[linker_k] += 1
 
-    print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
-    print(f'MedMentions entities found in UMLS: {len(gold_umls_ids)}')
-    print(f'K: {k}, Filtered threshold : {threshold}')
-    print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(all_golds)))
-    print('Gold concept not in candidates: {0:.2f}%'.format(100 * entity_wrong_links_count / len(all_golds)))
-    print('Doc level gold concept in candidates: {0:.2f}%'.format(100 * doc_entity_correct_links_count / len(all_golds_per_doc_set)))
-    print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
-    print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
-    for linker_k in classifier_correct_predictions.keys():
-        correct = classifier_correct_predictions[linker_k]
-        total = classifier_wrong_predictions[linker_k] + correct
-        print('Linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / total))
-        print('Normalized linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / entity_correct_links_count))
-    print('Mean, std, min, max candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates)))
-    print('Mean, std, min, max filtered candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates)))
+                    # Generate training data for the linking classifier
+                    if generate_linking_classifier_training_data:
+                        for candidate_id, candidate in candidates.items():
+                            classifier_example = linker.classifier_example(candidate_id, candidate, mention_text, mention_types)
+                            classifier_example['label'] = int(gold_entity.umls_id == candidate_id)
+                            linking_classifier_training_data.append(classifier_example)
+
+                # the number of correct entities for a given document is the number of gold entities contained in the candidates
+                # produced for that document
+                doc_entity_correct_links_count += len(doc_candidates.intersection(doc_golds))
+                # the number of incorrect entities for a given document is the number of gold entities not contained in the candidates
+                # produced for that document
+                doc_entity_missed_count += len(doc_golds - doc_candidates)
+
+                all_golds_per_doc_set += list(doc_golds)
+                all_golds += gold_umls_ids
+                all_mentions += mention_texts
+
+            print(f'MedMentions entities not in UMLS: {len(missing_entity_ids)}')
+            print(f'MedMentions entities found in UMLS: {len(gold_umls_ids)}')
+            print(f'K: {k}, Filtered threshold : {threshold}')
+            print('Gold concept in candidates: {0:.2f}%'.format(100 * entity_correct_links_count / len(all_golds)))
+            print('Gold concept not in candidates: {0:.2f}%'.format(100 * entity_wrong_links_count / len(all_golds)))
+            print('Doc level gold concept in candidates: {0:.2f}%'.format(100 * doc_entity_correct_links_count / len(all_golds_per_doc_set)))
+            print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
+            print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
+            for linker_k in classifier_correct_predictions.keys():
+                correct = classifier_correct_predictions[linker_k]
+                total = classifier_wrong_predictions[linker_k] + correct
+                print('Linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / total))
+                print('Normalized linking mention-level recall@{0}: {1:.2f}%'.format(linker_k, 100 * correct / entity_correct_links_count))
+            print('Mean, std, min, max candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_candidates), np.std(num_candidates), np.min(num_candidates), np.max(num_candidates)))
+            print('Mean, std, min, max filtered candidate ids: {0:.2f}, {1:.2f}, {2}, {3}'.format(np.mean(num_filtered_candidates), np.std(num_filtered_candidates), np.min(num_filtered_candidates), np.max(num_filtered_candidates)))
 
     return linking_classifier_training_data
 
@@ -696,7 +706,7 @@ def main(medmentions_path: str,
     else:
         thresholds = [float(x) for x in thresholds.split(",")]
 
-    if (len(thresholds) > 1 or len(k_list > 1):
+    if len(thresholds) > 1 or len(k_list) > 1:
         assert not generate_linker_data, \
             'generating linker training data should be for a single threshold and k'
 
@@ -709,17 +719,15 @@ def main(medmentions_path: str,
         examples_list = [train_examples, dev_examples, test_examples]
         filenames = [f'{model_path}/train.jsonl', f'{model_path}/dev.jsonl', f'{model_path}/test.jsonl']
         for examples, filename in zip(examples_list, filenames):
-            supervised_data = eval_candidate_generation_and_linking(examples, umls_concept_dict_by_id, candidate_generator, k_list[0], thresholds[0],
-                                                                    use_gold_mentions, spacy_model, generate_linker_data, linker, substitute_abbreviations)
+            supervised_data = eval_candidate_generation_and_linking(examples, umls_concept_dict_by_id, candidate_generator, k_list, thresholds,
+                                                                    use_gold_mentions, nlp, generate_linker_data, linker, substitute_abbreviations)
             with open(filename, 'w') as f:
                 for d in supervised_data:
                     f.write(f'{json.dumps(d)}\n')
     else:
         print('Results on the DEV set')
-        for k in k_list:
-            for threshold in thresholds:
-                eval_candidate_generation_and_linking(dev_examples, umls_concept_dict_by_id, candidate_generator, k, threshold,
-                                                    use_gold_mentions, spacy_model, generate_linker_data, linker, substitute_abbreviations)
+        eval_candidate_generation_and_linking(dev_examples, umls_concept_dict_by_id, candidate_generator, k_list, thresholds,
+                                            use_gold_mentions, nlp, generate_linker_data, linker, substitute_abbreviations)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
