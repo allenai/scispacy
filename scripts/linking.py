@@ -608,7 +608,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
             print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
             if linker:
-                print('Linking precision ')
+                print('Linking precision {0:.2f}%'.format(100 * classifier_correct_predictions[1] / (classifier_correct_predictions[1] + classifier_wrong_predictions[1])))
             for linker_k in classifier_correct_predictions.keys():
                 correct = classifier_correct_predictions[linker_k]
                 total = classifier_wrong_predictions[linker_k] + correct
@@ -730,4 +730,4 @@ if __name__ == "__main__":
           args.train,
           args.spacy_model, 
           args.generate_linker_data,
-          args.user_soft_matching)
+          args.use_soft_matching)
