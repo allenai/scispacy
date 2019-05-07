@@ -546,29 +546,29 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                                                                                      substitute_abbreviations)
 
     linking_classifier_training_data = []
-
-    entity_correct_links_count = 0  # number of correctly linked entities
-    entity_wrong_links_count = 0  # number of wrongly linked entities
-    entity_no_links_count = 0  # number of entities that are not linked
-    num_candidates = []
-    num_filtered_candidates = []
-
-    doc_entity_correct_links_count = 0  # number of correctly linked entities
-    doc_entity_missed_count = 0  # number of gold entities missed
-    doc_mention_no_links_count = 0  # number of ner mentions that did not have any linking candidates
-    doc_num_candidates = []
-    doc_num_filtered_candidates = []
-
-    all_golds_per_doc_set = []
-    all_golds = []
-    all_mentions = []
-
-    classifier_correct_predictions = defaultdict(int)
-    classifier_wrong_predictions = defaultdict(int)
-
-
     for k in k_list:
         for threshold in thresholds:
+
+
+            entity_correct_links_count = 0  # number of correctly linked entities
+            entity_wrong_links_count = 0  # number of wrongly linked entities
+            entity_no_links_count = 0  # number of entities that are not linked
+            num_candidates = []
+            num_filtered_candidates = []
+
+            doc_entity_correct_links_count = 0  # number of correctly linked entities
+            doc_entity_missed_count = 0  # number of gold entities missed
+            doc_mention_no_links_count = 0  # number of ner mentions that did not have any linking candidates
+            doc_num_candidates = []
+            doc_num_filtered_candidates = []
+
+            all_golds_per_doc_set = []
+            all_golds = []
+            all_mentions = []
+
+            classifier_correct_predictions = defaultdict(int)
+            classifier_wrong_predictions = defaultdict(int)
+
 
             for doc, example, gold_entities, predicted_entities, gold_umls_ids in tqdm(examples_with_text_and_ids,
                                                                                     desc="Iterating over examples",
