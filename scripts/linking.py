@@ -484,12 +484,13 @@ def get_predicted_mention_candidates_and_types(span,
                                                predicted_mention_types,
                                                use_soft_matching):
     """
-    This function returns two lists, candidates, and mention types. These lists will be the same length and have
+    This function returns three lists, candidates, mention types, and mention spans. These lists will be the same length and have
     length equal to the number of predicted entities that overlap with the input gold entity. When not using soft mentions,
     this length will be equal to one, as only one predicted entity can exactly match a gold entity.
     """
     candidates = []
     mention_types = []
+    mention_spans = []
 
     if span is not None:
         for j, predicted_entity in enumerate(ner_entities):
@@ -514,8 +515,9 @@ def get_predicted_mention_candidates_and_types(span,
                 if overlaps:
                     candidates.append(filtered_batch_candidate_neighbor_ids[j])
                     mention_types.append(predicted_mention_types[j])
+                    mention_spans.append(predicted_entity)
 
-    return candidates, mention_types
+    return candidates, mention_types, mention_spans
 
 
 def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExample],
@@ -584,6 +586,9 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             doc_mention_no_links_count = 0  # number of ner mentions that did not have any linking candidates
             doc_num_candidates = []
             doc_num_filtered_candidates = []
+            doc_linking_correct_count = 0
+            doc_linking_golds_in_candidates = 0
+            doc_linking_total_predictions = 0
 
             all_golds_per_doc_set = []
             all_golds = []
@@ -591,8 +596,8 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
 
             gold_entities_linker_correct = defaultdict(int)
             gold_entities_linker_incorrect = defaultdict(int)
-            predicted_entities_linker_correct = defaultdict(int)
-            predicted_entities_linker_incorrect = defaultdict(int)
+            predicted_entities_linker_correct = defaultdict(set)
+            predicted_entities_linker_incorrect = defaultdict(set)
 
             for doc, example, gold_entities, predicted_entities, gold_umls_ids in tqdm(examples_with_text_and_ids,
                                                                                     desc="Iterating over examples",
@@ -604,6 +609,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                 doc_golds = set(gold_umls_ids)
                 doc_candidates = set()
                 doc_linker_predictions = set()
+                doc_all_entities_in_candidates = set()
 
                 if use_gold_mentions:
                     mention_texts = gold_entities
@@ -622,8 +628,9 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                     num_candidates.append(len(candidate_neighbor_ids))
                     num_filtered_candidates.append(len(filtered_ids))
                     doc_candidates.update(filtered_ids)
-                    mention_types.update(predicted_mention_types[j])
-                    sorted_candidate_ids = linker.link(filtered_ids, mention_text, mention_types)
+                    sorted_candidate_ids = linker.link(filtered_ids, mention_text, predicted_mention_type)
+                    doc_all_entities_in_candidates.update(filtered_ids)
+                    doc_linker_predictions.add(sorted_candidate_ids[1])
 
                 for i, gold_entity in enumerate(entities):
                     if use_gold_mentions:
@@ -637,15 +644,15 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                             # one case is that the spacy span has an extra period attached to the end of it
                             span_from_doc = doc.char_span(gold_entity.start, gold_entity.end+1)
 
-                        candidates_by_mention, mention_types_by_mention = get_predicted_mention_candidates_and_types(span_from_doc, predicted_entities,
-                                                                                                                     filtered_batch_candidate_neighbor_ids,
-                                                                                                                     predicted_mention_types, use_soft_matching)
+                        candidates_by_mention, mention_types_by_mention, overlapping_mention_spans = get_predicted_mention_candidates_and_types(span_from_doc, predicted_entities,
+                                                                                                                                                filtered_batch_candidate_neighbor_ids,
+                                                                                                                                                predicted_mention_types, use_soft_matching)
                         mention_text = ""  # not used 
 
                     # Evaluating candidate generation
-                    if len(candidates) == 0:
+                    if len(candidates_by_mention) == 0 or len(candidates_by_mention[0]) == 0:
                         entity_no_links_count += 1
-                    elif any(gold_entity.umls_id in candidates_by_mention for candidates_by_mention in candidates):
+                    elif any(gold_entity.umls_id in candidates for candidates in candidates_by_mention):
                         entity_correct_links_count += 1
                     else:
                         entity_wrong_links_count += 1
@@ -658,16 +665,16 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                             linking_predictions_by_mention.append(sorted_candidate_ids)
 
                         for linker_k in [1, 3, 5, 10]:
-                            if gold_entity.umls_id in any(linking_predictions for linking_predictions[:linker_k] in linking_predictions_by_mention):
+                            if any(gold_entity.umls_id in linking_predictions[:linker_k] for linking_predictions in linking_predictions_by_mention):
                                 gold_entities_linker_correct[linker_k] += 1
                             else:
                                 gold_entities_linker_incorrect[linker_k] += 1
 
-                            for linking_predictions in linking_predictions_by_mention:
+                            for mention_index, linking_predictions in enumerate(linking_predictions_by_mention):
                                 if gold_entity.umls_id in linking_predictions[:linker_k]:
-                                    predicted_entities_linker_correct[linker_k] += 1
+                                    predicted_entities_linker_correct[linker_k].add(overlapping_mention_spans[mention_index])
                                 else:
-                                    predicted_entities_linker_incorrect[linker_k] += 1
+                                    predicted_entities_linker_incorrect[linker_k].add(overlapping_mention_spans[mention_index])
 
                     # Generate training data for the linking classifier
                     if generate_linking_classifier_training_data:
@@ -684,6 +691,10 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                 # produced for that document
                 doc_entity_missed_count += len(doc_golds - doc_candidates)
 
+                doc_linking_correct_count += len(doc_linker_predictions.intersection(doc_golds))
+                doc_linking_golds_in_candidates += len(doc_golds.intersection(doc_all_entities_in_candidates))
+                doc_linking_total_predictions += len(doc_linker_predictions)
+
                 all_golds_per_doc_set += list(doc_golds)
                 all_golds += gold_umls_ids
                 all_mentions += mention_texts
@@ -697,7 +708,10 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             print('Doc level gold concepts missed: {0:.2f}%'.format(100 * doc_entity_missed_count / len(all_golds_per_doc_set)))
             print('Candidate generation failed: {0:.2f}%'.format(100 * entity_no_links_count / len(all_golds)))
             if linker:
-                print('Linking precision {0:.2f}%'.format(100 * predicted_entities_linker_correct[1] / (len(predicted_entities))))
+                print('Mention linking precision {0:.2f}%'.format(100 * len(predicted_entities_linker_correct[1]) / (len(predicted_entities_linker_correct[1]) + len(predicted_entities_linker_incorrect[1]))))
+                print('Doc linking precision {0:.2f}%'.format(100 * doc_linking_correct_count / doc_linking_total_predictions))
+                print('Normalized doc linking precision {0:.2f}%'.format(100 * doc_linking_correct_count / doc_linking_golds_in_candidates))
+                print('Doc linking recall {0:.2f}%'.format(100 * doc_linking_correct_count / all_golds_per_doc_set))
             for linker_k in [1, 3, 5, 10]:
                 correct = gold_entities_linker_correct[linker_k]
                 total = len(all_golds)
