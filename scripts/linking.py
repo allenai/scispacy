@@ -483,8 +483,13 @@ def get_predicted_mention_candidates_and_types(span,
                                                filtered_batch_candidate_neighbor_ids,
                                                predicted_mention_types,
                                                use_soft_matching):
-    candidates = {}
-    mention_types = set()
+    """
+    This function returns two lists, candidates, and mention types. These lists will be the same length and have
+    length equal to the number of predicted entities that overlap with the input gold entity. When not using soft mentions,
+    this length will be equal to one, as only one predicted entity can exactly match a gold entity.
+    """
+    candidates = []
+    mention_types = []
 
     if span is not None:
         for j, predicted_entity in enumerate(ner_entities):
@@ -507,8 +512,8 @@ def get_predicted_mention_candidates_and_types(span,
                     or predicted_entity.start_char <= span.end_char and predicted_entity.end_char >= span.end_char:
                     overlaps = True
                 if overlaps:
-                    candidates.update(filtered_batch_candidate_neighbor_ids[j])
-                    mention_types.update(predicted_mention_types[j])
+                    candidates.append(filtered_batch_candidate_neighbor_ids[j])
+                    mention_types.append(predicted_mention_types[j])
 
     return candidates, mention_types
 
@@ -608,13 +613,16 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                 batch_candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
 
                 filtered_batch_candidate_neighbor_ids = []
-                for candidate_neighbor_ids in batch_candidate_neighbor_ids:
+                for candidate_neighbor_ids, mention_text, predicted_entity, predicted_mention_type \
+                    in zip(batch_candidate_neighbor_ids, mention_texts, predicted_entities, predicted_mention_types):
                     # Keep only canonical entities for which at least one mention has a score less than the threshold.
                     filtered_ids = {k: v for k, v in candidate_neighbor_ids.items() if any([z[1] <= threshold for z in v])}
                     filtered_batch_candidate_neighbor_ids.append(filtered_ids)
                     num_candidates.append(len(candidate_neighbor_ids))
                     num_filtered_candidates.append(len(filtered_ids))
                     doc_candidates.update(filtered_ids)
+                    mention_types.update(predicted_mention_types[j])
+                    sorted_candidate_ids = linker.link(filtered_ids, mention_text, mention_types)
 
                 for i, gold_entity in enumerate(entities):
                     if use_gold_mentions:
@@ -636,27 +644,28 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                     # Evaluating candidate generation
                     if len(candidates) == 0:
                         entity_no_links_count += 1
-                    elif gold_entity.umls_id in candidates:
+                    elif any(gold_entity.umls_id in candidates_by_mention for candidates_by_mention in candidates):
                         entity_correct_links_count += 1
                     else:
                         entity_wrong_links_count += 1
 
                     # Evaluating linking
                     if linker:
-                        sorted_candidate_ids = linker.link(candidates, mention_text, mention_types)
-                        doc_linker_predictions.update(sorted_candidate_ids[0])
-                        for linker_k in [1, 3, 5, 10]:
-                            if gold_entity.umls_id not in sorted_candidate_ids[:linker_k]:
-                                classifier_wrong_predictions[linker_k] += 1
-                            else:
-                                classifier_correct_predictions[linker_k] += 1
+                        for candidates_by_mention, types_by_mention in zip(candidates, mention_types):
+                            sorted_candidate_ids = linker.link(candidates_by_mention, mention_text, types_by_mention)
+                            for linker_k in [1, 3, 5, 10]:
+                                if gold_entity.umls_id not in sorted_candidate_ids[:linker_k]:
+                                    classifier_wrong_predictions[linker_k] += 1
+                                else:
+                                    classifier_correct_predictions[linker_k] += 1
 
                     # Generate training data for the linking classifier
                     if generate_linking_classifier_training_data:
-                        for candidate_id, candidate in candidates.items():
-                            classifier_example = linker.classifier_example(candidate_id, candidate, mention_text, mention_types)
-                            classifier_example['label'] = int(gold_entity.umls_id == candidate_id)
-                            linking_classifier_training_data.append(classifier_example)
+                        for candidates_by_mention, types_by_mention in zip(candidates, mention_types):
+                            for candidate_id, candidate in candidates.items():
+                                classifier_example = linker.classifier_example(candidate_id, candidate, mention_text, types_by_mention)
+                                classifier_example['label'] = int(gold_entity.umls_id == candidate_id)
+                                linking_classifier_training_data.append(classifier_example)
 
                 # the number of correct entities for a given document is the number of gold entities contained in the candidates
                 # produced for that document
