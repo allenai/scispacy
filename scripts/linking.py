@@ -419,6 +419,11 @@ def get_mention_text_and_ids_by_doc(data: List[data_util.MedMentionExample],
         A list of MedMentionExamples being evaluated
     umls: Dict[str, Any]
         A dictionary of UMLS concepts
+    nlp : Language
+        A spacy NLP model.
+    substitute_abbreviations: bool, default = False
+        Whether or not to search for and replace abbreviations when generating mention candidates.
+        Note that this can be applied on both gold and predicted mentions.
     """
     missing_entity_ids = []  # entities in MedMentions but not in UMLS
     examples_with_labels = []
@@ -454,6 +459,9 @@ def get_mention_text_and_ids_by_doc(data: List[data_util.MedMentionExample],
             gold_umls_ids.append(entity.umls_id)
             total += 1
 
+
+        # Note that because we might substitute some entities for their abbreviations,
+        # the entities on the doc may not match predicted_mention_texts.
         for entity in doc.ents:
             new_span, _ = maybe_substitute_span(doc, entity, abbreviations)
             if new_span is None:
@@ -502,8 +510,8 @@ def get_predicted_mention_candidates_and_types(span,
 def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExample],
                                           umls_concept_dict_by_id: Dict[str, Dict],
                                           candidate_generator: CandidateGenerator,
-                                          k_list: int,
-                                          thresholds: float,
+                                          k_list: List[int],
+                                          thresholds: List[float],
                                           use_gold_mentions: bool,
                                           nlp: Language,
                                           generate_linking_classifier_training_data: bool,
@@ -526,7 +534,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
         A CandidateGenerator instance for generating linking candidates for mentions
     k_list: List[int]
         A list of values determining how many candidates are generated.
-    thresholds: float
+    thresholds: List[float]
         A list of threshold values determining the cutoff score for candidates
     use_gold_mentions: bool
         Evalute using gold mentions and types or predicted spacy ner mentions and types
