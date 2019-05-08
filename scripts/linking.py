@@ -500,6 +500,11 @@ def get_predicted_mention_candidates_and_types(span,
                 mention_spans.append(predicted_entity)
                 break
             elif use_soft_matching:
+                i1 = min(span_from_doc.end_char, predicted_entity.end_char)
+                if i0 <= i1:
+                    overlap
+                else: 
+                    no overlap
                 # gold span starts inside the predicted span
                 if (span.start_char >= predicted_entity.start_char <= span.end_char
                         # predicted span starts inside gold span.
@@ -608,14 +613,14 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                 if use_gold_mentions:
                     mention_texts = gold_entities
                 else:
-                    predicted_mention_types = [[ent.label_] for ent in predicted_entities]
+                    mention_types = [[ent.label_] for ent in predicted_entities]
                     mention_texts = [ent.text for ent in predicted_entities]
 
                 batch_candidate_neighbor_ids = candidate_generator.generate_candidates(mention_texts, k)
 
                 filtered_batch_candidate_neighbor_ids = []
-                for candidate_neighbor_ids, mention_text, predicted_entity, predicted_mention_type \
-                    in zip(batch_candidate_neighbor_ids, mention_texts, predicted_entities, predicted_mention_types):
+                for candidate_neighbor_ids, mention_text, predicted_entity, mention_type \
+                    in zip(batch_candidate_neighbor_ids, mention_texts, predicted_entities, mention_types):
                     # Keep only canonical entities for which at least one mention has a score less than the threshold.
                     filtered_ids = {k: v for k, v in candidate_neighbor_ids.items() if any([z[1] <= threshold for z in v])}
                     filtered_batch_candidate_neighbor_ids.append(filtered_ids)
@@ -626,7 +631,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                     # loop below loops over gold entities, so to compute the document level metrics we first link for all predicted
                     # entities here. This could be refactored to remove the inefficiency
                     if len(filtered_ids) != 0:
-                        sorted_candidate_ids = linker.link(filtered_ids, mention_text, predicted_mention_type)
+                        sorted_candidate_ids = linker.link(filtered_ids, mention_text, mention_type)
                         doc_all_entities_in_candidates.update(filtered_ids)
                         doc_linker_predictions.add(sorted_candidate_ids[0])
 
@@ -644,7 +649,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
 
                         candidates_by_mention, mention_types_by_mention, overlapping_mention_spans = get_predicted_mention_candidates_and_types(span_from_doc, predicted_entities,
                                                                                                                                                 filtered_batch_candidate_neighbor_ids,
-                                                                                                                                                predicted_mention_types, use_soft_matching)
+                                                                                                                                                mention_types, use_soft_matching)
                         mention_text = ""  # not used 
 
                     # Evaluating candidate generation
