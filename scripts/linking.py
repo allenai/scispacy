@@ -494,11 +494,11 @@ def get_predicted_mention_candidates_and_types(span,
 
     if span is not None:
         for j, predicted_entity in enumerate(ner_entities):
-            if use_soft_matching and span == predicted_entity:
+            if not use_soft_matching and span == predicted_entity:
                 candidates = filtered_batch_candidate_neighbor_ids[j]
                 mention_types = predicted_mention_types[j]
                 break
-            elif not use_soft_matching:
+            elif use_soft_matching:
                 overlaps = False
                 # gold span within spacy span
                 if span.start_char >= predicted_entity.start_char and span.end_char <= predicted_entity.end_char \
