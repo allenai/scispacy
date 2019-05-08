@@ -501,9 +501,9 @@ def get_predicted_mention_candidates_and_types(span,
                 break
             elif use_soft_matching:
                 # gold span starts inside the predicted span
-                if (span.start_char >= predicted_entity.start_char <= span.end_char
+                if (span.start_char <= predicted_entity.start_char <= span.end_char
                         # predicted span starts inside gold span.
-                        or predicted_entity.start_char >= span.start_char <= predicted_entity.end_char):
+                        or predicted_entity.start_char <= span.start_char <= predicted_entity.end_char):
                     candidates.append(filtered_batch_candidate_neighbor_ids[j])
                     mention_types.append(predicted_mention_types[j])
                     mention_spans.append(predicted_entity)
