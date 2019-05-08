@@ -500,7 +500,6 @@ def get_predicted_mention_candidates_and_types(span,
                 mention_spans.append(predicted_entity)
                 break
             elif use_soft_matching:
-                overlaps = False
                 # gold span starts inside the predicted span
                 if (span.start_char >= predicted_entity.start_char <= span.end_char
                         # predicted span starts inside gold span.
