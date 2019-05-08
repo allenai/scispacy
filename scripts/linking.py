@@ -774,14 +774,14 @@ def main(medmentions_path: str,
         filenames = [f'{model_path}/train.jsonl', f'{model_path}/dev.jsonl', f'{model_path}/test.jsonl']
         for examples, filename in zip(examples_list, filenames):
             supervised_data = eval_candidate_generation_and_linking(examples, umls_concept_dict_by_id, candidate_generator, k_list, thresholds,
-                                                                    use_gold_mentions, nlp, generate_linker_data, linker, substitute_abbreviations)
+                                                                    use_gold_mentions, nlp, generate_linker_data, linker, use_soft_matching, substitute_abbreviations)
             with open(filename, 'w') as f:
                 for d in supervised_data:
                     f.write(f'{json.dumps(d)}\n')
     else:
         print('Results on the DEV set')
         eval_candidate_generation_and_linking(dev_examples, umls_concept_dict_by_id, candidate_generator, k_list, thresholds,
-                                            use_gold_mentions, nlp, generate_linker_data, linker, substitute_abbreviations)
+                                            use_gold_mentions, nlp, generate_linker_data, linker, use_soft_matching, substitute_abbreviations)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
