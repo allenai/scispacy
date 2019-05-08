@@ -649,7 +649,6 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                         mention_text = ""  # not used 
 
                     # Evaluating candidate generation
-                    print(candidates_by_mention)
                     if len(candidates_by_mention) == 0 or len(candidates_by_mention[0]) == 0:
                         entity_no_links_count += 1
                     elif any(gold_entity.umls_id in candidates for candidates in candidates_by_mention):
