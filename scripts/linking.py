@@ -628,9 +628,10 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                     num_candidates.append(len(candidate_neighbor_ids))
                     num_filtered_candidates.append(len(filtered_ids))
                     doc_candidates.update(filtered_ids)
-                    sorted_candidate_ids = linker.link(filtered_ids, mention_text, predicted_mention_type)
-                    doc_all_entities_in_candidates.update(filtered_ids)
-                    doc_linker_predictions.add(sorted_candidate_ids[1])
+                    if len(filtered_ids) != 0:
+                        sorted_candidate_ids = linker.link(filtered_ids, mention_text, predicted_mention_type)
+                        doc_all_entities_in_candidates.update(filtered_ids)
+                        doc_linker_predictions.add(sorted_candidate_ids[0])
 
                 for i, gold_entity in enumerate(entities):
                     if use_gold_mentions:
@@ -711,7 +712,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                 print('Mention linking precision {0:.2f}%'.format(100 * len(predicted_entities_linker_correct[1]) / (len(predicted_entities_linker_correct[1]) + len(predicted_entities_linker_incorrect[1]))))
                 print('Doc linking precision {0:.2f}%'.format(100 * doc_linking_correct_count / doc_linking_total_predictions))
                 print('Normalized doc linking precision {0:.2f}%'.format(100 * doc_linking_correct_count / doc_linking_golds_in_candidates))
-                print('Doc linking recall {0:.2f}%'.format(100 * doc_linking_correct_count / all_golds_per_doc_set))
+                print('Doc linking recall {0:.2f}%'.format(100 * doc_linking_correct_count / len(all_golds_per_doc_set)))
             for linker_k in [1, 3, 5, 10]:
                 correct = gold_entities_linker_correct[linker_k]
                 total = len(all_golds)
