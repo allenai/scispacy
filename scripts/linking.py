@@ -497,22 +497,14 @@ def get_predicted_mention_candidates_and_types(span,
             if not use_soft_matching and span == predicted_entity:
                 candidates = filtered_batch_candidate_neighbor_ids[j]
                 mention_types = predicted_mention_types[j]
+                mention_spans.append(predicted_entity)
                 break
             elif use_soft_matching:
                 overlaps = False
-                # gold span within spacy span
-                if span.start_char >= predicted_entity.start_char and span.end_char <= predicted_entity.end_char \
-                    and predicted_entity != span:
-                    overlaps = True
-                # spacy span within gold span
-                if predicted_entity.start_char >= span.start_char and predicted_entity.end_char <= span.end_char \
-                    and predicted_entity != span:
-                    overlaps = True
-                # endpoint overlap between gold span and spacy span
-                if predicted_entity.start_char <= span.start_char and predicted_entity.end_char >= span.start_char \
-                    or predicted_entity.start_char <= span.end_char and predicted_entity.end_char >= span.end_char:
-                    overlaps = True
-                if overlaps:
+                # gold span starts inside the predicted span
+                if (span.start_char >= predicted_entity.start_char <= span.end_char
+                        # predicted span starts inside gold span.
+                        or predicted_entity.start_char >= span.start_char <= predicted_entity.end_char):
                     candidates.append(filtered_batch_candidate_neighbor_ids[j])
                     mention_types.append(predicted_mention_types[j])
                     mention_spans.append(predicted_entity)
@@ -631,6 +623,9 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                     num_candidates.append(len(candidate_neighbor_ids))
                     num_filtered_candidates.append(len(filtered_ids))
                     doc_candidates.update(filtered_ids)
+                    # Note: doing linking here means that each entity is linked twice, which is inefficient. However the main
+                    # loop below loops over gold entities, so to compute the document level metrics we first link for all predicted
+                    # entities here. This could be refactored to remove the inefficiency
                     if len(filtered_ids) != 0:
                         sorted_candidate_ids = linker.link(filtered_ids, mention_text, predicted_mention_type)
                         doc_all_entities_in_candidates.update(filtered_ids)
