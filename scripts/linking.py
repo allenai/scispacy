@@ -488,7 +488,6 @@ def get_predicted_mention_candidates_and_types(span,
     length equal to the number of predicted entities that overlap with the input gold entity. When not using soft mentions,
     this length will be equal to one, as only one predicted entity can exactly match a gold entity.
     """
-    import pdb; pdb.set_trace()
     candidates = []
     mention_types = []
     mention_spans = []
