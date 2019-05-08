@@ -607,6 +607,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
 
                 if use_gold_mentions:
                     mention_texts = gold_entities
+                    mention_types = [[ent.label_] for ent in gold_entities]
                 else:
                     mention_types = [[ent.label_] for ent in predicted_entities]
                     mention_texts = [ent.text for ent in predicted_entities]
