@@ -594,8 +594,11 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
             all_golds = []
             all_mentions = []
 
+            # Note: these counts correspond to the number of gold entities that were correctly identified using either
+            # predicted mentions or gold mentions. It does not mean that these counts are only for using gold mentions
             gold_entities_linker_correct = defaultdict(int)
             gold_entities_linker_incorrect = defaultdict(int)
+
             predicted_entities_linker_correct = defaultdict(set)
             predicted_entities_linker_incorrect = defaultdict(set)
 
