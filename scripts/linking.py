@@ -488,6 +488,7 @@ def get_predicted_mention_candidates_and_types(span,
     length equal to the number of predicted entities that overlap with the input gold entity. When not using soft mentions,
     this length will be equal to one, as only one predicted entity can exactly match a gold entity.
     """
+    import pdb; pdb.set_trace()
     candidates = []
     mention_types = []
     mention_spans = []
@@ -677,7 +678,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
 
                     # Generate training data for the linking classifier
                     if generate_linking_classifier_training_data:
-                        for candidates, mention_types in zip(candidates_by_mention, mention_types_by_mention):
+                        for candidates, mention_types_for_mention in zip(candidates_by_mention, mention_types_by_mention):
                             for candidate_id, candidate in candidates.items():
                                 classifier_example = linker.classifier_example(candidate_id, candidate, mention_text, mention_types)
                                 classifier_example['label'] = int(gold_entity.umls_id == candidate_id)
