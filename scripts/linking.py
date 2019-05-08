@@ -495,8 +495,8 @@ def get_predicted_mention_candidates_and_types(span,
     if span is not None:
         for j, predicted_entity in enumerate(ner_entities):
             if not use_soft_matching and span == predicted_entity:
-                candidates = filtered_batch_candidate_neighbor_ids[j]
-                mention_types = predicted_mention_types[j]
+                candidates.append(filtered_batch_candidate_neighbor_ids[j])
+                mention_types.append(predicted_mention_types[j])
                 mention_spans.append(predicted_entity)
                 break
             elif use_soft_matching:
@@ -649,6 +649,7 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
                         mention_text = ""  # not used 
 
                     # Evaluating candidate generation
+                    print(candidates_by_mention)
                     if len(candidates_by_mention) == 0 or len(candidates_by_mention[0]) == 0:
                         entity_no_links_count += 1
                     elif any(gold_entity.umls_id in candidates for candidates in candidates_by_mention):
