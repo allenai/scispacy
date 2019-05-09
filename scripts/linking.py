@@ -677,9 +677,9 @@ def eval_candidate_generation_and_linking(examples: List[data_util.MedMentionExa
 
                     # Generate training data for the linking classifier
                     if generate_linking_classifier_training_data:
-                        for candidates, mention_types in zip(candidates_by_mention, mention_types_by_mention):
+                        for candidates, mention_types_for_mention in zip(candidates_by_mention, mention_types_by_mention):
                             for candidate_id, candidate in candidates.items():
-                                classifier_example = linker.classifier_example(candidate_id, candidate, mention_text, mention_types)
+                                classifier_example = linker.classifier_example(candidate_id, candidate, mention_text, mention_types_for_mention)
                                 classifier_example['label'] = int(gold_entity.umls_id == candidate_id)
                                 linking_classifier_training_data.append(classifier_example)
 
