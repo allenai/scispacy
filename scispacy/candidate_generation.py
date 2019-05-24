@@ -18,13 +18,26 @@ class MentionCandidate(NamedTuple):
     aliases: List[str]
     distances: List[float]
 
-def load_approximate_nearest_neigbours_index(tfidf_vectors_path: str, ann_index_path: str, efs: int = 200):
+def load_approximate_nearest_neighbours_index(tfidf_vectors_path: str, ann_index_path: str, ef_search: int = 200):
+    """
+    Load an approximate nearest neighbours index from disk.
 
+    Parameters
+    ----------
+    tfidf_vectors_path : str, required.
+        The path to the tfidf vectors of the items in the index.
+    ann_index_path : str, required.
+        The path to the ann index.
+    ef_search: int, optional (default = 200)
+        Controls speed performance at query time. Max value is 2000,
+        but reducing to around ~100 will increase query speed by an order
+        of magnitude for a small performance hit.
+    """
     uml_concept_alias_tfidfs = scipy.sparse.load_npz(cached_path(tfidf_vectors_path)).astype(numpy.float32)
     ann_index = nmslib.init(method='hnsw', space='cosinesimil_sparse', data_type=nmslib.DataType.SPARSE_VECTOR)
     ann_index.addDataPointBatch(uml_concept_alias_tfidfs)
     ann_index.loadIndex(cached_path(ann_index_path))
-    query_time_params = {'efSearch': efs}
+    query_time_params = {'efSearch': ef_search}
     ann_index.setQueryTimeParams(query_time_params)
 
     return ann_index
@@ -50,9 +63,9 @@ class CandidateGenerator:
     valid and important aliases to include, but it means that using the candidate generator to implement a naive
     k-nn baseline linker results in very poor performance, because there are multiple entities for some strings
     which have an exact char3-gram match, as these entities contain the same alias string. This situation results
-    in multiple entities returned with a distance of 0.0, because they exactly match an alias, making a k-nn baseline
-    effectively a random choice between these candidates. However, this doesn't matter if you have a classifier
-    on top of the candidate generator, as is intended!
+    in multiple entities returned with a distance of 0.0, because they exactly match an alias, making a k-nn
+    baseline effectively a random choice between these candidates. However, this doesn't matter if you have a
+    classifier on top of the candidate generator, as is intended!
 
     Parameters
     ----------
@@ -84,7 +97,7 @@ class CandidateGenerator:
                  umls: List = None,
                  verbose: bool = False) -> None:
 
-        self.ann_index = ann_index or load_approximate_nearest_neigbours_index(
+        self.ann_index = ann_index or load_approximate_nearest_neighbours_index(
                 self.DEFAULT_PATHS["tfidf_umls_vectors"],
                 self.DEFAULT_PATHS["ann_index"]
         )
@@ -92,7 +105,7 @@ class CandidateGenerator:
 
         self.vectorizer = tfidf_vectorizer or joblib.load(cached_path(self.DEFAULT_PATHS["tfidf_vectorizer"]))
         self.ann_concept_aliases_list = ann_concept_aliases_list or \
-                                            json.load(open(cached_path(self.DEFAULT_PATHS["concept_aliases_list"])))
+            json.load(open(cached_path(self.DEFAULT_PATHS["concept_aliases_list"])))
 
         self.umls = umls or json.load(open(cached_path(self.DEFAULT_PATHS["umls_path"])))
         self.verbose = verbose
@@ -192,16 +205,17 @@ class CandidateGenerator:
             if distances is None:
                 distances = []
 
-            predicted_umls_concept_ids = defaultdict(lambda: {"mentions": [], "distances": []})
+            concept_to_mentions: Dict[str, List[str]] = defaultdict(list)
+            concept_to_distances: Dict[str, List[float]] = defaultdict(list)
             for neighbor_index, distance in zip(neighbors, distances):
                 mention = self.ann_concept_aliases_list[neighbor_index]
                 concepts_for_mention = self.mention_to_concept[mention]
                 for concept_id in concepts_for_mention:
-                    predicted_umls_concept_ids[concept_id]["mentions"].append(mention)
-                    predicted_umls_concept_ids[concept_id]["distances"].append(distance)
+                    concept_to_mentions[concept_id].append(mention)
+                    concept_to_distances[concept_id].append(distance)
 
-            mention_candidates = [MentionCandidate(concept, info["mentions"], info["distances"])
-                                  for concept, info in predicted_umls_concept_ids.items()]
+            mention_candidates = [MentionCandidate(concept, mentions, concept_to_distances[concept])
+                                  for concept, mentions in concept_to_mentions.items()]
 
             neighbors_by_concept_ids.append(mention_candidates)
 
@@ -237,17 +251,18 @@ def create_tfidf_ann_index(out_path: str, umls: List = None) -> Tuple[List[str],
         for alias in set(concept["aliases"]).union({concept["canonical_name"]}):
             text_to_concept_id[alias].add(concept["concept_id"])
 
-
     # nmslib hyperparameters (very important)
     # guide: https://github.com/nmslib/nmslib/blob/master/python_bindings/parameters.md
-    # default values resulted in very low recall
-    M = 100  # set to the maximum recommended value. Improves recall at the expense of longer indexing time
-    efC = 2000  # `C` for Construction. Set to the maximum recommended value
-                # Improves recall at the expense of longer indexing time
-    efS = 1000  # `S` for Search. This controls performance at query time. Maximum recommended value is 2000.
-                # It makes the query slow without significant gain in recall.
+    # Default values resulted in very low recall.
+
+    # set to the maximum recommended value. Improves recall at the expense of longer indexing time.
+    # TODO: This variable name is so hot because I don't actually know what this parameter does.
+    m_parameter = 100
+    # `C` for Construction. Set to the maximum recommended value
+    # Improves recall at the expense of longer indexing time
+    construction = 2000
     num_threads = 60  # set based on the machine
-    index_params = {'M': M, 'indexThreadQty': num_threads, 'efConstruction': efC, 'post' : 0}
+    index_params = {'M': m_parameter, 'indexThreadQty': num_threads, 'efConstruction': construction, 'post' : 0}
 
     print(f'No tfidf vectorizer on {tfidf_vectorizer_path} or ann index on {ann_index_path}')
     umls_concept_aliases = list(text_to_concept_id.keys())
@@ -266,7 +281,7 @@ def create_tfidf_ann_index(out_path: str, umls: List = None) -> Tuple[List[str],
 
     print(f'Finding empty (all zeros) tfidf vectors')
     empty_tfidfs_boolean_flags = numpy.array(uml_concept_alias_tfidfs.sum(axis=1) != 0).reshape(-1,)
-    deleted_aliases = umls_concept_aliases[empty_tfidfs_boolean_flags == False]
+    deleted_aliases = umls_concept_aliases[not empty_tfidfs_boolean_flags]
     number_of_non_empty_tfidfs = len(deleted_aliases)
     total_number_of_tfidfs = uml_concept_alias_tfidfs.shape[0]
 
