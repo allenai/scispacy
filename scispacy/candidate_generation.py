@@ -281,7 +281,7 @@ def create_tfidf_ann_index(out_path: str, umls: List = None) -> Tuple[List[str],
 
     print(f'Finding empty (all zeros) tfidf vectors')
     empty_tfidfs_boolean_flags = numpy.array(uml_concept_alias_tfidfs.sum(axis=1) != 0).reshape(-1,)
-    deleted_aliases = umls_concept_aliases[not empty_tfidfs_boolean_flags]
+    deleted_aliases = umls_concept_aliases[empty_tfidfs_boolean_flags == False] # pylint: disable=singleton-comparison
     number_of_non_empty_tfidfs = len(deleted_aliases)
     total_number_of_tfidfs = uml_concept_alias_tfidfs.shape[0]
 
