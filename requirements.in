@@ -4,6 +4,11 @@ pandas
 awscli
 conllu
 
+# Candidate generation and entity linking
+joblib
+nmslib>=1.7.3.6
+scikit-learn>=0.20.3
+
 # Required for testing.
 pytest
 pytest-cov
