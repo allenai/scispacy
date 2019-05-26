@@ -12,13 +12,26 @@ from nmslib.dist import FloatIndex
 
 from scispacy.file_cache import cached_path
 
+# pylint: disable=line-too-long
+DEFAULT_PATHS = {
+        "ann_index": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/nmslib_index.bin",
+        "tfidf_vectorizer": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectorizer.joblib",
+        "tfidf_umls_vectors": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectors_sparse.npz",
+        "concept_aliases_list": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/concept_aliases.json",
+        "umls_path": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2017_aa_cat0129.json"
+
+}
+# pylint: enable=line-too-long
+
 
 class MentionCandidate(NamedTuple):
     concept_id: str
     aliases: List[str]
     distances: List[float]
 
-def load_approximate_nearest_neighbours_index(tfidf_vectors_path: str, ann_index_path: str, ef_search: int = 200):
+def load_approximate_nearest_neighbours_index(tfidf_vectors_path: str = DEFAULT_PATHS["tfidf_umls_vectors"],
+                                              ann_index_path: str = DEFAULT_PATHS["ann_index"],
+                                              ef_search: int = 200) -> FloatIndex:
     """
     Load an approximate nearest neighbours index from disk.
 
@@ -81,15 +94,6 @@ class CandidateGenerator:
         Setting to true will print extra information about the generated candidates
 
     """
-    DEFAULT_PATHS = {
-            "ann_index": "blah",
-            "tfidf_vectorizer": "blach",
-            "tfidf_umls_vectors": "blach",
-            "concept_aliases_list": "blah",
-            "umls_path": "blah3"
-
-    }
-
     def __init__(self,
                  ann_index: FloatIndex = None,
                  tfidf_vectorizer: TfidfVectorizer = None,
@@ -97,17 +101,13 @@ class CandidateGenerator:
                  umls: List = None,
                  verbose: bool = False) -> None:
 
-        self.ann_index = ann_index or load_approximate_nearest_neighbours_index(
-                self.DEFAULT_PATHS["tfidf_umls_vectors"],
-                self.DEFAULT_PATHS["ann_index"]
-        )
+        self.ann_index = ann_index or load_approximate_nearest_neighbours_index()
 
-
-        self.vectorizer = tfidf_vectorizer or joblib.load(cached_path(self.DEFAULT_PATHS["tfidf_vectorizer"]))
+        self.vectorizer = tfidf_vectorizer or joblib.load(cached_path(DEFAULT_PATHS["tfidf_vectorizer"]))
         self.ann_concept_aliases_list = ann_concept_aliases_list or \
-            json.load(open(cached_path(self.DEFAULT_PATHS["concept_aliases_list"])))
+            json.load(open(cached_path(DEFAULT_PATHS["concept_aliases_list"])))
 
-        self.umls = umls or json.load(open(cached_path(self.DEFAULT_PATHS["umls_path"])))
+        self.umls = umls or json.load(open(cached_path(DEFAULT_PATHS["umls_path"])))
         self.verbose = verbose
 
         # We need to keep around a map from text to possible canonical ids that they map to.
@@ -222,7 +222,6 @@ class CandidateGenerator:
         return neighbors_by_concept_ids
 
 
-
 def create_tfidf_ann_index(out_path: str, umls: List = None) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
     """
     Build tfidf vectorizer and ann index.
@@ -243,7 +242,7 @@ def create_tfidf_ann_index(out_path: str, umls: List = None) -> Tuple[List[str],
     tfidf_vectors_path = f'{out_path}/tfidf_vectors_sparse.npz'
     uml_concept_aliases_path = f'{out_path}/concept_aliases.json'
 
-    umls = umls or json.load(open(cached_path(CandidateGenerator.DEFAULT_PATHS["umls_path"])))
+    umls = umls or json.load(open(cached_path(DEFAULT_PATHS["umls_path"])))
     # We need to keep around a map from text to possible canonical ids that they map to.
     text_to_concept_id: Dict[str, Set[str]] = defaultdict(set)
 
