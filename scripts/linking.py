@@ -436,9 +436,8 @@ def get_mention_text_and_ids_by_doc(data: List[data_util.MedMentionExample],
         doc = nlp(example.text)
         abbreviations = {}
         if substitute_abbreviations:
-            for full, shorts in doc._.abbreviations:
-                for short in shorts:
-                    abbreviations[short] = full
+            for short in doc._.abbreviations:
+                abbreviations[short] = short._.long_form
 
         mention_texts = []
         predicted_mention_texts = []
