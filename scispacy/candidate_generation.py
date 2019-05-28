@@ -105,7 +105,11 @@ class CandidateGenerator:
     umls: List[TYPE]
         A list of canonical concepts from the Unified Medical Language System knowledge graph.
     verbose: bool
-        Setting to true will print extra information about the generated candidates
+        Setting to true will print extra information about the generated candidates.
+    ef_search: int
+        The efs search parameter used in the index. This substantially effects runtime speed
+        (higher is slower but slightly more accurate). Note that this parameter is ignored
+        if a preconstructed ann_index is passed.
 
     """
     def __init__(self,
@@ -113,9 +117,10 @@ class CandidateGenerator:
                  tfidf_vectorizer: TfidfVectorizer = None,
                  ann_concept_aliases_list: List[str] = None,
                  umls: List = None,
-                 verbose: bool = False) -> None:
+                 verbose: bool = False,
+                 ef_search: int = 200) -> None:
 
-        self.ann_index = ann_index or load_approximate_nearest_neighbours_index()
+        self.ann_index = ann_index or load_approximate_nearest_neighbours_index(ef_search=ef_search)
 
         self.vectorizer = tfidf_vectorizer or joblib.load(cached_path(DEFAULT_PATHS["tfidf_vectorizer"]))
         self.ann_concept_aliases_list = ann_concept_aliases_list or \
@@ -174,7 +179,7 @@ class CandidateGenerator:
 
         return extended_neighbors, extended_distances
 
-    def generate_candidates(self, mention_texts: List[str], k: int) -> List[List[MentionCandidate]]:
+    def __call__(self, mention_texts: List[str], k: int) -> List[List[MentionCandidate]]:
         """
         Given a list of mention texts, returns a list of candidate neighbors.
 
