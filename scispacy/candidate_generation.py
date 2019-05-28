@@ -25,6 +25,19 @@ DEFAULT_PATHS = {
 
 
 class MentionCandidate(NamedTuple):
+    """
+    A data class representing a candidate entity that a mention may be linked to.
+
+    Parameters
+    ----------
+    concept_id : str, required.
+        The canonical concept id in UMLS.
+    aliases : List[str], required.
+        The aliases that caused this entity to be linked.
+    distances : List[float], required.
+        The distances from the mention text to the alias in tf-idf space.
+
+    """
     concept_id: str
     aliases: List[str]
     distances: List[float]
@@ -87,7 +100,8 @@ class CandidateGenerator:
     tfidf_vectorizer: TfidfVectorizer
         The vectorizer used to encode mentions.
     ann_concept_aliases_list: List[str]
-        A list of strings, mapping the indices used in the ann_index to canonical UMLS ids.
+        A list of strings, mapping the indices used in the ann_index to possible UMLS mentions.
+        This is essentially used a lookup between the ann index and actual mention strings.
     umls: List[TYPE]
         A list of canonical concepts from the Unified Medical Language System knowledge graph.
     verbose: bool
@@ -149,7 +163,7 @@ class CandidateGenerator:
         neighbors = list(neighbors)
         distances = list(distances)
 
-        # neighbors need to be convected to an np.array of objects instead of ndarray of dimensions len(vectors)xk
+        # neighbors need to be converted to an np.array of objects instead of ndarray of dimensions len(vectors)xk
         # Solution: add a row to `neighbors` with any length other than k. This way, calling np.array(neighbors)
         # returns an np.array of objects
         neighbors.append([])
@@ -198,7 +212,7 @@ class CandidateGenerator:
         total_time = end_time - start_time
         if self.verbose:
             print(f'Finding neighbors took {total_time.total_seconds()} seconds')
-        neighbors_by_concept_ids = []
+        batch_mention_candidates = []
         for neighbors, distances in zip(batch_neighbors, batch_distances):
             if neighbors is None:
                 neighbors = []
@@ -217,9 +231,9 @@ class CandidateGenerator:
             mention_candidates = [MentionCandidate(concept, mentions, concept_to_distances[concept])
                                   for concept, mentions in concept_to_mentions.items()]
 
-            neighbors_by_concept_ids.append(mention_candidates)
+            batch_mention_candidates.append(mention_candidates)
 
-        return neighbors_by_concept_ids
+        return batch_mention_candidates
 
 
 def create_tfidf_ann_index(out_path: str, umls: List = None) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
@@ -265,9 +279,12 @@ def create_tfidf_ann_index(out_path: str, umls: List = None) -> Tuple[List[str],
 
     print(f'No tfidf vectorizer on {tfidf_vectorizer_path} or ann index on {ann_index_path}')
     umls_concept_aliases = list(text_to_concept_id.keys())
-
     umls_concept_aliases = numpy.array(umls_concept_aliases)
 
+    # NOTE: here we are creating the tf-idf vectorizer with float32 type, but we can serialize the
+    # resulting vectors using float16, meaning they take up half the memory on disk. Unfortunately
+    # we can't use the float16 format to actually run the vectorizer, because of this bug in sparse
+    # matrix representations in scipy: https://github.com/scipy/scipy/issues/7408
     print(f'Fitting tfidf vectorizer on {len(umls_concept_aliases)} aliases')
     tfidf_vectorizer = TfidfVectorizer(analyzer='char_wb', ngram_range=(3, 3), min_df=10, dtype=numpy.float32)
     start_time = datetime.datetime.now()
