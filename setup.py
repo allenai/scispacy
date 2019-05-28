@@ -44,7 +44,10 @@ setup(
         "spacy==2.1.3",
         "awscli",
         "conllu",
-        "numpy"
+        "numpy",
+        "joblib",
+        "nmslib>=1.7.3.6",
+        "scikit-learn>=0.20.3"
         ],
     tests_require=[
         "pytest",
