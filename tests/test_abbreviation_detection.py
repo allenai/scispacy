@@ -70,17 +70,18 @@ class TestAbbreviationDetector(unittest.TestCase):
         doc = self.nlp(self.text)
         assert doc._.abbreviations == []
         doc2 = self.detector(doc)
-        assert len(doc2._.abbreviations) == 2
+        assert len(doc2._.abbreviations) == 3
 
-        long, shorts = doc2._.abbreviations[0]
-        assert long.string == "Spinal and bulbar muscular atrophy "
-        assert len(shorts) == 2
-        assert {x.string for x in shorts} == {"SBMA", "SBMA "}
+        short = doc2._.abbreviations[0]
+        assert short._.long_form.string == "Spinal and bulbar muscular atrophy "
+        assert short.string == "SBMA "
+        short = doc2._.abbreviations[1]
+        assert short._.long_form.string == "Spinal and bulbar muscular atrophy "
+        assert short.string == "SBMA"
 
-        long, shorts = doc2._.abbreviations[1]
-        assert long.string == "androgen receptor "
-        assert len(shorts) == 1
-        assert shorts.pop().string == "AR"
+        short = doc2._.abbreviations[2]
+        assert short._.long_form.string == "androgen receptor "
+        assert short.string == "AR"
 
     def test_find(self):
         doc = self.nlp(self.text)
