@@ -114,13 +114,15 @@ class AbbreviationDetector:
 
     This class sets the `._.abbreviations` attribute on spaCy Doc.
 
-    The abbreviations attribute is a `List[Tuple[Span, Set[Span]]]` mapping long forms
-    of abbreviations to all occurences of that abbreviation within a document.
+    The abbreviations attribute is a `List[Span]` where each Span has the `Span._.long_form`
+    attribute set to the long form definition of the abbreviation.
 
     Note that this class does not replace the spans, or merge them.
     """
     def __init__(self, nlp) -> None:
         Doc.set_extension("abbreviations", default=[], force=True)
+        Span.set_extension("long_form", default=None, force=True)
+
         self.matcher = Matcher(nlp.vocab)
         self.matcher.add("parenthesis", None, [{'ORTH': '('}, {'OP': '+'}, {'ORTH': ')'}])
         self.global_matcher = Matcher(nlp.vocab)
@@ -146,7 +148,11 @@ class AbbreviationDetector:
         matches_no_brackets = [(x[0], x[1] + 1, x[2] - 1) for x in matches]
         filtered = filter_matches(matches_no_brackets, doc)
         occurences = self.find_matches_for(filtered, doc)
-        doc._.abbreviations = occurences
+
+        for (long_form, short_forms) in occurences:
+            for short in short_forms:
+                short._.long_form = long_form
+                doc._.abbreviations.append(short)
         return doc
 
     def find_matches_for(self,
