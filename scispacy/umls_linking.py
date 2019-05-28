@@ -22,10 +22,7 @@ class UmlsEntityLinker:
         mentions = doc.ents
         #if self.resolve_abbreviations:
         #    mentions = self.replace_abbreviations(mentions)
-
         mention_strings = [x.text for x in mentions]
-
         candidates = self.candidate_generator(mention_strings, self.k)
-
         print(candidates)
         return doc

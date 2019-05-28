@@ -23,14 +23,14 @@ class UmlsKnowledgeBase:
     def __init__(self, file_path: str = DEFAULT_UMLS_PATH):
         raw = json.load(open(cached_path(file_path)))
 
-        self.cui_to_entity = {x["concept_id"]: UmlsEntity(**x) for x in raw}
-        alias_to_entities = defaultdict(set)
+        self.cui_to_entity: Dict[str, UmlsEntity] = {x["concept_id"]: UmlsEntity(**x) for x in raw}
+        alias_to_cuis = defaultdict(set)
 
         for concept in raw:
             for alias in set(concept["aliases"]).union({concept["canonical_name"]}):
-                alias_to_entities[alias].add(concept["concept_id"])
+                alias_to_cuis[alias].add(concept["concept_id"])
 
-        self.alias_to_entities = {**alias_to_entities}
+        self.alias_to_cuis: Dict[str, Set[str]] = {**alias_to_cuis}
 
 
 

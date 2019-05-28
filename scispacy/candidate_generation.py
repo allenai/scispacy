@@ -222,7 +222,7 @@ class CandidateGenerator:
             concept_to_distances: Dict[str, List[float]] = defaultdict(list)
             for neighbor_index, distance in zip(neighbors, distances):
                 mention = self.ann_concept_aliases_list[neighbor_index]
-                concepts_for_mention = self.umls.alias_to_entities[mention]
+                concepts_for_mention = self.umls.alias_to_cuis[mention]
                 for concept_id in concepts_for_mention:
                     concept_to_mentions[concept_id].append(mention)
                     concept_to_distances[concept_id].append(distance)
@@ -271,7 +271,7 @@ def create_tfidf_ann_index(out_path: str, umls: UmlsKnowledgeBase = None) -> Tup
     index_params = {'M': m_parameter, 'indexThreadQty': num_threads, 'efConstruction': construction, 'post' : 0}
 
     print(f'No tfidf vectorizer on {tfidf_vectorizer_path} or ann index on {ann_index_path}')
-    umls_concept_aliases = list(umls.alias_to_entities.keys())
+    umls_concept_aliases = list(umls.alias_to_cuis.keys())
     umls_concept_aliases = numpy.array(umls_concept_aliases)
 
     # NOTE: here we are creating the tf-idf vectorizer with float32 type, but we can serialize the
