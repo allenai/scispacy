@@ -1,15 +1,15 @@
 # pylint: disable=no-self-use,invalid-name
 import unittest
-import json
 import tempfile
 
 from scispacy.candidate_generation import CandidateGenerator, create_tfidf_ann_index, MentionCandidate
+from scispacy.umls_utils import UmlsKnowledgeBase
 
 class TestCandidateGeneration(unittest.TestCase):
 
     def test_create_index(self):
 
-        umls_fixture = json.load(open("tests/fixtures/umls_test_fixture.json"))
+        umls_fixture = UmlsKnowledgeBase("tests/fixtures/umls_test_fixture.json")
         with tempfile.TemporaryDirectory() as dir_name:
             umls_concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(dir_name, umls_fixture)
 
@@ -23,12 +23,12 @@ class TestCandidateGeneration(unittest.TestCase):
 
     def test_candidate_generation(self):
 
-        umls_fixture = json.load(open("tests/fixtures/umls_test_fixture.json"))
+        umls_fixture = UmlsKnowledgeBase("tests/fixtures/umls_test_fixture.json")
         with tempfile.TemporaryDirectory() as dir_name:
             umls_concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(dir_name, umls_fixture)
 
         candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, umls_concept_aliases, umls_fixture)
-        results = candidate_generator.generate_candidates(['(131)I-Macroaggregated Albumin'], 10)
+        results = candidate_generator(['(131)I-Macroaggregated Albumin'], 10)
 
         canonical_ids = [x.concept_id for x in results[0]]
         assert canonical_ids == ['C0000005', 'C0000102', 'C0000084']
@@ -39,5 +39,5 @@ class TestCandidateGeneration(unittest.TestCase):
                                                  distances=[0.0])
 
         # Test we don't crash with zero vectors
-        results = candidate_generator.generate_candidates(['ZZZZ'], 10)
+        results = candidate_generator(['ZZZZ'], 10)
         assert results == [[]]

@@ -1,4 +1,38 @@
-from typing import List, Dict
+from typing import List, Dict, NamedTuple, Optional, Set
+import json
+from collections import defaultdict
+
+from scispacy.file_cache import cached_path
+
+class UmlsEntity(NamedTuple):
+
+    concept_id: str
+    canonical_name: str
+    aliases: List[str]
+    types: List[str]
+    definition: Optional[str] = None
+
+DEFAULT_UMLS_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2017_aa_cat0129.json"
+
+class UmlsKnowledgeBase:
+
+    """
+    A class representing two commonly needed views of the Unified Medical Language System.
+    """
+
+    def __init__(self, file_path: str = DEFAULT_UMLS_PATH):
+        raw = json.load(open(cached_path(file_path)))
+
+        self.cui_to_entity = {x["concept_id"]: UmlsEntity(**x) for x in raw}
+        alias_to_entities = defaultdict(set)
+
+        for concept in raw:
+            for alias in set(concept["aliases"]).union({concept["canonical_name"]}):
+                alias_to_entities[alias].add(concept["concept_id"])
+
+        self.alias_to_entities = {**alias_to_entities}
+
+
 
 # preferred definition sources (from S2)
 DEF_SOURCES_PREFERRED = {'NCI_BRIDG', 'NCI_NCI-GLOSS', 'NCI', 'GO', 'MSH', 'NCI_FDA'}
