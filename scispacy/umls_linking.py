@@ -14,8 +14,9 @@ class UmlsEntityLinker:
     entities above a given threshold.
 
 
-    This class sets the `._.umls_ent` attribute on spacy Spans, which consists of a
-    List[Tuple[str, float]] corresponding to the UMLS concept_id and the associated score.
+    This class sets the `._.umls_ents` attribute on spacy Spans, which consists of a
+    List[Tuple[str, float]] corresponding to the UMLS concept_id and the associated score
+    for a list of `max_entities_per_mention` number of entities.
 
     You can look up more information for a given id using the umls attribute of this class:
 
@@ -59,7 +60,7 @@ class UmlsEntityLinker:
                  filter_for_definitions: bool = True,
                  max_entities_per_mention: int = 5):
 
-        Span.set_extension("umls_ent", default=[], force=True)
+        Span.set_extension("umls_ents", default=[], force=True)
 
         self.candidate_generator = candidate_generator or CandidateGenerator()
         self.resolve_abbreviations = resolve_abbreviations
@@ -90,5 +91,5 @@ class UmlsEntityLinker:
                 if self.filter_for_definitions and self.umls.cui_to_entity[cand.concept_id].definition is None:
                     continue
                 if score > self.threshold:
-                    mention._.umls_ent.append((cand.concept_id, score))
+                    mention._.umls_ents.append((cand.concept_id, score))
         return doc
