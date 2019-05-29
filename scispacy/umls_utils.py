@@ -45,13 +45,15 @@ class UmlsKnowledgeBase:
         raw = json.load(open(cached_path(file_path)))
 
         alias_to_cuis: Dict[str, Set[str]] = defaultdict(set)
+        self.cui_to_entity: Dict[str, UmlsEntity] = {}
 
         for concept in raw:
-            for alias in set(concept["aliases"]).union({concept["canonical_name"]}):
+            unique_aliases = set(concept["aliases"])
+            unique_aliases.add(concept["canonical_name"])
+            for alias in unique_aliases:
                 alias_to_cuis[alias].add(concept["concept_id"])
+            self.cui_to_entity[concept["concept_id"]] = UmlsEntity(**concept)
 
-
-        self.cui_to_entity: Dict[str, UmlsEntity] = {x["concept_id"]: UmlsEntity(**x) for x in raw}
         self.alias_to_cuis: Dict[str, Set[str]] = {**alias_to_cuis}
 
 
