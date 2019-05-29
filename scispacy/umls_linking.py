@@ -74,6 +74,8 @@ class UmlsEntityLinker:
         if self.resolve_abbreviations and Doc.has_extension("abbreviations"):
 
             for ent in doc.ents:
+                # TODO: This is possibly sub-optimal - we might
+                # prefer to look up both the long and short forms.
                 if ent._.long_form is not None:
                     mentions.append(ent._.long_form)
                 else:
