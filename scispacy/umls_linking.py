@@ -68,7 +68,7 @@ class UmlsEntityLinker:
 
         for mention, candidates in zip(doc.ents, batch_candidates):
             for cand in candidates:
-                score = max([1.0 - s for s in cand.distances])
+                score = max(cand.similarities)
                 if score > self.threshold:
                     mention._.umls_ent.append((cand.concept_id, score))
         return doc

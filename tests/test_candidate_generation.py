@@ -36,7 +36,7 @@ class TestCandidateGeneration(unittest.TestCase):
         # The mention was an exact match, so should have a distance of zero to a concept:
         assert results[0][0] == MentionCandidate(concept_id='C0000005',
                                                  aliases=['(131)I-Macroaggregated Albumin'],
-                                                 distances=[0.0])
+                                                 similarities=[1.0])
 
         # Test we don't crash with zero vectors
         results = candidate_generator(['ZZZZ'], 10)

@@ -34,13 +34,13 @@ class MentionCandidate(NamedTuple):
         The canonical concept id in UMLS.
     aliases : List[str], required.
         The aliases that caused this entity to be linked.
-    distances : List[float], required.
-        The distances from the mention text to the alias in tf-idf space.
+    similarities : List[float], required.
+        The cosine similarities from the mention text to the alias in tf-idf space.
 
     """
     concept_id: str
     aliases: List[str]
-    distances: List[float]
+    similarities: List[float]
 
 def load_approximate_nearest_neighbours_index(tfidf_vectors_path: str = DEFAULT_PATHS["tfidf_umls_vectors"],
                                               ann_index_path: str = DEFAULT_PATHS["ann_index"],
@@ -218,15 +218,15 @@ class CandidateGenerator:
                 distances = []
 
             concept_to_mentions: Dict[str, List[str]] = defaultdict(list)
-            concept_to_distances: Dict[str, List[float]] = defaultdict(list)
+            concept_to_similarities: Dict[str, List[float]] = defaultdict(list)
             for neighbor_index, distance in zip(neighbors, distances):
                 mention = self.ann_concept_aliases_list[neighbor_index]
                 concepts_for_mention = self.umls.alias_to_cuis[mention]
                 for concept_id in concepts_for_mention:
                     concept_to_mentions[concept_id].append(mention)
-                    concept_to_distances[concept_id].append(distance)
+                    concept_to_similarities[concept_id].append(1.0 - distance)
 
-            mention_candidates = [MentionCandidate(concept, mentions, concept_to_distances[concept])
+            mention_candidates = [MentionCandidate(concept, mentions, concept_to_similarities[concept])
                                   for concept, mentions in concept_to_mentions.items()]
 
             batch_mention_candidates.append(mention_candidates)
