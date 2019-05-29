@@ -7,13 +7,14 @@ import spacy
 
 from scispacy.candidate_generation import CandidateGenerator, create_tfidf_ann_index, MentionCandidate
 from scispacy.umls_linking import UmlsEntityLinker
+from scispacy.umls_utils import UmlsKnowledgeBase
 
-class TestCandidateGeneration(unittest.TestCase):
+class TestUmlsLinker(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.nlp = spacy.load("en_core_web_sm")
 
-        umls_fixture = json.load(open("tests/fixtures/umls_test_fixture.json"))
+        umls_fixture = UmlsKnowledgeBase("tests/fixtures/umls_test_fixture.json")
         with tempfile.TemporaryDirectory() as dir_name:
             umls_concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(dir_name, umls_fixture)
 

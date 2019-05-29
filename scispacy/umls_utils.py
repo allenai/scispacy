@@ -17,7 +17,15 @@ DEFAULT_UMLS_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/uml
 class UmlsKnowledgeBase:
 
     """
-    A class representing two commonly needed views of the Unified Medical Language System.
+    A class representing two commonly needed views of the Unified Medical Language System:
+    1. A mapping from concept_id to a UmlsEntity NamedTuple with more information.
+    2. A mapping from aliases to the sets of concept ids for which they are aliases.
+
+    Parameters
+    ----------
+    file_path: str, optional.
+        The file path to the json representation of UMLS to load.
+
     """
 
     def __init__(self, file_path: str = DEFAULT_UMLS_PATH):

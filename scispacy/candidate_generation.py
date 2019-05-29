@@ -235,7 +235,8 @@ class CandidateGenerator:
         return batch_mention_candidates
 
 
-def create_tfidf_ann_index(out_path: str, umls: UmlsKnowledgeBase = None) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
+def create_tfidf_ann_index(out_path: str,
+                           umls: UmlsKnowledgeBase = None) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
     """
     Build tfidf vectorizer and ann index.
 
@@ -246,8 +247,8 @@ def create_tfidf_ann_index(out_path: str, umls: UmlsKnowledgeBase = None) -> Tup
     ----------
     out_path: str, required.
         The path where the various model pieces will be saved.
-    umls : List, optional.
-        The list of umls kb items to generate the index and vectors for.
+    umls : UmlsKnowledgeBase, optional.
+        The umls kb items to generate the index and vectors for.
 
     """
     tfidf_vectorizer_path = f'{out_path}/tfidf_vectorizer.joblib'
