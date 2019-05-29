@@ -22,7 +22,7 @@ class UmlsEntityLinker:
     print(linker.umls.cui_to_entity[concept_id])
 
     A Note on Definitions:
-    Only 187767 entities, or 6.74% of the UMLS KB we are matching against, have entities. However,
+    Only 187767 entities, or 6.74% of the UMLS KB we are matching against, have definitions. However,
     the MedMentions dataset links to entities which have definitions 82.9% of the time. So by
     default, we only link to entities which have definitions (typically they are more salient / cleaner),
     but this might not suit your use case. YMMV.
