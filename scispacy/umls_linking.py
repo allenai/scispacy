@@ -5,7 +5,6 @@ from scispacy.candidate_generation import CandidateGenerator
 
 
 class UmlsEntityLinker:
-
     """
     A spacy pipeline component which identifies entities in text which appear
     in the Unified Medical Language System (UMLS).
@@ -86,10 +85,14 @@ class UmlsEntityLinker:
         batch_candidates = self.candidate_generator(mention_strings, self.k)
 
         for mention, candidates in zip(doc.ents, batch_candidates):
-            for cand in candidates[:self.max_entities_per_mention]:
+            predicted = []
+            for cand in candidates:
                 score = max(cand.similarities)
                 if self.filter_for_definitions and self.umls.cui_to_entity[cand.concept_id].definition is None:
                     continue
                 if score > self.threshold:
-                    mention._.umls_ents.append((cand.concept_id, score))
+                    predicted.append((cand.concept_id, score))
+            sorted_predicted = sorted(predicted, reverse=True, key=lambda x: x[1])
+            mention._.umls_ents = sorted_predicted[:self.max_entities_per_mention]
+
         return doc
