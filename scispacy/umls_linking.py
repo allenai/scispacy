@@ -37,7 +37,6 @@ class UmlsEntityLinker:
         The threshold that a mention candidate must reach to be added to the mention in the Doc
         as a mention candidate.
     """
-
     def __init__(self,
                  candidate_generator: CandidateGenerator = None,
                  resolve_abbreviations: bool = True,
@@ -53,13 +52,21 @@ class UmlsEntityLinker:
         self.umls = self.candidate_generator.umls
 
     def __call__(self, doc: Doc) -> Doc:
-        mentions = doc.ents
-        #if self.resolve_abbreviations:
-        #    mentions = self.replace_abbreviations(mentions)
+        mentions = []
+        if self.resolve_abbreviations and Doc.has_extension("abbreviations"):
+
+            for ent in doc.ents:
+                if ent._.long_form is not None:
+                    mentions.append(ent._.long_form)
+                else:
+                    mentions.append(ent)
+        else:
+            mentions = doc.ents
+
         mention_strings = [x.text for x in mentions]
         batch_candidates = self.candidate_generator(mention_strings, self.k)
 
-        for mention, candidates in zip(mentions, batch_candidates):
+        for mention, candidates in zip(doc.ents, batch_candidates):
             for cand in candidates:
                 score = max([1.0 - s for s in cand.distances])
                 if score > self.threshold:
