@@ -12,6 +12,19 @@ class UmlsEntity(NamedTuple):
     types: List[str]
     definition: Optional[str] = None
 
+    def __repr__(self):
+
+        rep = ""
+        num_aliases = len(self.aliases)
+        rep = rep + f"CUI: {self.concept_id}, Name: {self.canonical_name}\n"
+        rep = rep + f"Definition: {self.definition}\n"
+        rep = rep + f"TUI(s): {', '.join(self.types)}\n"
+        if num_aliases > 10:
+            rep = rep + f"Aliases (abbreviated, total: {num_aliases}): \n\t {', '.join(self.aliases[:10])}"
+        else:
+            rep = rep + f"Aliases: (total: {num_aliases}): \n\t {', '.join(self.aliases)}"
+        return rep
+
 DEFAULT_UMLS_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2017_aa_cat0129.json"
 
 class UmlsKnowledgeBase:
@@ -32,7 +45,7 @@ class UmlsKnowledgeBase:
         raw = json.load(open(cached_path(file_path)))
 
         self.cui_to_entity: Dict[str, UmlsEntity] = {x["concept_id"]: UmlsEntity(**x) for x in raw}
-        alias_to_cuis = defaultdict(set)
+        alias_to_cuis: Dict[str, Set[str]] = defaultdict(set)
 
         for concept in raw:
             for alias in set(concept["aliases"]).union({concept["canonical_name"]}):
