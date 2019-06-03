@@ -1,5 +1,5 @@
 numpy
-spacy==2.1.3
+spacy>=2.1.3
 pandas
 awscli
 conllu
