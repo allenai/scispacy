@@ -11,10 +11,14 @@ from spacy.matcher import Matcher
 
 from scispacy.data_util import read_full_med_mentions
 from scispacy.umls_utils import UmlsKnowledgeBase
+from scispacy.umls_linking import UmlsEntityLinker
+from scispacy.candidate_generation import CandidateGenerator
 
 def main(medmentions_path: str):
     print("Loading spacy model...")
     nlp = spacy.load('en_core_sci_sm')
+    candidate_generator = CandidateGenerator()
+    linker = UmlsEntityLinker(candidate_generator, filter_for_definitions=False)
 
     # print("Loading UMLS...")
     # umls = UmlsKnowledgeBase()
@@ -29,29 +33,52 @@ def main(medmentions_path: str):
         texts.append(abstract_text)
 
     matcher = Matcher(nlp.vocab)
-    such_as_pattern = [{"POS": "NOUN"},
-                       {"TEXT": ",", "OP": "?"},
-                       {"TEXT": "such"},
-                       {"TEXT": "as"},
-                       {"TEXT": ",", "OP": "?"},
-                       {"POS": "NOUN", "OP": "+"}]
-    matcher.add("SuchAs", None, such_as_pattern)
+    such_as_base_pattern = [{"POS": "NOUN"},
+                         {"TEXT": ",", "OP": "?"},
+                         {"TEXT": "such"},
+                         {"TEXT": "as"},
+                         {"TEXT": ",", "OP": "?"},
+                         {"POS": "NOUN"}]
+    such_as_extension_pattern = [{"TEXT": {"IN": [",", "and", "or"]}, "OP": "+"},
+                              {"POS": "NOUN"}]
+    such_as_2_pattern = such_as_base_pattern + such_as_extension_pattern
+    such_as_3_pattern = such_as_base_pattern + such_as_extension_pattern + such_as_extension_pattern
+    such_as_4_pattern = such_as_base_pattern + such_as_extension_pattern + such_as_extension_pattern + such_as_extension_pattern
+    matcher.add("SuchAs1", None, such_as_base_pattern)
+    matcher.add("SuchAs2", None, such_as_2_pattern)
+    matcher.add("SuchAs3", None, such_as_3_pattern)
+    matcher.add("SuchAs4", None, such_as_4_pattern)
 
     sets = []
-    for text_idx, text in tqdm(enumerate(texts)):
+    for text_idx, text in enumerate(texts):
         # import pdb; pdb.set_trace()
         original_doc = nlp(text)
         doc = nlp(text)
-        if "such" in text:
-            import pdb; pdb.set_trace()
+        doc = linker(doc)
+
+        # merge noun chunks
         with doc.retokenize() as retokenizer:
             for span in doc.noun_chunks:
                 attrs = {"POS": "NOUN"}
                 retokenizer.merge(span, attrs=attrs)
-        if "such" in text:
-            import pdb; pdb.set_trace()
+
+        # merge contiguous nouns
+        with doc.retokenize() as retokenizer:
+            span_start = None
+            for i, token in enumerate(doc):
+                if token.pos_ == "NOUN":
+                    if span_start is None:
+                        span_start = token.i
+                else:
+                    if span_start is not None:
+                        retokenizer.merge(doc[span_start:i])
+                        span_start = None
+
         matches = matcher(doc)
         if matches != []:
+            print()
+            for match in matches:
+                print(nlp.vocab.strings[match[0]], match[1], match[2])
             import pdb; pdb.set_trace()
 
 
