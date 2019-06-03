@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, NamedTuple, Set
+from typing import List, Dict, Tuple, NamedTuple
 import json
 import datetime
 from collections import defaultdict
@@ -11,6 +11,7 @@ import nmslib
 from nmslib.dist import FloatIndex
 
 from scispacy.file_cache import cached_path
+from scispacy.umls_utils import UmlsKnowledgeBase
 
 # pylint: disable=line-too-long
 DEFAULT_PATHS = {
@@ -18,7 +19,6 @@ DEFAULT_PATHS = {
         "tfidf_vectorizer": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectorizer.joblib",
         "tfidf_umls_vectors": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectors_sparse.npz",
         "concept_aliases_list": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/concept_aliases.json",
-        "umls_path": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2017_aa_cat0129.json"
 
 }
 # pylint: enable=line-too-long
@@ -34,13 +34,13 @@ class MentionCandidate(NamedTuple):
         The canonical concept id in UMLS.
     aliases : List[str], required.
         The aliases that caused this entity to be linked.
-    distances : List[float], required.
-        The distances from the mention text to the alias in tf-idf space.
+    similarities : List[float], required.
+        The cosine similarities from the mention text to the alias in tf-idf space.
 
     """
     concept_id: str
     aliases: List[str]
-    distances: List[float]
+    similarities: List[float]
 
 def load_approximate_nearest_neighbours_index(tfidf_vectors_path: str = DEFAULT_PATHS["tfidf_umls_vectors"],
                                               ann_index_path: str = DEFAULT_PATHS["ann_index"],
@@ -102,34 +102,32 @@ class CandidateGenerator:
     ann_concept_aliases_list: List[str]
         A list of strings, mapping the indices used in the ann_index to possible UMLS mentions.
         This is essentially used a lookup between the ann index and actual mention strings.
-    umls: List[TYPE]
-        A list of canonical concepts from the Unified Medical Language System knowledge graph.
+    umls: UmlsKnowledgeBase
+        A class representing canonical concepts from the Unified Medical Language System knowledge graph.
     verbose: bool
-        Setting to true will print extra information about the generated candidates
+        Setting to true will print extra information about the generated candidates.
+    ef_search: int
+        The efs search parameter used in the index. This substantially effects runtime speed
+        (higher is slower but slightly more accurate). Note that this parameter is ignored
+        if a preconstructed ann_index is passed.
 
     """
     def __init__(self,
                  ann_index: FloatIndex = None,
                  tfidf_vectorizer: TfidfVectorizer = None,
                  ann_concept_aliases_list: List[str] = None,
-                 umls: List = None,
-                 verbose: bool = False) -> None:
+                 umls: UmlsKnowledgeBase = None,
+                 verbose: bool = False,
+                 ef_search: int = 200) -> None:
 
-        self.ann_index = ann_index or load_approximate_nearest_neighbours_index()
+        self.ann_index = ann_index or load_approximate_nearest_neighbours_index(ef_search=ef_search)
 
         self.vectorizer = tfidf_vectorizer or joblib.load(cached_path(DEFAULT_PATHS["tfidf_vectorizer"]))
         self.ann_concept_aliases_list = ann_concept_aliases_list or \
             json.load(open(cached_path(DEFAULT_PATHS["concept_aliases_list"])))
 
-        self.umls = umls or json.load(open(cached_path(DEFAULT_PATHS["umls_path"])))
+        self.umls = umls or UmlsKnowledgeBase()
         self.verbose = verbose
-
-        # We need to keep around a map from text to possible canonical ids that they map to.
-        self.mention_to_concept: Dict[str, Set[str]] = defaultdict(set)
-        for concept in self.umls:
-            for alias in set(concept["aliases"]).union({concept["canonical_name"]}):
-                self.mention_to_concept[alias].add(concept["concept_id"])
-
 
     def nmslib_knn_with_zero_vectors(self, vectors: numpy.ndarray, k: int) -> Tuple[numpy.ndarray, numpy.ndarray]:
         """
@@ -174,7 +172,7 @@ class CandidateGenerator:
 
         return extended_neighbors, extended_distances
 
-    def generate_candidates(self, mention_texts: List[str], k: int) -> List[List[MentionCandidate]]:
+    def __call__(self, mention_texts: List[str], k: int) -> List[List[MentionCandidate]]:
         """
         Given a list of mention texts, returns a list of candidate neighbors.
 
@@ -220,15 +218,15 @@ class CandidateGenerator:
                 distances = []
 
             concept_to_mentions: Dict[str, List[str]] = defaultdict(list)
-            concept_to_distances: Dict[str, List[float]] = defaultdict(list)
+            concept_to_similarities: Dict[str, List[float]] = defaultdict(list)
             for neighbor_index, distance in zip(neighbors, distances):
                 mention = self.ann_concept_aliases_list[neighbor_index]
-                concepts_for_mention = self.mention_to_concept[mention]
+                concepts_for_mention = self.umls.alias_to_cuis[mention]
                 for concept_id in concepts_for_mention:
                     concept_to_mentions[concept_id].append(mention)
-                    concept_to_distances[concept_id].append(distance)
+                    concept_to_similarities[concept_id].append(1.0 - distance)
 
-            mention_candidates = [MentionCandidate(concept, mentions, concept_to_distances[concept])
+            mention_candidates = [MentionCandidate(concept, mentions, concept_to_similarities[concept])
                                   for concept, mentions in concept_to_mentions.items()]
 
             batch_mention_candidates.append(mention_candidates)
@@ -236,7 +234,8 @@ class CandidateGenerator:
         return batch_mention_candidates
 
 
-def create_tfidf_ann_index(out_path: str, umls: List = None) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
+def create_tfidf_ann_index(out_path: str,
+                           umls: UmlsKnowledgeBase = None) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
     """
     Build tfidf vectorizer and ann index.
 
@@ -247,8 +246,8 @@ def create_tfidf_ann_index(out_path: str, umls: List = None) -> Tuple[List[str],
     ----------
     out_path: str, required.
         The path where the various model pieces will be saved.
-    umls : List, optional.
-        The list of umls kb items to generate the index and vectors for.
+    umls : UmlsKnowledgeBase, optional.
+        The umls kb items to generate the index and vectors for.
 
     """
     tfidf_vectorizer_path = f'{out_path}/tfidf_vectorizer.joblib'
@@ -256,13 +255,7 @@ def create_tfidf_ann_index(out_path: str, umls: List = None) -> Tuple[List[str],
     tfidf_vectors_path = f'{out_path}/tfidf_vectors_sparse.npz'
     uml_concept_aliases_path = f'{out_path}/concept_aliases.json'
 
-    umls = umls or json.load(open(cached_path(DEFAULT_PATHS["umls_path"])))
-    # We need to keep around a map from text to possible canonical ids that they map to.
-    text_to_concept_id: Dict[str, Set[str]] = defaultdict(set)
-
-    for concept in umls:
-        for alias in set(concept["aliases"]).union({concept["canonical_name"]}):
-            text_to_concept_id[alias].add(concept["concept_id"])
+    umls = umls or UmlsKnowledgeBase()
 
     # nmslib hyperparameters (very important)
     # guide: https://github.com/nmslib/nmslib/blob/master/python_bindings/parameters.md
@@ -278,7 +271,7 @@ def create_tfidf_ann_index(out_path: str, umls: List = None) -> Tuple[List[str],
     index_params = {'M': m_parameter, 'indexThreadQty': num_threads, 'efConstruction': construction, 'post' : 0}
 
     print(f'No tfidf vectorizer on {tfidf_vectorizer_path} or ann index on {ann_index_path}')
-    umls_concept_aliases = list(text_to_concept_id.keys())
+    umls_concept_aliases = list(umls.alias_to_cuis.keys())
     umls_concept_aliases = numpy.array(umls_concept_aliases)
 
     # NOTE: here we are creating the tf-idf vectorizer with float32 type, but we can serialize the
