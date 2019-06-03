@@ -3,7 +3,6 @@ Utilities for working with the local dataset cache.
 """
 
 import os
-import logging
 import shutil
 import tempfile
 import json
@@ -13,8 +12,6 @@ from typing import Tuple, Union, IO
 from hashlib import sha256
 
 import requests
-
-logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 CACHE_ROOT = Path(os.getenv('SCISPACY_CACHE', str(Path.home() / '.scispacy')))
 DATASET_CACHE = str(CACHE_ROOT / "datasets")
@@ -124,7 +121,7 @@ def get_from_cache(url: str, cache_dir: str = None) -> str:
         # Download to temporary file, then copy to cache dir once finished.
         # Otherwise you get corrupt cache entries if the download gets interrupted.
         with tempfile.NamedTemporaryFile() as temp_file:
-            logger.info("%s not found in cache, downloading to %s", url, temp_file.name)
+            print(f"{url} not found in cache, downloading to {temp_file.name}")
 
             # GET file object
             http_get(url, temp_file)
@@ -134,16 +131,13 @@ def get_from_cache(url: str, cache_dir: str = None) -> str:
             # shutil.copyfileobj() starts at the current position, so go to the start
             temp_file.seek(0)
 
-            logger.info("copying %s to cache at %s", temp_file.name, cache_path)
+            print(f"Finished download, copying {temp_file.name} to cache at {cache_path}")
             with open(cache_path, 'wb') as cache_file:
                 shutil.copyfileobj(temp_file, cache_file)
 
-            logger.info("creating metadata file for %s", cache_path)
             meta = {'url': url, 'etag': etag}
             meta_path = cache_path + '.json'
             with open(meta_path, 'w') as meta_file:
                 json.dump(meta, meta_file)
-
-            logger.info("removing temp file %s", temp_file.name)
 
     return cache_path

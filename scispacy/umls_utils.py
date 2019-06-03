@@ -1,4 +1,62 @@
-from typing import List, Dict
+from typing import List, Dict, NamedTuple, Optional, Set
+import json
+from collections import defaultdict
+
+from scispacy.file_cache import cached_path
+
+class UmlsEntity(NamedTuple):
+
+    concept_id: str
+    canonical_name: str
+    aliases: List[str]
+    types: List[str]
+    definition: Optional[str] = None
+
+    def __repr__(self):
+
+        rep = ""
+        num_aliases = len(self.aliases)
+        rep = rep + f"CUI: {self.concept_id}, Name: {self.canonical_name}\n"
+        rep = rep + f"Definition: {self.definition}\n"
+        rep = rep + f"TUI(s): {', '.join(self.types)}\n"
+        if num_aliases > 10:
+            rep = rep + f"Aliases (abbreviated, total: {num_aliases}): \n\t {', '.join(self.aliases[:10])}"
+        else:
+            rep = rep + f"Aliases: (total: {num_aliases}): \n\t {', '.join(self.aliases)}"
+        return rep
+
+DEFAULT_UMLS_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2017_aa_cat0129.json"
+
+class UmlsKnowledgeBase:
+
+    """
+    A class representing two commonly needed views of the Unified Medical Language System:
+    1. A mapping from concept_id to a UmlsEntity NamedTuple with more information.
+    2. A mapping from aliases to the sets of concept ids for which they are aliases.
+
+    Parameters
+    ----------
+    file_path: str, optional.
+        The file path to the json representation of UMLS to load.
+
+    """
+
+    def __init__(self, file_path: str = DEFAULT_UMLS_PATH):
+        raw = json.load(open(cached_path(file_path)))
+
+        alias_to_cuis: Dict[str, Set[str]] = defaultdict(set)
+        self.cui_to_entity: Dict[str, UmlsEntity] = {}
+
+        for concept in raw:
+            unique_aliases = set(concept["aliases"])
+            unique_aliases.add(concept["canonical_name"])
+            for alias in unique_aliases:
+                alias_to_cuis[alias].add(concept["concept_id"])
+            self.cui_to_entity[concept["concept_id"]] = UmlsEntity(**concept)
+
+        self.alias_to_cuis: Dict[str, Set[str]] = {**alias_to_cuis}
+
+
 
 # preferred definition sources (from S2)
 DEF_SOURCES_PREFERRED = {'NCI_BRIDG', 'NCI_NCI-GLOSS', 'NCI', 'GO', 'MSH', 'NCI_FDA'}
