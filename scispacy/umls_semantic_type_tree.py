@@ -1,6 +1,6 @@
+from typing import NamedTuple, List, Dict, Deque, Any, Optional
 
-
-from typing import NamedTuple, List, Dict, Deque, Any
+from scispacy.file_cache import cached_path
 
 class SemanticTypeNode(NamedTuple):
 
@@ -47,6 +47,21 @@ class UmlsSemanticTypeTree:
             children.extend(self.get_children(child))
         return children
 
+    def get_parent(self, node: SemanticTypeNode) -> Optional[SemanticTypeNode]:
+        """
+        Returns the parent of the input node, returning None if the input node is the root of the tree
+        """
+        current_depth = node.level
+        possible_parents = self.get_nodes_at_depth(current_depth - 1)
+
+        for possible_parent in possible_parents:
+            for child in possible_parent.children:
+                if child.type_id == node.type_id:
+                    return possible_parent
+
+        # If there are no parents, we are at the root and return None
+        return None
+
     def get_collapsed_type_id_map_at_level(self, level: int) -> Dict[str, str]:
         """
         Constructs a label mapping from the original tree labels to a tree of a fixed depth,
@@ -79,7 +94,7 @@ def construct_umls_tree_from_tsv(filepath: str) -> UmlsSemanticTypeTree:
     """
     from collections import deque
     node_stack: Deque[SemanticTypeNode] = deque()
-    for line in open(filepath, "r"):
+    for line in open(cached_path(filepath), "r"):
         name, type_id, level = line.split("\t")
         name = name.strip()
         int_level = int(level.strip())

@@ -28,3 +28,18 @@ class TestUmlsSemanticTypeTree(unittest.TestCase):
                                'T056': 'T052',
                                'T051': 'T051'}
         assert ["T052"] == [node.type_id for node in self.tree.get_nodes_at_depth(2)]
+
+    def test_get_parent_root(self):
+        root_node = self.tree.get_node_from_id("T051")
+        parent = self.tree.get_parent(root_node)
+        assert parent is None
+
+    def test_get_parent(self):
+        level_1_node = self.tree.get_node_from_id("T052")
+        level_1_node_parent = self.tree.get_parent(level_1_node)
+        assert level_1_node_parent.type_id == "T051"
+
+        leaf_node = self.tree.get_node_from_id("T055")
+        leaf_node_parent = self.tree.get_parent(leaf_node)
+        assert leaf_node_parent.type_id == "T053"
+

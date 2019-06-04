@@ -3,6 +3,7 @@ import json
 from collections import defaultdict
 
 from scispacy.file_cache import cached_path
+from scispacy.umls_semantic_type_tree import UmlsSemanticTypeTree, construct_umls_tree_from_tsv
 
 class UmlsEntity(NamedTuple):
 
@@ -26,6 +27,7 @@ class UmlsEntity(NamedTuple):
         return rep
 
 DEFAULT_UMLS_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2017_aa_cat0129.json"
+DEFAULT_UMLS_TYPES_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_semantic_type_tree.tsv"
 
 class UmlsKnowledgeBase:
 
@@ -41,7 +43,7 @@ class UmlsKnowledgeBase:
 
     """
 
-    def __init__(self, file_path: str = DEFAULT_UMLS_PATH):
+    def __init__(self, file_path: str = DEFAULT_UMLS_PATH, types_file_path: str = DEFAULT_UMLS_TYPES_PATH):
         raw = json.load(open(cached_path(file_path)))
 
         alias_to_cuis: Dict[str, Set[str]] = defaultdict(set)
@@ -55,7 +57,7 @@ class UmlsKnowledgeBase:
             self.cui_to_entity[concept["concept_id"]] = UmlsEntity(**concept)
 
         self.alias_to_cuis: Dict[str, Set[str]] = {**alias_to_cuis}
-
+        self.semantic_type_tree: UmlsSemanticTypeTree = construct_umls_tree_from_tsv(types_file_path)
 
 
 # preferred definition sources (from S2)
