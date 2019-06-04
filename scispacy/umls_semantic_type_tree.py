@@ -52,9 +52,10 @@ class UmlsSemanticTypeTree:
         Returns the parent of the input node, returning None if the input node is the root of the tree
         """
         current_depth = node.level
-        if current_depth == 0:
-            return None
         possible_parents = self.get_nodes_at_depth(current_depth - 1)
+        if len(possible_parents) == 0:
+            return None
+
         for possible_parent in possible_parents:
             for child in possible_parent.children:
                 if child.type_id == node.type_id:
