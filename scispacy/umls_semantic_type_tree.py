@@ -46,20 +46,21 @@ class UmlsSemanticTypeTree:
             children.append(child)
             children.extend(self.get_children(child))
         return children
-    
+
     def get_parent(self, node: SemanticTypeNode) -> Optional[SemanticTypeNode]:
         """
         Returns the parent of the input node, returning None if the input node is the root of the tree
         """
         current_depth = node.level
         possible_parents = self.get_nodes_at_depth(current_depth - 1)
-        if len(possible_parents) == 0:
-            return None
 
         for possible_parent in possible_parents:
             for child in possible_parent.children:
                 if child.type_id == node.type_id:
                     return possible_parent
+
+        # If there are no parents, we are at the root and return None
+        return None
 
     def get_collapsed_type_id_map_at_level(self, level: int) -> Dict[str, str]:
         """
