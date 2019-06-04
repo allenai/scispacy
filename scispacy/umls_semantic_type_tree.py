@@ -1,6 +1,6 @@
-
-
 from typing import NamedTuple, List, Dict, Deque, Any
+
+from scispacy.file_cache import cached_path
 
 class SemanticTypeNode(NamedTuple):
 
@@ -79,7 +79,7 @@ def construct_umls_tree_from_tsv(filepath: str) -> UmlsSemanticTypeTree:
     """
     from collections import deque
     node_stack: Deque[SemanticTypeNode] = deque()
-    for line in open(filepath, "r"):
+    for line in open(cached_path(filepath), "r"):
         name, type_id, level = line.split("\t")
         name = name.strip()
         int_level = int(level.strip())
