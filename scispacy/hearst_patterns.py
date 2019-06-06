@@ -125,7 +125,7 @@ class HyponymDetector:
                 ('(compare (NP_[\\w\\-]+ ?(, )?)+(and |or )?with NP_[\\w\\-]+)', 'last'),
                 ('(NP_[\\w\\-]+ (, )?compare to (NP_[\\w\\-]+ ? (, )?(and |or )?)+)', 'first'),
                 ('(NP_[\\w\\-]+ (, )?among -PRON- (NP_[\\w\\-]+ ? (, )?(and |or )?)+)', 'first'),
-                ('((NP_[\\w\\-]+ ?(, )?)+(and |or )?as NP_[\\w\\-]+)', 'last'),
+                # ('((NP_[\\w\\-]+ ?(, )?)+(and |or )?as NP_[\\w\\-]+)', 'last'),
                 ('(NP_[\\w\\-]+ (, )? (NP_[\\w\\-]+ ? (, )?(and |or )?)+ for instance)', 'first'),
                 ('((NP_[\\w\\-]+ ?(, )?)+(and |or )?sort of NP_[\\w\\-]+)', 'last')
             ])
@@ -137,8 +137,9 @@ class HyponymDetector:
 
         tokens_in_chunks = set()
         # TODO: consider writing custom noun chunker
-        chunks = set(doc.noun_chunks)
+        chunks = set([(chunk[0].i, chunk) for chunk in doc.noun_chunks])
         for chunk in chunks:
+            chunk = chunk[1]
             for token in chunk:
                 tokens_in_chunks.add(token)
 
@@ -152,9 +153,9 @@ class HyponymDetector:
                     new_chunk = doc[span_start:i]
                     for token in new_chunk:
                         tokens_in_chunks.add(token)
-                    chunks.add(new_chunk)
+                    chunks.add((new_chunk[0].i, new_chunk))
                     span_start = None
-        return chunks
+        return [pair[1] for pair in sorted(list(chunks), key=lambda x: x[0])]
 
     def clean_hyponym_text(self, input_text: str) -> str:
         """
@@ -184,7 +185,8 @@ class HyponymDetector:
             chunk_original_text = chunk.text
             doc_text_replaced = re.sub(r'\b%s\b' % re.escape(chunk_original_text),
                                        r'%s' % chunk_replacement_text,
-                                       doc_text_replaced)
+                                       doc_text_replaced,
+                                       count=1)
         return doc_text_replaced
 
     def apply_hearst_patterns(self, text_replaced_for_regex: str) -> List[Tuple[str, str, str]]:
@@ -208,7 +210,7 @@ class HyponymDetector:
                 else:
                     raise Exception("Unknown order {} for hearst pattern {}".format(order, hearst_pattern))
                 
-                matches_to_return.append((general, specifics, match_string))
+                matches_to_return.append((general, specifics, match_string.strip()))
         return matches_to_return
 
     def __call__(self, doc: Doc) -> Doc:

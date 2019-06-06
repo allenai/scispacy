@@ -37,18 +37,16 @@ class TestHyponymDetector(unittest.TestCase):
         assert all([chunk.text == expected_chunk for chunk, expected_chunk in zip(chunks, expected_chunks)])
 
     def test_apply_hearst_patterns(self):
-        text = ("This strain was named CCA53, and its lignin-degrading "
-                "capability was assessed by observing its growth on medium "
-                "containing alkali lignin or lignin -associated aromatic "
-                "monomers as the sole carbon source.")
+        text = ("Recognizing that the preferred habitats for the species "
+                "are in the valleys, systematic planting of keystone plant "
+                "species such as fig trees (Ficus) creates the best microhabitats.")
         doc = self.nlp(text)
         chunks = self.detector.get_chunks(doc)
         doc_text_replaced = self.detector.replace_text_for_regex(doc, chunks)
 
-        match_string = ("NP_alkali_lignin_or_lignin_-associated_aromatic_"
-                        "monomers as NP_the_sole_carbon_source")
-        general = "NP_the_sole_carbon_source"
-        specifics = ["NP_alkali_lignin_or_lignin_-associated_aromatic_monomers"]
+        match_string = ("NP_keystone_plant_species such as NP_fig_trees")
+        general = "NP_keystone_plant_species"
+        specifics = ["NP_fig_trees"]
 
         expected_extractions = [(general, specifics, match_string)]
         matches = self.detector.apply_hearst_patterns(doc_text_replaced)
@@ -59,15 +57,13 @@ class TestHyponymDetector(unittest.TestCase):
         hyponym_pipe = HyponymDetector(extended=True)
         self.nlp.add_pipe(hyponym_pipe, last=True)
 
-        text = ("This strain was named CCA53, and its lignin-degrading "
-        "capability was assessed by observing its growth on medium "
-        "containing alkali lignin or lignin -associated aromatic "
-        "monomers as the sole carbon source.")
+        text = ("Recognizing that the preferred habitats for the species "
+                "are in the valleys, systematic planting of keystone plant "
+                "species such as fig trees (Ficus) creates the best microhabitats.")
 
-        match_string = ("NP_alkali_lignin_or_lignin_-associated_aromatic_"
-                        "monomers as NP_the_sole_carbon_source")
-        general = "carbon source"
-        specifics = ["alkali lignin or lignin -associated aromatic monomers"]
+        match_string = ("NP_keystone_plant_species such as NP_fig_trees")
+        general = "keystone plant species"
+        specifics = ["fig trees"]
 
         expected_extractions = [(general, specifics, match_string)]
 
