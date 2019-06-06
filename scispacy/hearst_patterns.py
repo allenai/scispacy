@@ -181,14 +181,17 @@ class HyponymDetector:
 
         chunk_replacement_to_chunk_original: Dict[str, str] = {}
         doc_text_replaced = doc.text
+        added_characters = 0
         for chunk in chunks:
             chunk_replacement_text = "NP_" + "_".join([token.lemma_ for token in chunk])
             chunk_original_text = chunk.text
             chunk_replacement_to_chunk_original[chunk_replacement_text] = chunk_original_text
-            doc_text_replaced = re.sub(r'\b%s\b' % re.escape(chunk_original_text),
-                                       r'%s' % chunk_replacement_text,
-                                       doc_text_replaced,
-                                       count=1)
+            # doc_text_replaced = re.sub(r'\b%s\b' % re.escape(chunk_original_text),
+            #                            r'%s' % chunk_replacement_text,
+            #                            doc_text_replaced)
+            doc_text_replaced = doc_text_replaced[:chunk.start_char + added_characters] + chunk_replacement_text + doc_text_replaced[chunk.end_char + added_characters:]
+            added_characters += len(chunk_replacement_text) - len(chunk_original_text)
+        
         return doc_text_replaced, chunk_replacement_to_chunk_original
 
     def apply_hearst_patterns(self, text_replaced_for_regex: str) -> List[Tuple[str, str, str]]:
@@ -201,7 +204,7 @@ class HyponymDetector:
             matches = re.finditer(hearst_pattern, text_replaced_for_regex)
             for match in matches:
                 match_string = match.group(0)
-                nps = [a for a in match_string.split() if a.startswith("NP_")]
+                nps = [a for a in re.split(' |,', match_string) if a.startswith("NP_")]
 
                 if order == "first":
                     general = nps[0]
@@ -216,6 +219,7 @@ class HyponymDetector:
         return matches_to_return
 
     def __call__(self, doc: Doc) -> Doc:
+
         chunks = self.get_chunks(doc)
         doc_text_replaced, chunk_replacement_to_chunk_original = self.replace_text_for_regex(doc, chunks)
 
