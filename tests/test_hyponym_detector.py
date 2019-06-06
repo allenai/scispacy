@@ -42,11 +42,11 @@ class TestHyponymDetector(unittest.TestCase):
                 "species such as fig trees (Ficus) creates the best microhabitats.")
         doc = self.nlp(text)
         chunks = self.detector.get_chunks(doc)
-        doc_text_replaced = self.detector.replace_text_for_regex(doc, chunks)
+        doc_text_replaced, _ = self.detector.replace_text_for_regex(doc, chunks)
 
-        match_string = ("NP_keystone_plant_species such as NP_fig_trees")
-        general = "NP_keystone_plant_species"
-        specifics = ["NP_fig_trees"]
+        match_string = ("NP_keystone_plant_specie such as NP_fig_tree")
+        general = "NP_keystone_plant_specie"
+        specifics = ["NP_fig_tree"]
 
         expected_extractions = [(general, specifics, match_string)]
         matches = self.detector.apply_hearst_patterns(doc_text_replaced)
@@ -61,7 +61,7 @@ class TestHyponymDetector(unittest.TestCase):
                 "are in the valleys, systematic planting of keystone plant "
                 "species such as fig trees (Ficus) creates the best microhabitats.")
 
-        match_string = ("NP_keystone_plant_species such as NP_fig_trees")
+        match_string = ("NP_keystone_plant_specie such as NP_fig_tree")
         general = "keystone plant species"
         specifics = ["fig trees"]
 

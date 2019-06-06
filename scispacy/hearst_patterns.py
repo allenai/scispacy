@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 import copy
 import re
@@ -76,7 +76,7 @@ class HyponymDetector:
                                'such',
                                'sup',
                                'sure']
-        self._prefix_stopwords = ['the', 'a']
+        self._prefix_stopwords = ['the', 'a', 'it']
 
         self._hearst_patterns = [
             ('(NP_[\\w\\-]+ (, )?such as (NP_[\\w\\-]+ ? (, )?(and |or )?)+)', 'first'),
@@ -179,15 +179,17 @@ class HyponymDetector:
         for regex matching Hearst patterns
         """
 
+        chunk_replacement_to_chunk_original: Dict[str, str] = {}
         doc_text_replaced = doc.text
         for chunk in chunks:
-            chunk_replacement_text = "NP_" + "_".join([token.text for token in chunk])
+            chunk_replacement_text = "NP_" + "_".join([token.lemma_ for token in chunk])
             chunk_original_text = chunk.text
+            chunk_replacement_to_chunk_original[chunk_replacement_text] = chunk_original_text
             doc_text_replaced = re.sub(r'\b%s\b' % re.escape(chunk_original_text),
                                        r'%s' % chunk_replacement_text,
                                        doc_text_replaced,
                                        count=1)
-        return doc_text_replaced
+        return doc_text_replaced, chunk_replacement_to_chunk_original
 
     def apply_hearst_patterns(self, text_replaced_for_regex: str) -> List[Tuple[str, str, str]]:
         """
@@ -215,12 +217,18 @@ class HyponymDetector:
 
     def __call__(self, doc: Doc) -> Doc:
         chunks = self.get_chunks(doc)
-        doc_text_replaced = self.replace_text_for_regex(doc, chunks)
+        doc_text_replaced, chunk_replacement_to_chunk_original = self.replace_text_for_regex(doc, chunks)
 
         matches = self.apply_hearst_patterns(doc_text_replaced)
         
-        matches = self.apply_hearst_patterns(doc_text_replaced)
         for (general, specifics, match_string) in matches:
-            doc._.hyponyms.append((self.clean_hyponym_text(general), [self.clean_hyponym_text(specific) for specific in specifics], match_string))
+            original_general = chunk_replacement_to_chunk_original[general]
+            original_specifics = [chunk_replacement_to_chunk_original[specific] for specific in specifics]
+            cleaned_general = self.clean_hyponym_text(original_general)
+            cleaned_specifics = [self.clean_hyponym_text(specific) for specific in original_specifics]
+            cleaned_specifics = [specific for specific in cleaned_specifics if specific != '']
+            if cleaned_general == '' or cleaned_specifics == []:
+                continue
+            doc._.hyponyms.append((cleaned_general, cleaned_specifics, match_string))
 
         return doc
