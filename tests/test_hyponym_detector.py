@@ -53,7 +53,7 @@ class TestHyponymDetector(unittest.TestCase):
 
         assert matches == expected_extractions
 
-    def test_pipe(self):
+    def test_pipe_sentence(self):
         hyponym_pipe = HyponymDetector(extended=True)
         self.nlp.add_pipe(hyponym_pipe, last=True)
 
@@ -64,6 +64,36 @@ class TestHyponymDetector(unittest.TestCase):
         match_string = ("NP_keystone_plant_specie such as NP_fig_tree")
         general = "keystone plant species"
         specifics = ["fig trees"]
+
+        expected_extractions = [(general, specifics, match_string)]
+
+        doc = self.nlp(text)
+        assert doc._.hyponyms == expected_extractions
+
+    def test_pipe_abstract(self):
+        hyponym_pipe = HyponymDetector(extended=True)
+        self.nlp.add_pipe(hyponym_pipe, last=True)
+
+        text = ("HERG1 potassium channel plays a critical role in the cell proliferation. "
+                "HERG1 protein expression was analyzed by immunohistochemistry (IHC) in 62 "
+                "patients with oral leukoplakias and 100 patients with oral squamous cell "
+                "carcinomas (OSCC). HERG1 mRNA levels were assessed by real-time reverse "
+                "transcriptase-polymerase chain reaction (RT-PCR) in 22 patients with primary "
+                "head and neck squamous cell carcinoma (HNSCC). Statistically significant "
+                "associations were found between HERG1 expression and tobacco consumption, disease stage, "
+                "tumor differentiation, tumor recurrence, and reduced survival. There was no association "
+                "between HERG1 expression and the risk of progression from oral leukoplakia to OSCC. "
+                "In addition, a high proportion of tumors (80%) showed increased HERG1 mRNA levels "
+                "compared to normal mucosa from nononcologic patients. Aberrant HERG1 expression "
+                "increases as oral tumorigenesis progresses from oral hyperplasia to OSCC. "
+                "Increased HERG1 mRNA levels were also frequently detected in OSCC and other "
+                "HNSCC subsites. HERG1 expression emerges as a clinically relevant feature "
+                "during tumor progression and a potential poor prognostic biomarker for OSCC. "
+                "© 2016 Wiley Periodicals, Inc. Head Neck 38: 1708-1716, 2016.")
+
+        match_string = ("NP_oscc and other NP_hnscc_subsite")
+        general = "HNSCC subsites"
+        specifics = ["OSCC"]
 
         expected_extractions = [(general, specifics, match_string)]
 
