@@ -29,4 +29,7 @@ RUN pip install -r requirements.in
 RUN python -m spacy download en_core_web_sm
 RUN python -m spacy download en_core_web_md
 
+# install a released scispacy model for use in the tests
+RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_core_sci_sm-0.2.0.tar.gz
+
 CMD [ "/bin/bash" ]
