@@ -135,7 +135,9 @@ class HyponymDetector:
         Returns noun chunks from a spacy Doc, augmenting the noun chunks that spaCy returns by default
         """
 
+        # keep track of which tokens have already been added to chunks
         tokens_in_chunks = set()
+
         # TODO: consider writing custom noun chunker
         chunks = set([(chunk[0].i, chunk) for chunk in doc.noun_chunks])
         for chunk in chunks:
@@ -143,6 +145,7 @@ class HyponymDetector:
             for token in chunk:
                 tokens_in_chunks.add(token)
 
+        # add contiguous nouns as noun chunks
         span_start = None
         for i, token in enumerate(doc):
             if token.pos_ == "NOUN" and not token in tokens_in_chunks:
@@ -186,10 +189,9 @@ class HyponymDetector:
             chunk_replacement_text = "NP_" + "_".join([token.lemma_ for token in chunk])
             chunk_original_text = chunk.text
             chunk_replacement_to_chunk_original[chunk_replacement_text] = chunk_original_text
-            # doc_text_replaced = re.sub(r'\b%s\b' % re.escape(chunk_original_text),
-            #                            r'%s' % chunk_replacement_text,
-            #                            doc_text_replaced)
             doc_text_replaced = doc_text_replaced[:chunk.start_char + added_characters] + chunk_replacement_text + doc_text_replaced[chunk.end_char + added_characters:]
+            
+            # need to keep track of how many characters are added when replacing text so the indexing in the previous line is still correct
             added_characters += len(chunk_replacement_text) - len(chunk_original_text)
         
         return doc_text_replaced, chunk_replacement_to_chunk_original
