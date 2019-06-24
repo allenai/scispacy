@@ -7,6 +7,8 @@ from spacy.tokens import Span, Doc
 
 class HyponymDetector:
     """
+    TODO: This would be better implemented using the spacy matcher so that we can keep track of spans and tokens
+
     A spaCy pipe for detecting hyponyms using Hearst patterns.
 
     This class sets the `._.hyponyms` attribute on a spaCy Doc, which consists of
