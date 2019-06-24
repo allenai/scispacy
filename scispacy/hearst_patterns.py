@@ -15,6 +15,13 @@ class HyponymDetector:
 
     Parts of the implementation taken from https://github.com/mmichelsonIF/hearst_patterns_python/blob/master/hearstPatterns/hearstPatterns.py
 
+    The pipe can be used with an instantiated spacy model like so:
+
+    ```
+    hyponym_pipe = HyponymDetector(extended=True)
+    nlp.add_pipe(hyponym_pipe, last=True)
+    ```
+
     Parameters
     ----------
     extended: bool, optional (default=False).
