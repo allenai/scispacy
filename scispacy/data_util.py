@@ -39,9 +39,9 @@ def process_example(lines: List[str]) -> MedMentionExample:
     entities = []
     for entity_line in lines[2:]:
         _, start, end, mention, mention_type, umls_id = entity_line.split("\t")
-        mention_type = mention_type.split(",")[0]
-        entities.append(MedMentionEntity(int(start), int(end),
-                                         mention, mention_type, umls_id))
+        for mention_type_ in mention_type.split(","):
+            entities.append(MedMentionEntity(int(start), int(end),
+                                             mention, mention_type_, umls_id))
     return MedMentionExample(title, abstract, title + " " + abstract, pubmed_id, entities)
 
 def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
