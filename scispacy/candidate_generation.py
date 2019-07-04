@@ -289,7 +289,7 @@ def create_tfidf_ann_index(out_path: str,
 
     print(f'Finding empty (all zeros) tfidf vectors')
     empty_tfidfs_boolean_flags = numpy.array(uml_concept_alias_tfidfs.sum(axis=1) != 0).reshape(-1,)
-    number_of_non_empty_tfidfs = sum(empty_tfidfs_boolean_flags == False)
+    number_of_non_empty_tfidfs = sum(empty_tfidfs_boolean_flags == False)  # pylint: disable=singleton-comparison
     total_number_of_tfidfs = numpy.size(uml_concept_alias_tfidfs, 0)
 
     print(f'Deleting {number_of_non_empty_tfidfs}/{total_number_of_tfidfs} aliases because their tfidf is empty')
