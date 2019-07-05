@@ -272,7 +272,6 @@ def create_tfidf_ann_index(out_path: str,
 
     print(f'No tfidf vectorizer on {tfidf_vectorizer_path} or ann index on {ann_index_path}')
     umls_concept_aliases = list(umls.alias_to_cuis.keys())
-    umls_concept_aliases = numpy.array(umls_concept_aliases)
 
     # NOTE: here we are creating the tf-idf vectorizer with float32 type, but we can serialize the
     # resulting vectors using float16, meaning they take up half the memory on disk. Unfortunately
@@ -290,15 +289,14 @@ def create_tfidf_ann_index(out_path: str,
 
     print(f'Finding empty (all zeros) tfidf vectors')
     empty_tfidfs_boolean_flags = numpy.array(uml_concept_alias_tfidfs.sum(axis=1) != 0).reshape(-1,)
-    deleted_aliases = umls_concept_aliases[empty_tfidfs_boolean_flags == False] # pylint: disable=singleton-comparison
-    number_of_non_empty_tfidfs = len(deleted_aliases)
-    total_number_of_tfidfs = uml_concept_alias_tfidfs.shape[0]
+    number_of_non_empty_tfidfs = sum(empty_tfidfs_boolean_flags == False)  # pylint: disable=singleton-comparison
+    total_number_of_tfidfs = numpy.size(uml_concept_alias_tfidfs, 0)
 
     print(f'Deleting {number_of_non_empty_tfidfs}/{total_number_of_tfidfs} aliases because their tfidf is empty')
     # remove empty tfidf vectors, otherwise nmslib will crash
-    umls_concept_aliases = umls_concept_aliases[empty_tfidfs_boolean_flags].tolist()
+    umls_concept_aliases = [alias for alias, flag in zip(umls_concept_aliases, empty_tfidfs_boolean_flags) if flag]
     uml_concept_alias_tfidfs = uml_concept_alias_tfidfs[empty_tfidfs_boolean_flags]
-    print(deleted_aliases)
+    assert len(umls_concept_aliases) == numpy.size(uml_concept_alias_tfidfs, 0)
 
     print(f'Saving list of concept ids and tfidfs vectors to {uml_concept_aliases_path} and {tfidf_vectors_path}')
     json.dump(umls_concept_aliases, open(uml_concept_aliases_path, "w"))
