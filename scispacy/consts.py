@@ -16,4 +16,7 @@ ABBREVIATIONS: List[str] = ["sec.",
                             "nos.",
                             "No.",
                             "Nos.",
-                            "al."]
+                            "al.",
+			    "gen.",
+			    "sp.",
+			    "nov."]
