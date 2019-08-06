@@ -41,3 +41,15 @@ class TestCandidateGeneration(unittest.TestCase):
         # Test we don't crash with zero vectors
         results = candidate_generator(['ZZZZ'], 10)
         assert results == [[]]
+    
+    def test_empty_list(self):
+        
+        umls_fixture = UmlsKnowledgeBase("tests/fixtures/umls_test_fixture.json")
+        with tempfile.TemporaryDirectory() as dir_name:
+            umls_concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(dir_name, umls_fixture)
+
+        candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, umls_concept_aliases, umls_fixture)
+        results = candidate_generator([], 10)
+
+        assert results == []
+
