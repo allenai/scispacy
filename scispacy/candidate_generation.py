@@ -200,6 +200,11 @@ class CandidateGenerator:
         """
         if self.verbose:
             print(f'Generating candidates for {len(mention_texts)} mentions')
+
+        # tfidf vectorizer crashes on an empty array, so we return early here
+        if mention_texts == []:
+            return []
+
         tfidfs = self.vectorizer.transform(mention_texts)
         start_time = datetime.datetime.now()
 
