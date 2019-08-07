@@ -169,7 +169,11 @@ nlp = spacy.load("en_core_sci_sm")
 # and load a large JSON file (the knowledge base). Be patient!
 # Thankfully it should be faster after the first time you use it, because
 # the downloads are cached.
-linker = UmlsEntityLinker()
+# NOTE: The resolve_abbreviations parameter is optional, and requires that
+# the AbbreviationDetector pipe has already been added to the pipeline. Adding
+# the AbbreviationDetector pipe and setting resolve_abbreviations to True means
+# that linking will only be performed on the long form of abbreviations.
+linker = UmlsEntityLinker(resolve_abbreviations=True)
 
 nlp.add_pipe(linker)
 
