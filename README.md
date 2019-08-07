@@ -159,6 +159,7 @@ print(linker.umls.cui_to_entity[concept_id])
 
 #### Example Usage
 ```python
+import spacy
 import scispacy
 
 from scispacy.umls_linking import UmlsEntityLinker
