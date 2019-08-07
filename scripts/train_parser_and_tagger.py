@@ -92,11 +92,12 @@ def train_parser_and_tagger(train_json_path: str,
     n_train_words = train_corpus.count_train()
 
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in  ['tagger', 'parser']]
-    if ontonotes_path:
-        optimizer = nlp.begin_training(lambda: itertools.chain(train_corpus.train_tuples, onto_train_corpus.train_tuples))
-    else:
-        optimizer = nlp.begin_training(lambda: train_corpus.train_tuples)
-    nlp._optimizer = None
+    with nlp.disable_pipes(*other_pipes):
+        if ontonotes_path:
+            optimizer = nlp.begin_training(lambda: itertools.chain(train_corpus.train_tuples, onto_train_corpus.train_tuples))
+        else:
+            optimizer = nlp.begin_training(lambda: train_corpus.train_tuples)
+        nlp._optimizer = None
 
     train_docs = train_corpus.train_docs(nlp)
     train_docs = list(train_docs)
