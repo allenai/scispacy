@@ -85,7 +85,9 @@ def train(model, train_data, dev_data, output_dir, n_iter):
                                    util.env_opt('batch_to', 32),
                                    util.env_opt('batch_compound', 1.001))
 
-    optimizer = nlp.begin_training()
+    with nlp.disable_pipes(*other_pipes):
+        optimizer = nlp.begin_training()
+
     best_epoch = 0
     best_f1 = 0
     for i in range(n_iter):
