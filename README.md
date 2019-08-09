@@ -216,7 +216,7 @@ for umls_ent in entity._.umls_ents:
 
 ## Citing
 
-If you use ScispaCy in your research, please cite [ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing](https://www.semanticscholar.org/paper/ScispaCy%3A-Fast-and-Robust-Models-for-Biomedical-Neumann-King/de28ec1d7bd38c8fc4e8ac59b6133800818b4e29).
+If you use ScispaCy in your research, please cite [ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing](https://www.semanticscholar.org/paper/ScispaCy%3A-Fast-and-Robust-Models-for-Biomedical-Neumann-King/de28ec1d7bd38c8fc4e8ac59b6133800818b4e29). Additionally, please indicate which version and model of ScispaCy you used to allow for reproduction of your research.
 ```
 @inproceedings{Neumann2019ScispaCyFA,
   title={ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing},
