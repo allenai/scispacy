@@ -96,8 +96,8 @@ class UmlsEntityLinker:
             for cand in candidates:
                 score = max(cand.similarities)
                 if (self.filter_for_definitions and
-                    self.umls.cui_to_entity[cand.concept_id].definition is None and
-                    score < self.no_definition_threshold):
+                            self.umls.cui_to_entity[cand.concept_id].definition is None and
+                            score < self.no_definition_threshold):
                     continue
                 if score > self.threshold:
                     predicted.append((cand.concept_id, score))
