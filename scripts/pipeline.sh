@@ -14,7 +14,7 @@ fi
 
 if [[ -z "${SIZE}" ]]; then
   echo "Usage (run from base SciSpaCy repository):"
-  echo "pipeline.sh <size> {small|medium} <build_directory> {default=./build} <model name> {default='scispacy_model'}"
+  echo "pipeline.sh <size> {small|medium|large} <build_directory> {default=./build} <model name> {default='scispacy_model'}"
   exit 1
 fi
 
