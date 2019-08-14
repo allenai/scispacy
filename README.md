@@ -141,6 +141,9 @@ below to adapt to your use case (higher precision, higher recall etc).
 - `threshold : float, optional, (default = 0.7)`
     The threshold that a mention candidate must reach to be added to the mention in the Doc
     as a mention candidate.
+-   `no_definition_threshold : float, optional, (default = 0.95)`
+        The threshold that a entity candidate must reach to be added to the mention in the Doc
+        as a mention candidate if the entity candidate does not have a definition.
 - `filter_for_definitions: bool, default = True`
     Whether to filter entities that can be returned to only include those with definitions
     in the knowledge base.
