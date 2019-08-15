@@ -41,8 +41,11 @@ class UmlsEntityLinker:
     k : int, optional, (default = 30)
         The number of nearest neighbours to look up from the candidate generator per mention.
     threshold : float, optional, (default = 0.7)
-        The threshold that a mention candidate must reach to be added to the mention in the Doc
+        The threshold that a entity candidate must reach to be added to the mention in the Doc
         as a mention candidate.
+    no_definition_threshold : float, optional, (default = 0.95)
+        The threshold that a entity candidate must reach to be added to the mention in the Doc
+        as a mention candidate if the entity candidate does not have a definition.
     filter_for_definitions: bool, default = True
         Whether to filter entities that can be returned to only include those with definitions
         in the knowledge base.
@@ -56,6 +59,7 @@ class UmlsEntityLinker:
                  resolve_abbreviations: bool = True,
                  k: int = 30,
                  threshold: float = 0.7,
+                 no_definition_threshold: float = 0.95,
                  filter_for_definitions: bool = True,
                  max_entities_per_mention: int = 5):
 
@@ -65,6 +69,7 @@ class UmlsEntityLinker:
         self.resolve_abbreviations = resolve_abbreviations
         self.k = k
         self.threshold = threshold
+        self.no_definition_threshold = no_definition_threshold
         self.umls = self.candidate_generator.umls
         self.filter_for_definitions = filter_for_definitions
         self.max_entities_per_mention = max_entities_per_mention
@@ -90,7 +95,9 @@ class UmlsEntityLinker:
             predicted = []
             for cand in candidates:
                 score = max(cand.similarities)
-                if self.filter_for_definitions and self.umls.cui_to_entity[cand.concept_id].definition is None:
+                if (self.filter_for_definitions and
+                            self.umls.cui_to_entity[cand.concept_id].definition is None and
+                            score < self.no_definition_threshold):
                     continue
                 if score > self.threshold:
                     predicted.append((cand.concept_id, score))
