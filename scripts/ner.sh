@@ -5,7 +5,7 @@ set -e
 MODEL_PATH=$1
 OUT_PATH=${2:-./ner}
 
-MED_MENTIONS="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/med_mentions_st21pv.tar.gz"
+MED_MENTIONS="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/med_mentions.tar.gz"
 
 if [[ -z "${MODEL_PATH}" ]]; then
   echo "Usage (run from base SciSpaCy repository): ner.sh <model_path> {path to existing model} <output directory> {default=./ner}"
