@@ -18,4 +18,3 @@ python scripts/train_ner.py \
   --model_path ${MODEL_PATH} \
   --iterations 7 \
   --label_granularity 0
-
