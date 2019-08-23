@@ -28,7 +28,7 @@ def train_ner(output_dir: str,
               label_granularity: int = None):
 
     if label_granularity is not None:
-        umls_tree = construct_umls_tree_from_tsv("data/umls_semantic_type_tree.tsv")
+        umls_tree = construct_umls_tree_from_tsv("https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_semantic_type_tree.tsv")
         label_mapping = umls_tree.get_collapsed_type_id_map_at_level(label_granularity)
         if label_granularity == 0:
             span_only = True
