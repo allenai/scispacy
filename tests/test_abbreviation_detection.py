@@ -96,3 +96,12 @@ class TestAbbreviationDetector(unittest.TestCase):
 
         long, shorts = self.detector.find(doc[7:13], doc)
         assert shorts == set()
+
+    def test_issue_158(self):
+        text = "The PVO observations showed that the total transterminator flux "\
+               "was 23% of that at solar maximum and that the largest reductions in the "\
+               "number of ions transported antisunward occurred at the highest altitudes "\
+               "(Spenner et al., 1995)."
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0

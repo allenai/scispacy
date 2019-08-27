@@ -46,8 +46,10 @@ def find_abbreviation(long_form_candidate: Span,
                # to be the _starting_ character of a span.
                (short_index == 0 and long_index > 0 and long_form[long_index -1].isalnum())):
             long_index -= 1
-            if long_index < 0:
-                return short_form_candidate, None
+
+        if long_index < 0:
+            return short_form_candidate, None
+
         long_index -= 1
         short_index -= 1
 
