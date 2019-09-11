@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build and test with Docker
+      run: |
+        docker build --tag scispacy .
+        docker run --rm scispacy pytest tests/
+        docker run --rm scispacy bash scripts/pylint.sh
+        docker run --rm scispacy bash scripts/mypy.sh
+        docker run --rm scispacy pytest tests/ --cov scispacy --cov-fail-under=20
