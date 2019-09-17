@@ -33,7 +33,7 @@ Additionally, scispacy uses modern features of Python and as such is only availa
 version of Python required for scispaCy.  If you already have a Python 3.6 or 3.7
 environment you want to use, you can skip to the 'installing via pip' section.
 
-1.  [Download and install Conda](https://conda.io/docs/download.html).
+1.  [Follow the installation instructions for Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html?highlight=conda#regular-installation).
 
 2.  Create a Conda environment called "scispacy" with Python 3.6:
 
