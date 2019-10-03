@@ -191,4 +191,4 @@ class AbbreviationDetector:
             # Clean up the global matcher.
             self.global_matcher.remove(key)
 
-        return [(k, v) for k, v in all_occurences.items()]
+        return list((k, v) for k, v in all_occurences.items())
