@@ -6,7 +6,7 @@ import shutil
 from tqdm import tqdm
 from spacy import util
 from timeit import default_timer as timer
-from spacy.cli.train import _get_progress
+from spacy.cli.train import _get_progress, _configure_training_output
 from spacy.vocab import Vocab
 from spacy.gold import GoldCorpus
 from wasabi import Printer
@@ -110,12 +110,9 @@ def train_parser_and_tagger(train_json_path: str,
         randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
         train_mixture += randomly_sampled_onto
 
-    row_head = ("Itn", "Dep Loss", "NER Loss", "UAS", "NER P", "NER R", "NER F", "Tag %", "Token %", "CPU WPS", "GPU WPS")
-    row_settings = {
-        "widths": (3, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7),
-        "aligns": tuple(["r" for i in row_head]),
-        "spacing": 2
-    }
+    row_head, output_stats = _configure_training_output(nlp.pipe_names, -1, False)
+    row_widths = [len(w) for w in row_head]
+    row_settings = {"widths": row_widths, "aligns": tuple(["r" for i in row_head]), "spacing": 2}
 
     print("")
     msg.row(row_head, **row_settings)
@@ -163,13 +160,13 @@ def train_parser_and_tagger(train_json_path: str,
             best_epoch_uas = scorer.scores["uas"]
             best_epoch = i
         progress = _get_progress(
-            i, losses, scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps
+            i, losses, scorer.scores, output_stats, cpu_wps=cpu_wps, gpu_wps=gpu_wps
         )
         msg.row(progress, **row_settings)
 
         if ontonotes_path:
             progress = _get_progress(
-                i, losses, onto_scorer.scores, cpu_wps=cpu_wps, gpu_wps=gpu_wps
+                i, losses, onto_scorer.scores, output_stats, cpu_wps=cpu_wps, gpu_wps=gpu_wps
             )
             msg.row(progress, **row_settings)
 
