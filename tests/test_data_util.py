@@ -4,7 +4,7 @@ import unittest
 import shutil
 
 
-from scispacy.data_util import read_med_mentions, med_mentions_example_iterator
+from scispacy.data_util import read_full_med_mentions, med_mentions_example_iterator, remove_overlapping_entities
 from scispacy.data_util import read_ner_from_tsv
 
 class TestDataUtil(unittest.TestCase):
@@ -30,10 +30,30 @@ class TestDataUtil(unittest.TestCase):
                 assert entity.end < len(example.text)
                 assert entity.mention_text == example.text[entity.start: entity.end]
 
-    def test_read_med_mentions(self):
-        examples = read_med_mentions(self.med_mentions)
-        assert len(examples) == 3
+    def test_remove_overlaps(self):
+        test_entities = [(0, 5, 'ENTITY'), (6, 10, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert len(result) == 2
 
+        test_entities = [(0, 5, 'ENTITY'), (5, 10, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert len(result) == 2
+
+        test_entities = [(0, 5, 'ENTITY'), (4, 10, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert len(result) == 1
+
+        test_entities = [(0, 5, 'ENTITY'), (0, 5, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert len(result) == 1
+
+        test_entities = [(0, 5, 'ENTITY'), (4, 7, 'ENTITY'), (6, 20, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert len(result) == 2
+
+        test_entities = [(0, 5, 'ENTITY'), (4, 7, 'ENTITY'), (10, 20, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert len(result) == 2
 
     def test_read_ner_from_tsv(self):
 
