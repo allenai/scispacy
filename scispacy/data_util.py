@@ -61,18 +61,54 @@ def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
         if lines:
             yield process_example(lines)
 
-def read_med_mentions(filename: str):
-    """
-    Reads in the MedMentions dataset into Spacy's
-    NER format.
-    """
-    examples = []
-    for example in med_mentions_example_iterator(filename):
-        spacy_format_entities = [(x.start, x.end, x.mention_type) for x in example.entities]
-        examples.append((example.text, {"entities": spacy_format_entities}))
+def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, int, str]]) -> List[Tuple[int, int, str]]:
+    entity_index = 0
+    spacy_format_entities_without_overlap = []
+    stack = []
+    while True:
+        current_entity = sorted_spacy_format_entities[entity_index]
 
-    return examples
+        # special case for the end of the list
+        if entity_index == len(sorted_spacy_format_entities) - 1:
+            next_entity = (0, 0, 'ENTITY')
+        else:
+            next_entity = sorted_spacy_format_entities[entity_index + 1]
 
+        # if the entities overlap, add to the current overlapping chain
+        if len(range(max(current_entity[0], next_entity[0]), min(current_entity[1], next_entity[1]))) > 0:
+            if len(stack) == 0:
+                stack = [current_entity, next_entity]
+            else:
+                stack.append(next_entity)
+        # if the entities don't overlap and there is no stack, add the current entity
+        elif len(stack) == 0:
+            spacy_format_entities_without_overlap.append(current_entity)
+        # if the entities don't overlap, and there is a stack, dump the stack
+        else:
+            sorted_stack = sorted(stack, key=lambda x: x[1]-x[0], reverse=True)
+            selections_from_stack = []
+            stack_index = 0
+            # greedily keep the longest entity that doesn't overlap
+            while stack_index < len(sorted_stack):
+                entity = sorted_stack[stack_index]
+                match_found = False
+                for already_selected_entity in selections_from_stack:
+                    if len(range(max(entity[0], already_selected_entity[0]), min(entity[1], already_selected_entity[1]))) > 0:
+                        match_found = True
+                        break
+                
+                if not match_found:
+                    selections_from_stack.append(entity)
+                
+                stack_index += 1
+            
+            spacy_format_entities_without_overlap.extend(selections_from_stack)
+        
+        entity_index += 1
+        if entity_index == len(sorted_spacy_format_entities):
+            break
+    
+    return spacy_format_entities_without_overlap
 
 def read_full_med_mentions(directory_path: str,
                            label_mapping: Dict[str, str] = None,
@@ -124,6 +160,7 @@ def read_full_med_mentions(directory_path: str,
 
     for example in examples:
         spacy_format_entities = [(x.start, x.end, label_function(x.mention_type)) for x in example.entities]
+        import ipdb; ipdb.set_trace()
         spacy_example = (example.text, {"entities": spacy_format_entities})
         if example.pubmed_id in train_ids:
             train_examples.append(spacy_example if spacy_format else example)
