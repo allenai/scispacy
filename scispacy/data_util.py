@@ -103,7 +103,7 @@ def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, in
                     for already_selected_entity in selections_from_stack:
                         max_start = max(entity[0], already_selected_entity[0])
                         min_end = min(entity[1], already_selected_entity[1])
-                        if len(range(max_start), range(min_end)) > 0:
+                        if len(range(max_start, min_end)) > 0:
                             match_found = True
                             break
 
