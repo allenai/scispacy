@@ -61,10 +61,12 @@ def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
         if lines:
             yield process_example(lines)
 
-def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, int, str]]) -> List[Tuple[int, int, str]]:
+def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, int, str]]
+                                ) -> List[Tuple[int, int, str]]:
     """
-    Removes overlapping entities from the entity set, by greedily taking the longest entity from each overlapping chain.
-    The input list of entities should be sorted and follow the spacy format
+    Removes overlapping entities from the entity set, by greedilytaking the longest
+    entity from each overlapping chain. The input list of entities should be sorted
+    and follow the spacy format.
     """
     entity_index = 0
     spacy_format_entities_without_overlap = []
@@ -85,7 +87,8 @@ def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, in
             stack_start = current_entity_start
             stack_end = current_entity_end
         else:
-            if current_entity is not None and len(range(max(current_entity_start, stack_start), min(current_entity_end, stack_end))) > 0:
+            if current_entity is not None \
+                    and len(range(max(current_entity_start, stack_start), min(current_entity_end, stack_end))) > 0:
                 stack.append(current_entity)
                 stack_start = min(current_entity_start, stack_start)
                 stack_end = max(current_entity_end, stack_end)
@@ -98,15 +101,17 @@ def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, in
                     entity = sorted_stack[stack_index]
                     match_found = False
                     for already_selected_entity in selections_from_stack:
-                        if len(range(max(entity[0], already_selected_entity[0]), min(entity[1], already_selected_entity[1]))) > 0:
+                        max_start = max(entity[0], already_selected_entity[0])
+                        min_end = min(entity[1], already_selected_entity[1])
+                        if len(range(max_start), range(min_end)) > 0:
                             match_found = True
                             break
-                    
+
                     if not match_found:
                         selections_from_stack.append(entity)
-                    
+
                     stack_index += 1
-                
+
                 stack = []
                 spacy_format_entities_without_overlap.extend(selections_from_stack)
                 if current_entity is not None:
@@ -117,7 +122,7 @@ def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, in
         if entity_index == len(sorted_spacy_format_entities):
             break
         entity_index += 1
-    
+
     return sorted(spacy_format_entities_without_overlap, key=lambda x: x[0])
 
 def read_full_med_mentions(directory_path: str,
