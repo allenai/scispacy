@@ -62,6 +62,10 @@ def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
             yield process_example(lines)
 
 def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, int, str]]) -> List[Tuple[int, int, str]]:
+    """
+    Removes overlapping entities from the entity set, by greedily taking the longest entity from each overlapping chain.
+    The input list of entities should be sorted and follow the spacy format
+    """
     entity_index = 0
     spacy_format_entities_without_overlap = []
     stack = []
