@@ -1,6 +1,6 @@
 numpy
 spacy>=2.2.1
-spacy_lookups_data
+spacy-lookups-data
 pandas
 awscli
 conllu
