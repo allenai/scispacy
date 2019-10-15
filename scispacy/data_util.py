@@ -160,7 +160,6 @@ def read_full_med_mentions(directory_path: str,
 
     for example in examples:
         spacy_format_entities = [(x.start, x.end, label_function(x.mention_type)) for x in example.entities]
-        import ipdb; ipdb.set_trace()
         spacy_example = (example.text, {"entities": spacy_format_entities})
         if example.pubmed_id in train_ids:
             train_examples.append(spacy_example if spacy_format else example)
