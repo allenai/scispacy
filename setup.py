@@ -47,7 +47,8 @@ setup(
         "numpy",
         "joblib",
         "nmslib>=1.7.3.6",
-        "scikit-learn>=0.20.3"
+        "scikit-learn>=0.20.3",
+        "pysbd"
         ],
     tests_require=[
         "pytest",
