@@ -40,7 +40,7 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
 
             # handle the rare (impossible?) case where spacy tokenizes over a sentence boundary that 
             # pysbd finds
-            built_up_sentence = " "*len(built_up_sentence) - len(current_segment)
+            built_up_sentence = ' '*int(len(built_up_sentence) - len(current_segment))
             built_up_sentence = token.string
             segment_index += 1
             current_segment = segments[segment_index]
