@@ -63,8 +63,8 @@ def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
 
 def select_subset_of_overlapping_chain(chain: List[Tuple[int, int, str]]) -> List[Tuple[int, int, str]]:
     """
-    Select the subset of entities in an overlapping chain to return by greedily choosing the longest entity in the chain
-    until there are no entities remaining
+    Select the subset of entities in an overlapping chain to return by greedily choosing the
+    longest entity in the chain until there are no entities remaining
     """
     sorted_chain = sorted(chain, key=lambda x: x[1]-x[0], reverse=True)
     selections_from_chain = []
@@ -94,23 +94,23 @@ def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, in
     entity from each overlapping chain. The input list of entities should be sorted
     and follow the spacy format.
     """
-    entity_index = 0
     spacy_format_entities_without_overlap = []
     current_overlapping_chain = []
     current_overlapping_chain_start = 0
     current_overlapping_chain_end = 0
-    for i in range(len(sorted_spacy_format_entities)):
-        if entity_index < len(sorted_spacy_format_entities):
-            current_entity = sorted_spacy_format_entities[i]
-            current_entity_start = current_entity[0]
-            current_entity_end = current_entity[1]
+    for i, current_entity in enumerate(sorted_spacy_format_entities):
+        current_entity = sorted_spacy_format_entities[i]
+        current_entity_start = current_entity[0]
+        current_entity_end = current_entity[1]
 
         if len(current_overlapping_chain) == 0:
             current_overlapping_chain.append(current_entity)
             current_overlapping_chain_start = current_entity_start
             current_overlapping_chain_end = current_entity_end
         else:
-            if min(current_entity_end, current_overlapping_chain_end) - max(current_entity_start, current_overlapping_chain_start) > 0:
+            min_end = min(current_entity_end, current_overlapping_chain_end)
+            max_start = max(current_entity_start, current_overlapping_chain_start)
+            if min_end - max_start > 0:
                 current_overlapping_chain.append(current_entity)
                 current_overlapping_chain_start = min(current_entity_start, current_overlapping_chain_start)
                 current_overlapping_chain_end = max(current_entity_end, current_overlapping_chain_end)
