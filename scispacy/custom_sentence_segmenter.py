@@ -21,6 +21,8 @@ def merge_segments(segments: List[str]) -> List[str]:
 
 def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     """Adds sentence boundaries to a Doc. Intended to be used as a pipe in a spaCy pipeline.
+       New lines cannot be end of sentence tokens. New lines that separate sentences will be
+       added to the beginning of the next sentence.
 
     @param doc: the spaCy document to be annotated with sentence boundaries
     """
@@ -32,8 +34,11 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     segment_index = 0
     current_segment = segments[segment_index]
     built_up_sentence = ""
-    for token in doc:
-        if token.text.replace('\n', '') == '':
+    for i, token in enumerate(doc):
+        if i == 0 and token.is_space:
+            token.is_sent_start = True
+            continue
+        if token.text.replace('\n', '').replace('\r', '') == '':
             token.is_sent_start = False
         elif len(built_up_sentence) >= len(current_segment):
             token.is_sent_start = True
@@ -41,11 +46,11 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
             # handle the rare (impossible?) case where spacy tokenizes over a sentence boundary that
             # pysbd finds
             built_up_sentence = ' '*int(len(built_up_sentence) - len(current_segment))
-            built_up_sentence = token.string
+            built_up_sentence = token.text_with_ws
             segment_index += 1
             current_segment = segments[segment_index]
         else:
-            built_up_sentence += token.string
+            built_up_sentence += token.text_with_ws
             token.is_sent_start = False
 
     return doc
