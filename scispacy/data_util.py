@@ -61,18 +61,71 @@ def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
         if lines:
             yield process_example(lines)
 
-def read_med_mentions(filename: str):
+def select_subset_of_overlapping_chain(chain: List[Tuple[int, int, str]]) -> List[Tuple[int, int, str]]:
     """
-    Reads in the MedMentions dataset into Spacy's
-    NER format.
+    Select the subset of entities in an overlapping chain to return by greedily choosing the
+    longest entity in the chain until there are no entities remaining
     """
-    examples = []
-    for example in med_mentions_example_iterator(filename):
-        spacy_format_entities = [(x.start, x.end, x.mention_type) for x in example.entities]
-        examples.append((example.text, {"entities": spacy_format_entities}))
+    sorted_chain = sorted(chain, key=lambda x: x[1]-x[0], reverse=True)
+    selections_from_chain: List[Tuple[int, int, str]] = []
+    chain_index = 0
+    # dump the current chain by greedily keeping the longest entity that doesn't overlap
+    while chain_index < len(sorted_chain):
+        entity = sorted_chain[chain_index]
+        match_found = False
+        for already_selected_entity in selections_from_chain:
+            max_start = max(entity[0], already_selected_entity[0])
+            min_end = min(entity[1], already_selected_entity[1])
+            if len(range(max_start, min_end)) > 0:
+                match_found = True
+                break
 
-    return examples
+        if not match_found:
+            selections_from_chain.append(entity)
 
+        chain_index += 1
+
+    return selections_from_chain
+
+def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, int, str]]
+                                ) -> List[Tuple[int, int, str]]:
+    """
+    Removes overlapping entities from the entity set, by greedilytaking the longest
+    entity from each overlapping chain. The input list of entities should be sorted
+    and follow the spacy format.
+    """
+    spacy_format_entities_without_overlap = []
+    current_overlapping_chain: List[Tuple[int, int, str]] = []
+    current_overlapping_chain_start = 0
+    current_overlapping_chain_end = 0
+    for i, current_entity in enumerate(sorted_spacy_format_entities):
+        current_entity = sorted_spacy_format_entities[i]
+        current_entity_start = current_entity[0]
+        current_entity_end = current_entity[1]
+
+        if len(current_overlapping_chain) == 0:
+            current_overlapping_chain.append(current_entity)
+            current_overlapping_chain_start = current_entity_start
+            current_overlapping_chain_end = current_entity_end
+        else:
+            min_end = min(current_entity_end, current_overlapping_chain_end)
+            max_start = max(current_entity_start, current_overlapping_chain_start)
+            if min_end - max_start > 0:
+                current_overlapping_chain.append(current_entity)
+                current_overlapping_chain_start = min(current_entity_start, current_overlapping_chain_start)
+                current_overlapping_chain_end = max(current_entity_end, current_overlapping_chain_end)
+            else:
+                selections_from_chain = select_subset_of_overlapping_chain(current_overlapping_chain)
+
+                current_overlapping_chain = []
+                spacy_format_entities_without_overlap.extend(selections_from_chain)
+                current_overlapping_chain.append(current_entity)
+                current_overlapping_chain_start = current_entity_start
+                current_overlapping_chain_end = current_entity_end
+
+    spacy_format_entities_without_overlap.extend(select_subset_of_overlapping_chain(current_overlapping_chain))
+
+    return sorted(spacy_format_entities_without_overlap, key=lambda x: x[0])
 
 def read_full_med_mentions(directory_path: str,
                            label_mapping: Dict[str, str] = None,
@@ -124,6 +177,7 @@ def read_full_med_mentions(directory_path: str,
 
     for example in examples:
         spacy_format_entities = [(x.start, x.end, label_function(x.mention_type)) for x in example.entities]
+        spacy_format_entities = remove_overlapping_entities(sorted(spacy_format_entities, key=lambda x: x[0]))
         spacy_example = (example.text, {"entities": spacy_format_entities})
         if example.pubmed_id in train_ids:
             train_examples.append(spacy_example if spacy_format else example)

@@ -6,12 +6,11 @@
   "deprecation_fixes":{
     "vectors_name":"spacy_pretrained_vectors"
   },
-  "nr_class":51,
+  "nr_class":49,
   "hidden_depth":1,
   "token_vector_width":96,
   "hidden_width":64,
   "maxout_pieces":2,
   "pretrained_vectors":null,
-  "bilstm_depth":0,
-  "min_action_freq":30
+  "bilstm_depth":0
 }

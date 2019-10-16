@@ -1,5 +1,6 @@
 numpy
-spacy>=2.1.3,<2.2
+spacy>=2.2.1
+spacy-lookups-data
 pandas
 awscli
 conllu

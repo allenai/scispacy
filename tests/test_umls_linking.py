@@ -22,11 +22,8 @@ class TestUmlsLinker(unittest.TestCase):
         self.linker = UmlsEntityLinker(candidate_generator, filter_for_definitions=False)
 
     def test_naive_entity_linking(self):
-        text = "There was a lot of (131)I-Macroaggregated Albumin."
+        text = "There was a lot of Dipalmitoylphosphatidylcholine."
         doc = self.nlp(text)
-
-        # Ents are completely wrong from the web spacy model, correct them manually.
-        doc.ents = [doc[5:10]]
 
         # Check that the linker returns nothing if we set the filter_for_definitions flag
         # and set the threshold very high for entities without definitions.
@@ -39,19 +36,20 @@ class TestUmlsLinker(unittest.TestCase):
         # set the threshold to something more reasonable.
         self.linker.no_definition_threshold = 0.95
         doc = self.linker(doc)
-        assert doc.ents[0]._.umls_ents == [('C0000005', 1.0)]
+        assert doc.ents[0]._.umls_ents == [('C0000039', 1.0)]
 
         self.linker.filter_for_definitions = False
+        self.linker.threshold = 0.45
         doc = self.linker(doc)
         # Without the filter_for_definitions filter, we get 2 entities for
         # the first mention.
         assert len(doc.ents[0]._.umls_ents) == 2
 
         id_with_score = doc.ents[0]._.umls_ents[0]
-        assert id_with_score == ("C0000005", 1.0)
+        assert id_with_score == ("C0000039", 1.0)
         umls_entity = self.linker.umls.cui_to_entity[id_with_score[0]]
-        assert umls_entity.concept_id == "C0000005"
-        assert umls_entity.types == ["T116", "T121", "T130"]
+        assert umls_entity.concept_id == "C0000039"
+        assert umls_entity.types == ["T109", "T121"]
 
     def test_linker_resolves_abbreviations(self):
 

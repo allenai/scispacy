@@ -4,7 +4,7 @@ import unittest
 import shutil
 
 
-from scispacy.data_util import read_med_mentions, med_mentions_example_iterator
+from scispacy.data_util import read_full_med_mentions, med_mentions_example_iterator, remove_overlapping_entities
 from scispacy.data_util import read_ner_from_tsv
 
 class TestDataUtil(unittest.TestCase):
@@ -30,10 +30,51 @@ class TestDataUtil(unittest.TestCase):
                 assert entity.end < len(example.text)
                 assert entity.mention_text == example.text[entity.start: entity.end]
 
-    def test_read_med_mentions(self):
-        examples = read_med_mentions(self.med_mentions)
-        assert len(examples) == 3
+    def test_remove_overlaps(self):
+        test_entities = [(0, 5, 'ENTITY'), (6, 10, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert result == [(0, 5, 'ENTITY'), (6, 10, 'ENTITY')]
 
+        test_entities = [(0, 5, 'ENTITY'), (5, 10, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert result == [(0, 5, 'ENTITY'), (5, 10, 'ENTITY')]
+
+        test_entities = [(0, 5, 'ENTITY'), (4, 10, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert result == [(4, 10, 'ENTITY')]
+
+        test_entities = [(0, 5, 'ENTITY'), (0, 5, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert result == [(0, 5, 'ENTITY')]
+
+        test_entities = [(0, 5, 'ENTITY'), (4, 11, 'ENTITY'), (6, 20, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert result == [(0, 5, 'ENTITY'), (6, 20, 'ENTITY')]
+
+        test_entities = [(0, 5, 'ENTITY'), (4, 7, 'ENTITY'), (10, 20, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert result == [(0, 5, 'ENTITY'), (10, 20, 'ENTITY')]
+
+        test_entities = [(1368, 1374, 'ENTITY'), (1368, 1376, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert result == [(1368, 1376, 'ENTITY')]
+
+        test_entities = [(12, 33, 'ENTITY'), (769, 779, 'ENTITY'), (769, 787, 'ENTITY'), (806, 811, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert result == [(12, 33, 'ENTITY'), (769, 787, 'ENTITY'), (806, 811, 'ENTITY')]
+
+        test_entities = [(189, 209, 'ENTITY'),
+                         (317, 362, 'ENTITY'),
+                         (345, 354, 'ENTITY'),
+                         (364, 368, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert result == [(189, 209, 'ENTITY'), (317, 362, 'ENTITY'), (364, 368, 'ENTITY')]
+
+        test_entities = [(445, 502, 'ENTITY'),
+                         (461, 473, 'ENTITY'),
+                         (474, 489, 'ENTITY')]
+        result = remove_overlapping_entities(test_entities)
+        assert result == [(445, 502, 'ENTITY')]
 
     def test_read_ner_from_tsv(self):
 
