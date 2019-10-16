@@ -67,7 +67,7 @@ def select_subset_of_overlapping_chain(chain: List[Tuple[int, int, str]]) -> Lis
     longest entity in the chain until there are no entities remaining
     """
     sorted_chain = sorted(chain, key=lambda x: x[1]-x[0], reverse=True)
-    selections_from_chain = []
+    selections_from_chain: List[Tuple[int, int, str]] = []
     chain_index = 0
     # dump the current chain by greedily keeping the longest entity that doesn't overlap
     while chain_index < len(sorted_chain):
@@ -95,7 +95,7 @@ def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, in
     and follow the spacy format.
     """
     spacy_format_entities_without_overlap = []
-    current_overlapping_chain = []
+    current_overlapping_chain: List[Tuple[int, int, str]] = []
     current_overlapping_chain_start = 0
     current_overlapping_chain_end = 0
     for i, current_entity in enumerate(sorted_spacy_format_entities):
