@@ -3,7 +3,7 @@ from typing import List
 
 import pysbd
 
-from spacy.tokens import Doc, Token
+from spacy.tokens import Doc
 
 from scispacy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 
