@@ -3,7 +3,7 @@ from typing import List
 
 import pysbd
 
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Token
 
 from scispacy.consts import ABBREVIATIONS # pylint: disable-msg=E0611,E0401
 
@@ -32,7 +32,7 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     segment_index = 0
     current_segment = segments[segment_index]
     built_up_sentence = ""
-    for token in enumerate(doc):
+    for token in doc:
         if token.text.replace('\n', '') == '':
             token.is_sent_start = False
         elif len(built_up_sentence) >= len(current_segment):
