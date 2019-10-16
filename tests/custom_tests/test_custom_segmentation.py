@@ -25,6 +25,4 @@ TEST_CASES = [("LSTM networks, which we preview in Sec. 2, have been successfull
 def test_custom_segmentation(en_with_combined_rule_tokenizer_and_segmenter_fixture, remove_new_lines_fixture, text, expected_sents):
     doc = en_with_combined_rule_tokenizer_and_segmenter_fixture(text)
     sents = [s.text for s in doc.sents]
-    print(sents)
-    print(expected_sents)
     assert sents == expected_sents
