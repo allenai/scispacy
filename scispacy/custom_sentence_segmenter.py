@@ -27,6 +27,8 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     segmenter = pysbd.Segmenter(language="en", clean=False)
     segments = merge_segments(segmenter.segment(doc.text))
 
+    # pysbd splits raw text into sentences, so we have to do our best to align those 
+    # segments with spacy tokens
     segment_index = 0
     current_segment = segments[segment_index]
     built_up_sentence = ""
@@ -35,6 +37,10 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
             token.is_sent_start = False
         elif len(built_up_sentence) >= len(current_segment):
             token.is_sent_start = True
+
+            # handle the rare (impossible?) case where spacy tokenizes over a sentence boundary that 
+            # pysbd finds
+            built_up_sentence = " "*len(built_up_sentence) - len(current_segment)
             built_up_sentence = token.string
             segment_index += 1
             current_segment = segments[segment_index]
