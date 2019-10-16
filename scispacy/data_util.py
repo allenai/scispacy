@@ -61,6 +61,32 @@ def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
         if lines:
             yield process_example(lines)
 
+def select_subset_of_overlapping_chain(chain: List[Tuple[int, int, str]]) -> List[Tuple[int, int, str]]:
+    """
+    Select the subset of entities in an overlapping chain to return by greedily choosing the longest entity in the chain
+    until there are no entities remaining
+    """
+    sorted_chain = sorted(chain, key=lambda x: x[1]-x[0], reverse=True)
+    selections_from_chain = []
+    chain_index = 0
+    # dump the current chain by greedily keeping the longest entity that doesn't overlap
+    while chain_index < len(sorted_chain):
+        entity = sorted_chain[chain_index]
+        match_found = False
+        for already_selected_entity in selections_from_chain:
+            max_start = max(entity[0], already_selected_entity[0])
+            min_end = min(entity[1], already_selected_entity[1])
+            if len(range(max_start, min_end)) > 0:
+                match_found = True
+                break
+
+        if not match_found:
+            selections_from_chain.append(entity)
+
+        chain_index += 1
+
+    return selections_from_chain
+
 def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, int, str]]
                                 ) -> List[Tuple[int, int, str]]:
     """
@@ -70,58 +96,34 @@ def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, in
     """
     entity_index = 0
     spacy_format_entities_without_overlap = []
-    stack = []
-    stack_start = 0
-    stack_end = 0
-    while True:
+    current_overlapping_chain = []
+    current_overlapping_chain_start = 0
+    current_overlapping_chain_end = 0
+    for i in range(len(sorted_spacy_format_entities)):
         if entity_index < len(sorted_spacy_format_entities):
-            current_entity = sorted_spacy_format_entities[entity_index]
+            current_entity = sorted_spacy_format_entities[i]
             current_entity_start = current_entity[0]
             current_entity_end = current_entity[1]
-        else:
-            # if we are after the end of the list, just go through the last iteration to dump the stack
-            current_entity = None
 
-        if current_entity is not None and len(stack) == 0:
-            stack.append(current_entity)
-            stack_start = current_entity_start
-            stack_end = current_entity_end
+        if len(current_overlapping_chain) == 0:
+            current_overlapping_chain.append(current_entity)
+            current_overlapping_chain_start = current_entity_start
+            current_overlapping_chain_end = current_entity_end
         else:
-            if current_entity is not None \
-                    and len(range(max(current_entity_start, stack_start), min(current_entity_end, stack_end))) > 0:
-                stack.append(current_entity)
-                stack_start = min(current_entity_start, stack_start)
-                stack_end = max(current_entity_end, stack_end)
+            if len(range(max(current_entity_start, current_overlapping_chain_start), min(current_entity_end, current_overlapping_chain_end))) > 0:
+                current_overlapping_chain.append(current_entity)
+                current_overlapping_chain_start = min(current_entity_start, current_overlapping_chain_start)
+                current_overlapping_chain_end = max(current_entity_end, current_overlapping_chain_end)
             else:
-                sorted_stack = sorted(stack, key=lambda x: x[1]-x[0], reverse=True)
-                selections_from_stack = []
-                stack_index = 0
-                # dump the stack by greedily keeping the longest entity that doesn't overlap
-                while stack_index < len(sorted_stack):
-                    entity = sorted_stack[stack_index]
-                    match_found = False
-                    for already_selected_entity in selections_from_stack:
-                        max_start = max(entity[0], already_selected_entity[0])
-                        min_end = min(entity[1], already_selected_entity[1])
-                        if len(range(max_start, min_end)) > 0:
-                            match_found = True
-                            break
+                selections_from_chain = select_subset_of_overlapping_chain(current_overlapping_chain)
 
-                    if not match_found:
-                        selections_from_stack.append(entity)
+                current_overlapping_chain = []
+                spacy_format_entities_without_overlap.extend(selections_from_chain)
+                current_overlapping_chain.append(current_entity)
+                current_overlapping_chain_start = current_entity_start
+                current_overlapping_chain_end = current_entity_end
 
-                    stack_index += 1
-
-                stack = []
-                spacy_format_entities_without_overlap.extend(selections_from_stack)
-                if current_entity is not None:
-                    stack.append(current_entity)
-                    stack_start = current_entity_start
-                    stack_end = current_entity_end
-
-        if entity_index == len(sorted_spacy_format_entities):
-            break
-        entity_index += 1
+    spacy_format_entities_without_overlap.extend(select_subset_of_overlapping_chain(current_overlapping_chain))
 
     return sorted(spacy_format_entities_without_overlap, key=lambda x: x[0])
 
