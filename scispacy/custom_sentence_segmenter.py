@@ -14,7 +14,7 @@ def merge_segments(segments: List[str]) -> List[str]:
         if temp_segment != "":
             temp_segment += " "
         temp_segment += segment
-        if not (segment.endswith("Eqs.") or segment.endswith("eqs.")):
+        if not segment.endswith(tuple(ABBREVIATIONS)):
             adjusted_segments.append(temp_segment)
             temp_segment = ""
     return adjusted_segments
