@@ -1,5 +1,7 @@
 import pytest
 
+from scispacy.custom_sentence_segmenter import merge_segments
+
 TEST_CASES = [("LSTM networks, which we preview in Sec. 2, have been successfully", ["LSTM networks, which we preview in Sec. 2, have been successfully"]),
               ("When the tree is simply a chain, both Eqs. 2–8 and Eqs. 9–14 reduce to the standard LSTM transitions, Eqs. 1.", ["When the tree is simply a chain, both Eqs. 2–8 and Eqs. 9–14 reduce to the standard LSTM transitions, Eqs. 1."]),
               ("We used fluorescence time-lapse microscopy (Fig. 1D; fig. S1 and movies S1 and S2) and computational", ["We used fluorescence time-lapse microscopy (Fig. 1D; fig. S1 and movies S1 and S2) and computational"]),
@@ -19,6 +21,7 @@ TEST_CASES = [("LSTM networks, which we preview in Sec. 2, have been successfull
               ("\n\n2 Long Short-Term Memory Networks\n\n\n\n2.1 Overview\n\nRecurrent neural networks (RNNs) are able to process input sequences of arbitrary length via the recursive application of a transition function on a hidden state vector ht.", ["\n\n2 Long Short-Term Memory Networks\n\n\n\n", "2.1 Overview\n\n", "Recurrent neural networks (RNNs) are able to process input sequences of arbitrary length via the recursive application of a transition function on a hidden state vector ht."]),
               ("In order to address all three aspects, it is necessary to observe gene regulation in individual cells over time. Therefore, we built Bl-cascade[ strains of Escherichia coli, containing the l repressor and a downstream gene, such that both the amount of the repressor protein and the rate of expression of its target gene could be monitored simultaneously in individual cells (Fig. 1B). These strains incorporate a yellow fluorescent repressor fusion protein (cI-yfp) and a chromosomally integrated target promoter (P R ) controlling cyan fluorescent protein (cfp).", ["In order to address all three aspects, it is necessary to observe gene regulation in individual cells over time.", "Therefore, we built Bl-cascade[ strains of Escherichia coli, containing the l repressor and a downstream gene, such that both the amount of the repressor protein and the rate of expression of its target gene could be monitored simultaneously in individual cells (Fig. 1B).", "These strains incorporate a yellow fluorescent repressor fusion protein (cI-yfp) and a chromosomally integrated target promoter (P R ) controlling cyan fluorescent protein (cfp)."]),
               ("This is a sentence. (This is an interjected sentence.) This is also a sentence.", ["This is a sentence.", "(This is an interjected sentence.)", "This is also a sentence."]),
+              ("Thus, we first compute EMC 3 's response time-i.e., the duration from the initial of a call (from/to a participant in the target region) to the time when the decision of task assignment is made; and then, based on the computed response time, we estimate EMC 3 maximum throughput [28]-i.e., the maximum number of mobile users allowed in the MCS system. EMC 3 algorithm is implemented with the Java SE platform and is running on a Java HotSpot(TM) 64-Bit Server VM; and the implementation details are given in Appendix, available in the online supplemental material.", ["Thus, we first compute EMC 3 's response time-i.e., the duration from the initial of a call (from/to a participant in the target region) to the time when the decision of task assignment is made; and then, based on the computed response time, we estimate EMC 3 maximum throughput [28]-i.e., the maximum number of mobile users allowed in the MCS system.", "EMC 3 algorithm is implemented with the Java SE platform and is running on a Java HotSpot(TM) 64-Bit Server VM; and the implementation details are given in Appendix, available in the online supplemental material."])
              ]
 
 @pytest.mark.parametrize('text,expected_sents', TEST_CASES)
@@ -26,3 +29,16 @@ def test_custom_segmentation(en_with_combined_rule_tokenizer_and_segmenter_fixtu
     doc = en_with_combined_rule_tokenizer_and_segmenter_fixture(text)
     sents = [s.text for s in doc.sents]
     assert sents == expected_sents
+
+def test_merge_segment():
+    segments = ["This sentence mentions Eqs.", "1-4 and should not be split."]
+    merged_segments = merge_segments(segments)
+    assert len(merged_segments) == 1
+
+    segments = ["It also has a sentence before it.", "This sentence mentions Eqs.", "1-4 and should not be split.", "It also has another sentence after it."]
+    merged_segments = merge_segments(segments)
+    assert len(merged_segments) == 3
+
+    segments = ["This sentence ends with part an abbreviation that is part of a word material.", "It also has another sentence after it."]
+    merged_segments = merge_segments(segments)
+    assert len(merged_segments) == 2
