@@ -42,3 +42,7 @@ def test_merge_segment():
     segments = ["This sentence ends with part an abbreviation that is part of a word material.", "It also has another sentence after it."]
     merged_segments = merge_segments(segments)
     assert len(merged_segments) == 2
+
+    segments = ["This sentence is the last segment and ends with an abbreviation that is part of a word material."]
+    merged_segments = merge_segments(segments)
+    assert len(merged_segments) == 1
