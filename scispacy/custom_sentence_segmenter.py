@@ -11,7 +11,6 @@ def merge_segments(segments: List[str]) -> List[str]:
     adjusted_segments: List[str] = []
     temp_segment = ""
     for segment in segments:
-        print(adjusted_segments, temp_segment, segment)
         if temp_segment != "":
             temp_segment += " "
         temp_segment += segment
@@ -33,9 +32,7 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     @param doc: the spaCy document to be annotated with sentence boundaries
     """
     segmenter = pysbd.Segmenter(language="en", clean=False)
-    print(segmenter.segment(doc.text))
     segments = merge_segments(segmenter.segment(doc.text))
-    print(segments)
 
     # pysbd splits raw text into sentences, so we have to do our best to align those
     # segments with spacy tokens
