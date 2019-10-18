@@ -2,6 +2,7 @@
 from typing import List
 
 import pysbd
+import re
 
 from spacy.tokens import Doc
 
@@ -51,7 +52,15 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     # segments with spacy tokens
     segment_index = 0
     current_segment = segments[segment_index]
+
+    # somtimes pysbd replace a space with a period making alignment difficult, so fall back on the normal sentence splitter
+    if re.search(r'[a-zA-Z]\.[a-zA-Z]\.[a-zA-Z]', current_segment) is not None:
+        print("Warning: pysbd may have replaced a space with a period on {}".format(doc.text))
+        return doc
+
     built_up_sentence = ""
+    print(segments)
+    print([repr(token.text_with_ws) for token in doc])
     for i, token in enumerate(doc):
         if i == 0 and token.is_space:
             token.is_sent_start = True
@@ -67,6 +76,10 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
             built_up_sentence = token.text_with_ws
             segment_index += 1
             current_segment = segments[segment_index]
+            # somtimes pysbd replace a space with a period making alignment difficult, so fall back on the normal sentence splitter
+            if re.search(r'[a-zA-Z]\.[a-zA-Z]\.[a-zA-Z]', current_segment) is not None:
+                print("Warning pysbd may have replace a space with a period on {}".format(doc.text))
+                return doc
         else:
             built_up_sentence += token.text_with_ws
             token.is_sent_start = False
