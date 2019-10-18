@@ -31,17 +31,22 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
 
     @param doc: the spaCy document to be annotated with sentence boundaries
     """
-    # pysbd doesn't always like short strings
-    if len(doc) < 2:
-        return doc
-
     # pysbd seems to have a bug or two, so fall back on the normal sentence splitter
     try:
         segmenter = pysbd.Segmenter(language="en", clean=False)
+        segments = segmenter.segment(doc.text)
     except: # pylint: disable-msg=W0702
         print("Warning: pysbd failed on {}".format(doc.text))
         return doc
-    segments = merge_segments(segmenter.segment(doc.text))
+    print(list(doc))
+    print(segments)
+    segments = merge_segments(segments)
+    total_character_length_segments = sum([len(segment.replace(' ', '')) for segment in segments])
+    total_character_length_doc = len(doc.text_with_ws.replace(' ', '').replace('\n', '').replace('\r', ''))
+    # sometimes pysbd removes characters from the input, so fall back on the normal sentence splitter
+    if total_character_length_doc != total_character_length_segments:
+        print("Warning: pysbd swallowed characters on {}".format(doc.text))
+        return doc
 
     # pysbd splits raw text into sentences, so we have to do our best to align those
     # segments with spacy tokens
@@ -49,6 +54,8 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     current_segment = segments[segment_index]
     built_up_sentence = ""
     for i, token in enumerate(doc):
+        if segment_index == 0 and len(built_up_sentence) > 320 or i == 0 or i == 1:
+            print(len(current_segment), len(built_up_sentence), current_segment, "BREAK", built_up_sentence, "BREAK", token)
         if i == 0 and token.is_space:
             token.is_sent_start = True
             continue
