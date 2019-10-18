@@ -38,8 +38,7 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     except: # pylint: disable-msg=W0702
         print("Warning: pysbd failed on {}".format(doc.text))
         return doc
-    print(list(doc))
-    print(segments)
+
     segments = merge_segments(segments)
     total_character_length_segments = sum([len(segment.replace(' ', '')) for segment in segments])
     total_character_length_doc = len(doc.text_with_ws.replace(' ', '').replace('\n', '').replace('\r', ''))
@@ -54,8 +53,6 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     current_segment = segments[segment_index]
     built_up_sentence = ""
     for i, token in enumerate(doc):
-        if segment_index == 0 and len(built_up_sentence) > 320 or i == 0 or i == 1:
-            print(len(current_segment), len(built_up_sentence), current_segment, "BREAK", built_up_sentence, "BREAK", token)
         if i == 0 and token.is_space:
             token.is_sent_start = True
             continue
