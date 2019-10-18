@@ -92,7 +92,7 @@ def construct_umls_tree_from_tsv(filepath: str) -> UmlsSemanticTypeTree:
           Individual Behavior	T055	4
         Daily or Recreational Activity	T056	3
     """
-    from collections import deque
+    from collections import deque # pylint: disable-msg=C0415
     node_stack: Deque[SemanticTypeNode] = deque()
     for line in open(cached_path(filepath), "r"):
         name, type_id, level = line.split("\t")
