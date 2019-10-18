@@ -36,6 +36,7 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     @param doc: the spaCy document to be annotated with sentence boundaries
     """
     # pysbd seems to have a bug or two, so fall back on the normal sentence splitter
+    # https://github.com/nipunsadvilkar/pySBD/issues/31
     try:
         segmenter = pysbd.Segmenter(language="en", clean=False)
         segments = segmenter.segment(doc.text)
@@ -47,6 +48,7 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     total_character_length_segments = sum([len(segment.replace(' ', '')) for segment in segments])
     total_character_length_doc = len(doc.text_with_ws.replace(' ', '').replace('\n', '').replace('\r', ''))
     # sometimes pysbd removes characters from the input, so fall back on the normal sentence splitter
+    # https://github.com/nipunsadvilkar/pySBD/issues/29
     if total_character_length_doc != total_character_length_segments:
         logging.warning("Warning: pysbd swallowed characters on %s", doc.text)
         return doc
@@ -58,6 +60,7 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
 
     # somtimes pysbd replace a space with a period making alignment difficult,
     # so fall back on the normal sentence splitter
+    # https://github.com/nipunsadvilkar/pySBD/issues/30
     if re.search(r'[a-zA-Z]\.[a-zA-Z]\.[a-zA-Z]', current_segment) is not None:
         logging.warning("Warning: pysbd may have replaced a space with a period on %s", doc.text)
         return doc
