@@ -31,7 +31,15 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
 
     @param doc: the spaCy document to be annotated with sentence boundaries
     """
-    segmenter = pysbd.Segmenter(language="en", clean=False)
+    # pysbd doesn't always like short strings
+    if len(doc) < 2:
+        return doc
+
+    # pysbd seems to have a bug or two, so fall back on the normal sentence splitter
+    try:
+        segmenter = pysbd.Segmenter(language="en", clean=False)
+    except:
+        return doc
     segments = merge_segments(segmenter.segment(doc.text))
 
     # pysbd splits raw text into sentences, so we have to do our best to align those
