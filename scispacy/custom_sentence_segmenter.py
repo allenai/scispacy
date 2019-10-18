@@ -39,6 +39,7 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     try:
         segmenter = pysbd.Segmenter(language="en", clean=False)
     except:
+        print("Warning: pysbd failed on {}".format(doc.text))
         return doc
     segments = merge_segments(segmenter.segment(doc.text))
 
