@@ -58,7 +58,7 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     segment_index = 0
     current_segment = segments[segment_index]
 
-    # somtimes pysbd replace a space with a period making alignment difficult,
+    # sometimes pysbd replace a space with a period making alignment difficult,
     # so fall back on the normal sentence splitter
     # https://github.com/nipunsadvilkar/pySBD/issues/30
     if re.search(r'[a-zA-Z]\.[a-zA-Z]\.[a-zA-Z]', current_segment) is not None:
