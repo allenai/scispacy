@@ -38,7 +38,7 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     # pysbd seems to have a bug or two, so fall back on the normal sentence splitter
     try:
         segmenter = pysbd.Segmenter(language="en", clean=False)
-    except:
+    except: # pylint: disable-msg=W0702
         print("Warning: pysbd failed on {}".format(doc.text))
         return doc
     segments = merge_segments(segmenter.segment(doc.text))
