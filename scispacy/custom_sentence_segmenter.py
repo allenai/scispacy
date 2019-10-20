@@ -67,7 +67,7 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
 
     built_up_sentence = ""
     for i, token in enumerate(doc):
-        if i == 0 and token.is_space:
+        if i == 0 and (token.is_space or token.text == '.'):
             token.is_sent_start = True
             continue
         if token.text.replace('\n', '').replace('\r', '') == '':
