@@ -37,13 +37,13 @@ def test_custom_segmentation(en_with_combined_rule_tokenizer_and_segmenter_fixtu
     assert sents == expected_sents
 
 def test_segmenter(en_with_combined_rule_tokenizer_and_segmenter_fixture):
-    # this text crashes pysbd
+    # this text used to crash pysbd
     text = r"Then, (S\{ℓ 1 , ℓ 2 }) ∪ {v} is a smaller power dominating set than S, which is a contradiction. Now consider the case in which v ∈ V is incident to exactly two leaves, ℓ 1 and ℓ 2 , and suppose there is a minimum power dominating set S of G such that {v, ℓ 1 , ℓ 2 } ∩ S = ∅."
     doc = en_with_combined_rule_tokenizer_and_segmenter_fixture(text)
     # this is really just testing that we handle the case where pysbd crashes
     assert len(list(doc.sents)) > 0
 
-    # this text crashes pysbd
+    # this text used to crash pysbd
     text = r"Note that by definition of J, for i ∈ J, S i can be chosen such that S i \{v} is a set realizing γ P (T i ). By Lemma 3.8, for i ∈ I ′ , S i can be chosen such that v does not need to perform a force. Suppose first that |I| ≤ 1 and |J| ≥ 1; we claim that k i=1 (S i \{v}) is a power dominating set of T . To see why, note that for each i ∈ J, the set S i \{v} will force all of V (T i ) in T , including v. Then for i ∈ I ′ , all components T i can be forced by the sets S i \{v}, i ∈ I ′ , since v is colored but does not need to perform a force in those components. Finally, if there is a component T i * , i * ∈ I, v will have a single uncolored neighbor at this step of the forcing process (which is in T i * ), and it can force this neighbor; since v is a leaf in T i * , this is the same as dominating its neighbor. Thus, S i * \{v} can power dominate T i * after all other components are colored."
     doc = en_with_combined_rule_tokenizer_and_segmenter_fixture(text)
     # this is really just testing that we handle the case where pysbd crashes
