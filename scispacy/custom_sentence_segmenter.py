@@ -1,9 +1,6 @@
 
 from typing import List
 
-import re
-import logging
-
 import pysbd
 
 
