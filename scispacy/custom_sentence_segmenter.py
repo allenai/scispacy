@@ -39,7 +39,6 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     # segments with spacy tokens
     segment_index = 0
     current_segment = segments[segment_index]
-
     built_up_sentence = ""
     for i, token in enumerate(doc):
         if i == 0 and (token.is_space or token.text == '.'):
