@@ -35,35 +35,13 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
 
     @param doc: the spaCy document to be annotated with sentence boundaries
     """
-    # pysbd seems to have a bug or two, so fall back on the normal sentence splitter
-    # https://github.com/nipunsadvilkar/pySBD/issues/31
-    try:
-        segmenter = pysbd.Segmenter(language="en", clean=False)
-        segments = segmenter.segment(doc.text)
-    except: # pylint: disable-msg=W0702
-        logging.warning("Warning: pysbd failed on %s", doc.text)
-        return doc
 
     segments = merge_segments(segments)
-    total_character_length_segments = sum([len(segment.replace(' ', '')) for segment in segments])
-    total_character_length_doc = len(doc.text_with_ws.replace(' ', '').replace('\n', '').replace('\r', ''))
-    # sometimes pysbd removes characters from the input, so fall back on the normal sentence splitter
-    # https://github.com/nipunsadvilkar/pySBD/issues/29
-    if total_character_length_doc != total_character_length_segments:
-        logging.warning("Warning: pysbd swallowed characters on %s", doc.text)
-        return doc
 
     # pysbd splits raw text into sentences, so we have to do our best to align those
     # segments with spacy tokens
     segment_index = 0
     current_segment = segments[segment_index]
-
-    # sometimes pysbd replace a space with a period making alignment difficult,
-    # so fall back on the normal sentence splitter
-    # https://github.com/nipunsadvilkar/pySBD/issues/30
-    if re.search(r'[a-zA-Z]\.[a-zA-Z]\.[a-zA-Z]', current_segment) is not None:
-        logging.warning("Warning: pysbd may have replaced a space with a period on %s", doc.text)
-        return doc
 
     built_up_sentence = ""
     for i, token in enumerate(doc):
@@ -81,11 +59,6 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
             built_up_sentence = token.text_with_ws
             segment_index += 1
             current_segment = segments[segment_index]
-            # somtimes pysbd replace a space with a period making alignment difficult,
-            # so fall back on the normal sentence splitter
-            if re.search(r'[a-zA-Z]\.[a-zA-Z]\.[a-zA-Z]', current_segment) is not None:
-                logging.warning("Warning pysbd may have replace a space with a period on %s", doc.text)
-                return doc
         else:
             built_up_sentence += token.text_with_ws
             token.is_sent_start = False
