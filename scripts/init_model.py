@@ -12,12 +12,11 @@ import plac
 from tqdm import tqdm
 import numpy
 from ast import literal_eval
-from pathlib import Path
 from preshed.counter import PreshCounter
 from wasabi import Printer
 
 from spacy.vectors import Vectors
-from spacy.errors import Errors, Warnings, user_warning
+from spacy.errors import Errors
 from spacy.util import ensure_path, get_lang_class
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
@@ -41,11 +40,13 @@ msg = Printer()
         prune_vectors=("optional: number of vectors to prune to",
                        "option", "V", int),
         min_word_frequency=("optional: Word frequency to prune vocab to.",
-                       "option", "mwf", int)
+                       "option", "mwf", int),
+        vectors_name=("optional: Name for the word vectors.",
+                       "option", "vn", str)
 )
 def init_model(lang, output_dir, freqs_loc=None,
                vectors_loc=None, no_expand_vectors=False,
-               meta_overrides=None, prune_vectors=-1, min_word_frequency=50):
+               meta_overrides=None, prune_vectors=-1, min_word_frequency=50, vectors_name = None):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
     and word vectors.
@@ -62,7 +63,7 @@ def init_model(lang, output_dir, freqs_loc=None,
         msg.fail("Can't find words frequencies file", freqs_loc, exits=1)
     probs, oov_prob = read_freqs(freqs_loc, min_freq=min_word_frequency) if freqs_loc is not None else ({}, -20)
     vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
-    nlp = create_model(lang, probs, oov_prob, vectors_data, vector_keys, not no_expand_vectors, prune_vectors)
+    nlp = create_model(lang, probs, oov_prob, vectors_data, vector_keys, not no_expand_vectors, prune_vectors, vectors_name)
 
     # Insert our custom tokenizer into the base model.
     nlp.tokenizer = combined_rule_tokenizer(nlp)
@@ -93,7 +94,7 @@ def open_file(loc):
     else:
         return loc.open('r', encoding='utf8')
 
-def create_model(lang, probs, oov_prob, vectors_data, vector_keys, expand_vectors, prune_vectors):
+def create_model(lang, probs, oov_prob, vectors_data, vector_keys, expand_vectors, prune_vectors, vectors_name):
     print("Creating model...")
     lang_class = get_lang_class(lang)
     nlp = lang_class()
@@ -124,9 +125,10 @@ def create_model(lang, probs, oov_prob, vectors_data, vector_keys, expand_vector
 
         if len(vectors_data):
             if expand_vectors:
-                nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
+                nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys, name=vectors_name)
             else:
-                nlp.vocab.vectors = Vectors(data=vectors_data[new_indices], keys=new_keys)
+                nlp.vocab.vectors = Vectors(data=vectors_data[new_indices], keys=new_keys, name=vectors_name)
+            nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
 
         if prune_vectors >= 1:
             nlp.vocab.prune_vectors(prune_vectors)
