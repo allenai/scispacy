@@ -15,7 +15,7 @@ from spacy import util
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 
-from scispacy.data_util import read_med_mentions, read_full_med_mentions, read_ner_from_tsv
+from scispacy.data_util import read_full_med_mentions, read_ner_from_tsv
 from scispacy.util import WhitespaceTokenizer
 from scispacy.per_class_scorer import PerClassScorer
 from scispacy.train_utils import evaluate_ner

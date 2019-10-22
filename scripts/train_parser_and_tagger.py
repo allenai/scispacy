@@ -85,7 +85,7 @@ def train_parser_and_tagger(train_json_path: str,
         meta["url"] = "allenai.org"
         meta["sources"] = ["OntoNotes 5", "Common Crawl", "GENIA 1.0"]
         meta["version"] = "1.0.0"
-        meta["spacy_version"] = ">=2.0.18"
+        meta["spacy_version"] = ">=2.2.1"
         meta["parent_package"] = "spacy"
         meta["email"] = "ai2-info@allenai.org"
 
