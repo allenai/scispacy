@@ -24,12 +24,14 @@ def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
     ]
     start_token_ids = [span[0].idx for span in char_spans if span is not None]
     for token in doc:
+        prev_token = token.nbor(-1) if token.i != 0 else None
         if token.idx in start_token_ids:
-            prev_token = token.nbor(-1).text if token.idx != 0 else None
-            if prev_token in ABBREVIATIONS:
+            if prev_token and prev_token.text in ABBREVIATIONS:
                 token.is_sent_start = False
             else:
                 token.is_sent_start = True
+        elif prev_token and prev_token.i != 0 and prev_token.text.count('\n') >= 2:
+            token.is_sent_start = True
         else:
             token.is_sent_start = False
     return doc
