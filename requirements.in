@@ -20,4 +20,4 @@ mypy
 twine
 
 # required for the tests to run, or to use the custom sentence splitter
-pysbd
+-e git://github.com/nipunsadvilkar/pySBD.git@sentence-char-span

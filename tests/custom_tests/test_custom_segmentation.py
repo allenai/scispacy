@@ -54,20 +54,3 @@ def test_segmenter(en_with_combined_rule_tokenizer_and_segmenter_fixture):
     doc = en_with_combined_rule_tokenizer_and_segmenter_fixture(text)
     # this is really just testing that we handle the case where pysbd crashes
     assert len(list(doc.sents)) > 0
-
-def test_merge_segment():
-    segments = ["This sentence mentions Eqs.", "1-4 and should not be split."]
-    merged_segments = merge_segments(segments)
-    assert len(merged_segments) == 1
-
-    segments = ["It also has a sentence before it.", "This sentence mentions Eqs.", "1-4 and should not be split.", "It also has another sentence after it."]
-    merged_segments = merge_segments(segments)
-    assert len(merged_segments) == 3
-
-    segments = ["This sentence ends with part an abbreviation that is part of a word material.", "It also has another sentence after it."]
-    merged_segments = merge_segments(segments)
-    assert len(merged_segments) == 2
-
-    segments = ["This sentence is the last segment and ends with an abbreviation that is part of a word material."]
-    merged_segments = merge_segments(segments)
-    assert len(merged_segments) == 1
