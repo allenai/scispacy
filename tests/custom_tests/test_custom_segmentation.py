@@ -1,7 +1,5 @@
 import pytest
 
-from scispacy.custom_sentence_segmenter import merge_segments
-
 TEST_CASES = [
               ("LSTM networks, which we preview in Sec. 2, have been successfully", ["LSTM networks, which we preview in Sec. 2, have been successfully"]),
               ("When the tree is simply a chain, both Eqs. 2–8 and Eqs. 9–14 reduce to the standard LSTM transitions, Eqs. 1.", ["When the tree is simply a chain, both Eqs. 2–8 and Eqs. 9–14 reduce to the standard LSTM transitions, Eqs. 1."]),
