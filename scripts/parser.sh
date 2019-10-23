@@ -27,11 +27,17 @@ if [[ -n "${ONTONOTES_PATH}" ]]; then
     --ontonotes_train_percent ${ONTONOTES_PERCENT}
 
 else
-  python scripts/train_parser_and_tagger.py \
-    --train_json_path ${GENIA_TRAIN} \
-    --dev_json_path ${GENIA_DEV} \
-    --test_json_path ${GENIA_TEST} \
-    --model_path ${MODEL_PATH} \
-    --model_output_dir ${OUT_PATH}
+  read -p "Training without ontonotes mixed in. Are you sure? (Y/y to continue) " -r
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
+    python scripts/train_parser_and_tagger.py \
+      --train_json_path ${GENIA_TRAIN} \
+      --dev_json_path ${GENIA_DEV} \
+      --test_json_path ${GENIA_TEST} \
+      --model_path ${MODEL_PATH} \
+      --model_output_dir ${OUT_PATH}
+  else
+    exit
+  fi
 fi
 
