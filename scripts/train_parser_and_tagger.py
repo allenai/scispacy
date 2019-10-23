@@ -105,7 +105,7 @@ def train_parser_and_tagger(train_json_path: str,
     train_mixture = train_docs
     if ontonotes_path:
         onto_train_docs = onto_train_corpus.train_docs(nlp)
-        onto_train_docs = list(onto_train_docs)
+        onto_train_docs = list([doc for doc in onto_train_docs if len(doc[0]) > 0])
         num_onto_docs = int(float(ontonotes_train_percent)*len(onto_train_docs))
         randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
         train_mixture += randomly_sampled_onto
@@ -129,7 +129,7 @@ def train_parser_and_tagger(train_json_path: str,
                 for batch in minibatches:
                     docs, golds = zip(*batch)
                     nlp.update(docs, golds, sgd=optimizer,
-                               drop=next(dropout_rates), losses=losses)
+                            drop=next(dropout_rates), losses=losses)
                     pbar.update(sum(len(doc) for doc in docs))
 
         # save intermediate model and output results on the dev set
@@ -152,7 +152,7 @@ def train_parser_and_tagger(train_json_path: str,
             cpu_wps = nwords/(end_time-start_time)
 
             if ontonotes_path:
-                onto_dev_docs = list(onto_train_corpus.dev_docs(nlp_loaded))
+                onto_dev_docs = list([doc for doc in onto_train_corpus.dev_docs(nlp_loaded) if len(doc[0]) > 0])
                 onto_scorer = nlp_loaded.evaluate(onto_dev_docs)
 
 
@@ -200,7 +200,7 @@ def train_parser_and_tagger(train_json_path: str,
         meta_fp.write(json.dumps(meta))
 
     if ontonotes_path:
-        onto_test_docs = list(onto_test_corpus.dev_docs(nlp_loaded))
+        onto_test_docs = list([doc for doc in onto_test_corpus.dev_docs(nlp_loaded) if len(doc[0]) > 0])
         print("Retrained ontonotes evaluation")
         scorer_onto_retrained = nlp_loaded.evaluate(onto_test_docs)
         print("Test results:")
