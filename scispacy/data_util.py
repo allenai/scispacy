@@ -1,4 +1,3 @@
-
 from typing import NamedTuple, List, Iterator, Dict, Tuple
 import tarfile
 import atexit
@@ -8,12 +7,14 @@ import tempfile
 
 from scispacy.file_cache import cached_path
 
+
 class MedMentionEntity(NamedTuple):
     start: int
     end: int
     mention_text: str
     mention_type: str
     umls_id: str
+
 
 class MedMentionExample(NamedTuple):
     title: str
@@ -40,9 +41,13 @@ def process_example(lines: List[str]) -> MedMentionExample:
     for entity_line in lines[2:]:
         _, start, end, mention, mention_type, umls_id = entity_line.split("\t")
         mention_type = mention_type.split(",")[0]
-        entities.append(MedMentionEntity(int(start), int(end),
-                                         mention, mention_type, umls_id))
-    return MedMentionExample(title, abstract, title + " " + abstract, pubmed_id, entities)
+        entities.append(
+            MedMentionEntity(int(start), int(end), mention, mention_type, umls_id)
+        )
+    return MedMentionExample(
+        title, abstract, title + " " + abstract, pubmed_id, entities
+    )
+
 
 def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
     """
@@ -61,12 +66,15 @@ def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
         if lines:
             yield process_example(lines)
 
-def select_subset_of_overlapping_chain(chain: List[Tuple[int, int, str]]) -> List[Tuple[int, int, str]]:
+
+def select_subset_of_overlapping_chain(
+    chain: List[Tuple[int, int, str]]
+) -> List[Tuple[int, int, str]]:
     """
     Select the subset of entities in an overlapping chain to return by greedily choosing the
     longest entity in the chain until there are no entities remaining
     """
-    sorted_chain = sorted(chain, key=lambda x: x[1]-x[0], reverse=True)
+    sorted_chain = sorted(chain, key=lambda x: x[1] - x[0], reverse=True)
     selections_from_chain: List[Tuple[int, int, str]] = []
     chain_index = 0
     # dump the current chain by greedily keeping the longest entity that doesn't overlap
@@ -87,8 +95,10 @@ def select_subset_of_overlapping_chain(chain: List[Tuple[int, int, str]]) -> Lis
 
     return selections_from_chain
 
-def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, int, str]]
-                                ) -> List[Tuple[int, int, str]]:
+
+def remove_overlapping_entities(
+    sorted_spacy_format_entities: List[Tuple[int, int, str]]
+) -> List[Tuple[int, int, str]]:
     """
     Removes overlapping entities from the entity set, by greedilytaking the longest
     entity from each overlapping chain. The input list of entities should be sorted
@@ -112,10 +122,16 @@ def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, in
             max_start = max(current_entity_start, current_overlapping_chain_start)
             if min_end - max_start > 0:
                 current_overlapping_chain.append(current_entity)
-                current_overlapping_chain_start = min(current_entity_start, current_overlapping_chain_start)
-                current_overlapping_chain_end = max(current_entity_end, current_overlapping_chain_end)
+                current_overlapping_chain_start = min(
+                    current_entity_start, current_overlapping_chain_start
+                )
+                current_overlapping_chain_end = max(
+                    current_entity_end, current_overlapping_chain_end
+                )
             else:
-                selections_from_chain = select_subset_of_overlapping_chain(current_overlapping_chain)
+                selections_from_chain = select_subset_of_overlapping_chain(
+                    current_overlapping_chain
+                )
 
                 current_overlapping_chain = []
                 spacy_format_entities_without_overlap.extend(selections_from_chain)
@@ -123,15 +139,19 @@ def remove_overlapping_entities(sorted_spacy_format_entities: List[Tuple[int, in
                 current_overlapping_chain_start = current_entity_start
                 current_overlapping_chain_end = current_entity_end
 
-    spacy_format_entities_without_overlap.extend(select_subset_of_overlapping_chain(current_overlapping_chain))
+    spacy_format_entities_without_overlap.extend(
+        select_subset_of_overlapping_chain(current_overlapping_chain)
+    )
 
     return sorted(spacy_format_entities_without_overlap, key=lambda x: x[0])
 
-def read_full_med_mentions(directory_path: str,
-                           label_mapping: Dict[str, str] = None,
-                           span_only: bool = False,
-                           spacy_format: bool = True):
 
+def read_full_med_mentions(
+    directory_path: str,
+    label_mapping: Dict[str, str] = None,
+    span_only: bool = False,
+    spacy_format: bool = True,
+):
     def _cleanup_dir(dir_path: str):
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)
@@ -140,8 +160,10 @@ def read_full_med_mentions(directory_path: str,
     if "tar.gz" in directory_path:
         # Extract dataset to temp dir
         tempdir = tempfile.mkdtemp()
-        print(f"extracting dataset directory {resolved_directory_path} to temp dir {tempdir}")
-        with tarfile.open(resolved_directory_path, 'r:gz') as archive:
+        print(
+            f"extracting dataset directory {resolved_directory_path} to temp dir {tempdir}"
+        )
+        with tarfile.open(resolved_directory_path, "r:gz") as archive:
             archive.extractall(tempdir)
         # Postpone cleanup until exit in case the unarchived
         # contents are needed outside this function.
@@ -149,19 +171,29 @@ def read_full_med_mentions(directory_path: str,
 
         resolved_directory_path = tempdir
 
-
-    expected_names = ["corpus_pubtator.txt",
-                      "corpus_pubtator_pmids_all.txt",
-                      "corpus_pubtator_pmids_dev.txt",
-                      "corpus_pubtator_pmids_test.txt",
-                      "corpus_pubtator_pmids_trng.txt"]
+    expected_names = [
+        "corpus_pubtator.txt",
+        "corpus_pubtator_pmids_all.txt",
+        "corpus_pubtator_pmids_dev.txt",
+        "corpus_pubtator_pmids_test.txt",
+        "corpus_pubtator_pmids_trng.txt",
+    ]
 
     corpus = os.path.join(resolved_directory_path, expected_names[0])
     examples = med_mentions_example_iterator(corpus)
 
-    train_ids = {x.strip() for x in open(os.path.join(resolved_directory_path, expected_names[4]))}
-    dev_ids = {x.strip() for x in open(os.path.join(resolved_directory_path, expected_names[2]))}
-    test_ids = {x.strip() for x in open(os.path.join(resolved_directory_path, expected_names[3]))}
+    train_ids = {
+        x.strip()
+        for x in open(os.path.join(resolved_directory_path, expected_names[4]))
+    }
+    dev_ids = {
+        x.strip()
+        for x in open(os.path.join(resolved_directory_path, expected_names[2]))
+    }
+    test_ids = {
+        x.strip()
+        for x in open(os.path.join(resolved_directory_path, expected_names[3]))
+    }
 
     train_examples = []
     dev_examples = []
@@ -176,8 +208,12 @@ def read_full_med_mentions(directory_path: str,
             return label_mapping[label]
 
     for example in examples:
-        spacy_format_entities = [(x.start, x.end, label_function(x.mention_type)) for x in example.entities]
-        spacy_format_entities = remove_overlapping_entities(sorted(spacy_format_entities, key=lambda x: x[0]))
+        spacy_format_entities = [
+            (x.start, x.end, label_function(x.mention_type)) for x in example.entities
+        ]
+        spacy_format_entities = remove_overlapping_entities(
+            sorted(spacy_format_entities, key=lambda x: x[0])
+        )
         spacy_example = (example.text, {"entities": spacy_format_entities})
         if example.pubmed_id in train_ids:
             train_examples.append(spacy_example if spacy_format else example)
@@ -191,7 +227,10 @@ def read_full_med_mentions(directory_path: str,
     return train_examples, dev_examples, test_examples
 
 
-SpacyNerExample = Tuple[str, Dict[str, List[Tuple[int, int, str]]]] # pylint: disable=invalid-name
+SpacyNerExample = Tuple[
+    str, Dict[str, List[Tuple[int, int, str]]]
+]  # pylint: disable=invalid-name
+
 
 def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:
     """
@@ -207,7 +246,7 @@ def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:
     for word, entity in examples:
         sent += word
         sent += " "
-        if entity != 'O':
+        if entity != "O":
             if in_entity:
                 pass
             else:
@@ -221,14 +260,14 @@ def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:
             in_entity = False
             entity_type = ""
             start_index = -1
-        current_index += (len(word) + 1)
+        current_index += len(word) + 1
     if in_entity:
         end_index = current_index - 1
         entities.append((start_index, end_index, entity_type))
 
     # Remove last space.
     sent = sent[:-1]
-    return (sent, {'entities': entities})
+    return (sent, {"entities": entities})
 
 
 def read_ner_from_tsv(filename: str) -> List[SpacyNerExample]:
@@ -258,7 +297,7 @@ def read_ner_from_tsv(filename: str) -> List[SpacyNerExample]:
     examples: List[Tuple[str, str]] = []
     for line in open(cached_path(filename)):
         line = line.strip()
-        if line.startswith('-DOCSTART-'):
+        if line.startswith("-DOCSTART-"):
             continue
         # We have reached the end of a sentence.
         if not line:

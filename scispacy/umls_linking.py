@@ -54,14 +54,17 @@ class UmlsEntityLinker:
         how many are nearest neighbours are found.
 
     """
-    def __init__(self,
-                 candidate_generator: CandidateGenerator = None,
-                 resolve_abbreviations: bool = True,
-                 k: int = 30,
-                 threshold: float = 0.7,
-                 no_definition_threshold: float = 0.95,
-                 filter_for_definitions: bool = True,
-                 max_entities_per_mention: int = 5):
+
+    def __init__(
+        self,
+        candidate_generator: CandidateGenerator = None,
+        resolve_abbreviations: bool = True,
+        k: int = 30,
+        threshold: float = 0.7,
+        no_definition_threshold: float = 0.95,
+        filter_for_definitions: bool = True,
+        max_entities_per_mention: int = 5,
+    ):
 
         Span.set_extension("umls_ents", default=[], force=True)
 
@@ -95,13 +98,15 @@ class UmlsEntityLinker:
             predicted = []
             for cand in candidates:
                 score = max(cand.similarities)
-                if (self.filter_for_definitions and
-                            self.umls.cui_to_entity[cand.concept_id].definition is None and
-                            score < self.no_definition_threshold):
+                if (
+                    self.filter_for_definitions
+                    and self.umls.cui_to_entity[cand.concept_id].definition is None
+                    and score < self.no_definition_threshold
+                ):
                     continue
                 if score > self.threshold:
                     predicted.append((cand.concept_id, score))
             sorted_predicted = sorted(predicted, reverse=True, key=lambda x: x[1])
-            mention._.umls_ents = sorted_predicted[:self.max_entities_per_mention]
+            mention._.umls_ents = sorted_predicted[: self.max_entities_per_mention]
 
         return doc

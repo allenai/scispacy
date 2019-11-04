@@ -2,18 +2,21 @@ from typing import NamedTuple, List, Dict, Deque, Any, Optional
 
 from scispacy.file_cache import cached_path
 
+
 class SemanticTypeNode(NamedTuple):
 
     type_id: str
     full_name: str
-    children: List[Any] # Mypy does not support nested types yet :(
+    children: List[Any]  # Mypy does not support nested types yet :(
     level: int
+
 
 class UmlsSemanticTypeTree:
     """
     A utility class for manipulating the UMLS Semantic Type Hierarchy.
     Designed to be constructed from a TSV file using `construct_umls_tree_from_tsv`.
     """
+
     def __init__(self, root: SemanticTypeNode) -> None:
         children = self.get_children(root)
         children.append(root)
@@ -69,12 +72,11 @@ class UmlsSemanticTypeTree:
         still present in the new fixed depth tree. This is effectively mapping to a _coarser_
         label space.
         """
-        new_type_id_map: Dict[str, str] = {k:k for k in self.type_id_to_node.keys()}
+        new_type_id_map: Dict[str, str] = {k: k for k in self.type_id_to_node.keys()}
         for node in self.get_nodes_at_depth(level):
             for child in self.get_children(node):
                 new_type_id_map[child.type_id] = node.type_id
         return new_type_id_map
-
 
 
 def construct_umls_tree_from_tsv(filepath: str) -> UmlsSemanticTypeTree:
@@ -92,7 +94,8 @@ def construct_umls_tree_from_tsv(filepath: str) -> UmlsSemanticTypeTree:
           Individual Behavior	T055	4
         Daily or Recreational Activity	T056	3
     """
-    from collections import deque # pylint: disable-msg=C0415
+    from collections import deque  # pylint: disable-msg=C0415
+
     node_stack: Deque[SemanticTypeNode] = deque()
     for line in open(cached_path(filepath), "r"):
         name, type_id, level = line.split("\t")
@@ -102,8 +105,7 @@ def construct_umls_tree_from_tsv(filepath: str) -> UmlsSemanticTypeTree:
 
         node_stack.append(node)
 
-    def attach_children(node: SemanticTypeNode,
-                        stack: Deque[SemanticTypeNode]):
+    def attach_children(node: SemanticTypeNode, stack: Deque[SemanticTypeNode]):
         while stack and stack[0].level > node.level:
             popped = stack.popleft()
             attach_children(popped, stack)

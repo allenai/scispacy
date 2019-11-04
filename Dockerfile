@@ -23,7 +23,7 @@ COPY requirements.in .
 COPY scispacy/ scispacy/
 COPY scripts/ scripts/
 COPY tests/ tests/
-COPY .pylintrc .
+COPY .flake8 .flake8
 
 RUN pip install -r requirements.in
 RUN python -m spacy download en_core_web_sm

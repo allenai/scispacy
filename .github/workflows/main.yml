@@ -16,6 +16,6 @@ jobs:
       run: |
         docker build --tag scispacy .
         docker run --rm scispacy pytest tests/
-        docker run --rm scispacy bash scripts/pylint.sh
+        docker run --rm scispacy flake8 scispacy
         docker run --rm scispacy bash scripts/mypy.sh
         docker run --rm scispacy pytest tests/ --cov scispacy --cov-fail-under=20

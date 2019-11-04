@@ -1,11 +1,12 @@
-
 from typing import Tuple, List, Optional, Set, Dict
 from collections import defaultdict
 from spacy.tokens import Span, Doc
 from spacy.matcher import Matcher
 
-def find_abbreviation(long_form_candidate: Span,
-                      short_form_candidate: Span) -> Tuple[Span, Optional[Span]]:
+
+def find_abbreviation(
+    long_form_candidate: Span, short_form_candidate: Span
+) -> Tuple[Span, Optional[Span]]:
     """
     Implements the abbreviation detection algorithm in "A simple algorithm
     for identifying abbreviation definitions in biomedical text.", (Schwartz & Hearst, 2003).
@@ -40,11 +41,18 @@ def find_abbreviation(long_form_candidate: Span,
             short_index -= 1
             continue
 
-                # Does the character match at this position? ...
-        while ((long_index >= 0 and long_form[long_index].lower() != current_char) or
-               # .... or if we are checking the first character of the abbreviation, we enforce
-               # to be the _starting_ character of a span.
-               (short_index == 0 and long_index > 0 and long_form[long_index -1].isalnum())):
+            # Does the character match at this position? ...
+        while (
+            (long_index >= 0 and long_form[long_index].lower() != current_char)
+            or
+            # .... or if we are checking the first character of the abbreviation, we enforce
+            # to be the _starting_ character of a span.
+            (
+                short_index == 0
+                and long_index > 0
+                and long_form[long_index - 1].isalnum()
+            )
+        ):
             long_index -= 1
 
         if long_index < 0:
@@ -70,8 +78,10 @@ def find_abbreviation(long_form_candidate: Span,
 
     return short_form_candidate, long_form_candidate[starting_index:]
 
-def filter_matches(matcher_output: List[Tuple[int, int, int]],
-                   doc: Doc) -> List[Tuple[Span, Span]]:
+
+def filter_matches(
+    matcher_output: List[Tuple[int, int, int]], doc: Doc
+) -> List[Tuple[Span, Span]]:
     # Filter into two cases:
     # 1. <Short Form> ( <Long Form> )
     # 2. <Long Form> (<Short Form>) [this case is most common].
@@ -85,18 +95,18 @@ def filter_matches(matcher_output: List[Tuple[int, int, int]],
         if end - start > 3:
             # Long form is inside the parens.
             # Take two words before.
-            short_form_candidate = doc[start - 3: start - 1]
+            short_form_candidate = doc[start - 3 : start - 1]
             if short_form_filter(short_form_candidate):
-                candidates.append((doc[start: end], short_form_candidate))
+                candidates.append((doc[start:end], short_form_candidate))
         else:
             # Normal case.
             # Short form is inside the parens.
             # Sum character lengths of contents of parens.
-            abbreviation_length = sum([len(x) for x in  doc[start: end]])
+            abbreviation_length = sum([len(x) for x in doc[start:end]])
             max_words = min(abbreviation_length + 5, abbreviation_length * 2)
             # Look up to max_words backwards
-            long_form_candidate = doc[max(start - max_words - 1, 0): start - 1]
-            candidates.append((long_form_candidate, doc[start: end]))
+            long_form_candidate = doc[max(start - max_words - 1, 0) : start - 1]
+            candidates.append((long_form_candidate, doc[start:end]))
     return candidates
 
 
@@ -108,6 +118,7 @@ def short_form_filter(span: Span) -> bool:
     if not any([x.is_alpha for x in span]):
         return False
     return True
+
 
 class AbbreviationDetector:
     """
@@ -121,12 +132,15 @@ class AbbreviationDetector:
 
     Note that this class does not replace the spans, or merge them.
     """
+
     def __init__(self, nlp) -> None:
         Doc.set_extension("abbreviations", default=[], force=True)
         Span.set_extension("long_form", default=None, force=True)
 
         self.matcher = Matcher(nlp.vocab)
-        self.matcher.add("parenthesis", None, [{'ORTH': '('}, {'OP': '+'}, {'ORTH': ')'}])
+        self.matcher.add(
+            "parenthesis", None, [{"ORTH": "("}, {"OP": "+"}, {"ORTH": ")"}]
+        )
         self.global_matcher = Matcher(nlp.vocab)
 
     def find(self, span: Span, doc: Doc) -> Tuple[Span, Set[Span]]:
@@ -144,7 +158,6 @@ class AbbreviationDetector:
         else:
             return abbreviations[0]
 
-
     def __call__(self, doc: Doc) -> Doc:
         matches = self.matcher(doc)
         matches_no_brackets = [(x[0], x[1] + 1, x[2] - 1) for x in matches]
@@ -157,9 +170,9 @@ class AbbreviationDetector:
                 doc._.abbreviations.append(short)
         return doc
 
-    def find_matches_for(self,
-                         filtered: List[Tuple[Span, Span]],
-                         doc: Doc) -> List[Tuple[Span, Set[Span]]]:
+    def find_matches_for(
+        self, filtered: List[Tuple[Span, Span]], doc: Doc
+    ) -> List[Tuple[Span, Set[Span]]]:
         rules = {}
         all_occurences: Dict[Span, Set[Span]] = defaultdict(set)
         already_seen_long: Set[str] = set()
@@ -180,11 +193,15 @@ class AbbreviationDetector:
                 all_occurences[long].add(short)
                 rules[long.string] = long
                 # Add a rule to a matcher to find exactly this substring.
-                self.global_matcher.add(long.string, None, [{"ORTH": x.text} for x in short])
+                self.global_matcher.add(
+                    long.string, None, [{"ORTH": x.text} for x in short]
+                )
         to_remove = set()
         global_matches = self.global_matcher(doc)
         for match, start, end in global_matches:
-            string_key = self.global_matcher.vocab.strings[match] # pylint: disable=no-member
+            string_key = self.global_matcher.vocab.strings[
+                match
+            ]  # pylint: disable=no-member
             to_remove.add(string_key)
             all_occurences[rules[string_key]].add(doc[start:end])
         for key in to_remove:

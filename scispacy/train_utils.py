@@ -1,5 +1,3 @@
-
-
 import json
 
 import tqdm
@@ -7,10 +5,10 @@ from spacy.language import Language
 
 from scispacy.per_class_scorer import PerClassScorer
 
-def evaluate_ner(nlp: Language,
-                 eval_data,
-                 dump_path: str = None,
-                 verbose: bool = False) -> PerClassScorer:
+
+def evaluate_ner(
+    nlp: Language, eval_data, dump_path: str = None, verbose: bool = False
+) -> PerClassScorer:
 
     scorer = PerClassScorer()
     print("Evaluating %d rows" % len(eval_data))
@@ -18,7 +16,9 @@ def evaluate_ner(nlp: Language,
 
         # parse dev data with trained model
         doc = nlp(text)
-        predicted_spans = [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents]
+        predicted_spans = [
+            (ent.start_char, ent.end_char, ent.label_) for ent in doc.ents
+        ]
         scorer(predicted_spans, gold_spans["entities"])
 
         if i % 1000 == 0 and i > 0:
