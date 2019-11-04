@@ -15,9 +15,9 @@ from scispacy.umls_utils import UmlsKnowledgeBase
 
 DEFAULT_PATHS = {
     "ann_index": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/nmslib_index.bin",
-    "tfidf_vectorizer": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectorizer.joblib",
-    "tfidf_umls_vectors": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectors_sparse.npz",
-    "concept_aliases_list": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/concept_aliases.json",
+    "tfidf_vectorizer": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectorizer.joblib", # noqa
+    "tfidf_umls_vectors": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectors_sparse.npz", # noqa
+    "concept_aliases_list": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/concept_aliases.json", # noqa
 }
 
 
@@ -334,7 +334,7 @@ def create_tfidf_ann_index(
         uml_concept_alias_tfidfs.sum(axis=1) != 0
     ).reshape(-1,)
     number_of_non_empty_tfidfs = sum(
-        empty_tfidfs_boolean_flags == False
+        empty_tfidfs_boolean_flags == False  # noqa: E712
     )  # pylint: disable=singleton-comparison
     total_number_of_tfidfs = numpy.size(uml_concept_alias_tfidfs, 0)
 
