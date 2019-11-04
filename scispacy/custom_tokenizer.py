@@ -1,12 +1,12 @@
 from typing import List
 
 from spacy.lang import char_classes
-from spacy.symbols import ORTH  # pylint: disable-msg=E0611,E0401
-from spacy.tokenizer import Tokenizer  # pylint: disable-msg=E0611,E0401
+from spacy.symbols import ORTH
+from spacy.tokenizer import Tokenizer
 from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 from spacy.language import Language
 
-from scispacy.consts import ABBREVIATIONS  # pylint: disable-msg=E0611,E0401
+from scispacy.consts import ABBREVIATIONS
 
 
 def remove_new_lines(text: str) -> str:

@@ -4,7 +4,7 @@ import pysbd
 
 from spacy.tokens import Doc
 
-from scispacy.consts import ABBREVIATIONS  # pylint: disable-msg=E0611,E0401
+from scispacy.consts import ABBREVIATIONS
 
 
 def merge_segments(segments: List[str]) -> List[str]:

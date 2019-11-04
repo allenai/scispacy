@@ -17,7 +17,7 @@ from spacy.language import Language
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 
-from scispacy.custom_tokenizer import combined_rule_tokenizer # pylint: disable=wrong-import-position
+from scispacy.custom_tokenizer import combined_rule_tokenizer
 
 def count_frequencies(language_class: Language, input_path: Path):
     """

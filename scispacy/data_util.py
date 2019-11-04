@@ -227,9 +227,7 @@ def read_full_med_mentions(
     return train_examples, dev_examples, test_examples
 
 
-SpacyNerExample = Tuple[
-    str, Dict[str, List[Tuple[int, int, str]]]
-]  # pylint: disable=invalid-name
+SpacyNerExample = Tuple[str, Dict[str, List[Tuple[int, int, str]]]]
 
 
 def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:

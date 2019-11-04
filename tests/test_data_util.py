@@ -1,4 +1,3 @@
-# pylint: disable=no-self-use,invalid-name
 import os
 import unittest
 import shutil

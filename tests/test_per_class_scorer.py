@@ -43,6 +43,6 @@ class TestPerClassScorer(unittest.TestCase):
         assert gold == original_gold
         assert predicted == original_predicted
         # Check reseting.
-        assert scorer._true_positives == {} # pylint: disable=protected-access
-        assert scorer._false_positives == {} # pylint: disable=protected-access
-        assert scorer._false_negatives == {} # pylint: disable=protected-access
+        assert scorer._true_positives == {}
+        assert scorer._false_positives == {}
+        assert scorer._false_negatives == {}
