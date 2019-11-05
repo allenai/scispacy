@@ -4,19 +4,26 @@ from typing import List
 import pysbd
 
 from spacy.tokens import Doc
+from pysbd.utils import TextSpan
 
 from scispacy.consts import ABBREVIATIONS  # pylint: disable-msg=E0611,E0401
 
 
-def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
-    """Adds sentence boundaries to a Doc. Intended to be used as a pipe in a spaCy pipeline.
-       New lines cannot be end of sentence tokens. New lines that separate sentences will be
-       added to the beginning of the next sentence.
+def pysbd_sentencizer(doc: Doc) -> Doc:
+    """Adds sentence boundaries to a Doc.
+    Intended to be used as a pipe in a spaCy pipeline.
+    Uses https://github.com/nipunsadvilkar/pySBD to get proper sentence and
+    respective char_spans
+
+    Handle special cases:
+    New lines cannot be end of sentence tokens.
+    New lines that separate sentences will be added to the
+    beginning of the next sentence.
 
     @param doc: the spaCy document to be annotated with sentence boundaries
     """
     segmenter = pysbd.Segmenter(language="en", clean=False, char_span=True)
-    sents_char_spans = segmenter.segment(doc.text)
+    sents_char_spans: List[TextSpan] = segmenter.segment(doc.text)
 
     char_spans = [
         doc.char_span(sent_span.start, sent_span.end)
