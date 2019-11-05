@@ -43,19 +43,3 @@ def pysbd_sentencizer(doc: Doc) -> Doc:
         else:
             token.is_sent_start = False
     return doc
-
-
-if __name__ == "__main__":
-    import spacy
-    from scispacy.custom_tokenizer import combined_rule_tokenizer, combined_rule_prefixes
-
-    nlp = spacy.blank('en')
-    nlp.tokenizer = combined_rule_tokenizer(nlp)
-    nlp.add_pipe(combined_rule_sentence_segmenter, first=True)
-    # text = "When the tree is simply a chain, both Eqs. 2–8 and Eqs. 9–14 reduce to the standard LSTM transitions, Eqs. 1."
-    # text = "First sentence with char in the middle.adjacent sentence to it."
-    text = 'How about tomorrow?We can meet at eden garden.'
-    doc = nlp(text)
-    for sent_id, sent in enumerate(doc.sents, start=1):
-        print(sent_id, repr(sent.text), sep='\t')
-    # expected_sents = ['\n\n2 Long Short-Term Memory Networks\n\n\n\n', '2.1 Overview\n\n', 'Recurrent neural networks (RNNs) are able to pr...put sequences of arbitrary length via the recursive application of a transition function on a hidden state vector ht.']
