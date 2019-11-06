@@ -26,8 +26,8 @@ def pysbd_sentencizer(doc: Doc) -> Doc:
     sents_char_spans: List[TextSpan] = segmenter.segment(doc.text)
 
     char_spans = [
-        doc.char_span(sent_span.start, sent_span.end)
-        for sent_span in sents_char_spans
+            doc.char_span(sent_span.start, sent_span.end)
+            for sent_span in sents_char_spans
     ]
     start_token_char_offsets = [span[0].idx for span in char_spans if span is not None]
     for token in doc:
