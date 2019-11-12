@@ -3,63 +3,41 @@ from typing import List
 import pysbd
 
 from spacy.tokens import Doc
+from pysbd.utils import TextSpan
 
 from scispacy.consts import ABBREVIATIONS
 
 
-def merge_segments(segments: List[str]) -> List[str]:
-    adjusted_segments: List[str] = []
-    temp_segment = ""
-    for segment in segments:
-        if temp_segment != "":
-            temp_segment += " "
-        temp_segment += segment
-        # add a space to each abbreviation so we only match it at the end of a sentence
-        if not segment.endswith(
-            tuple([" " + abbreviation for abbreviation in ABBREVIATIONS])
-        ):
-            adjusted_segments.append(temp_segment)
-            temp_segment = ""
+def pysbd_sentencizer(doc: Doc) -> Doc:
+    """Adds sentence boundaries to a Doc.
+    Intended to be used as a pipe in a spaCy pipeline.
+    Uses https://github.com/nipunsadvilkar/pySBD to get proper sentence and
+    respective char_spans
 
-    # on the off chance an abbreviation ends a sentence and is the end of the document, we just add that segment
-    if temp_segment != "":
-        adjusted_segments.append(temp_segment)
-    return adjusted_segments
-
-
-def combined_rule_sentence_segmenter(doc: Doc) -> Doc:
-    """Adds sentence boundaries to a Doc. Intended to be used as a pipe in a spaCy pipeline.
-       New lines cannot be end of sentence tokens. New lines that separate sentences will be
-       added to the beginning of the next sentence.
+    Handle special cases:
+    New lines cannot be end of sentence tokens.
+    New lines that separate sentences will be added to the
+    beginning of the next sentence.
 
     @param doc: the spaCy document to be annotated with sentence boundaries
     """
-    segmenter = pysbd.Segmenter(language="en", clean=False)
-    segments = segmenter.segment(doc.text)
-    segments = merge_segments(segments)
+    segmenter = pysbd.Segmenter(language="en", clean=False, char_span=True)
+    sents_char_spans: List[TextSpan] = segmenter.segment(doc.text)
 
-    # pysbd splits raw text into sentences, so we have to do our best to align those
-    # segments with spacy tokens
-    segment_index = 0
-    current_segment = segments[segment_index]
-    built_up_sentence = ""
-    for i, token in enumerate(doc):
-        if i == 0 and (token.is_space or token.text == "."):
+    char_spans = [
+        doc.char_span(sent_span.start, sent_span.end) for sent_span in sents_char_spans
+    ]
+    start_token_char_offsets = [span[0].idx for span in char_spans if span is not None]
+    for token in doc:
+        prev_token = token.nbor(-1) if token.i != 0 else None
+        if token.idx in start_token_char_offsets:
+            if prev_token and prev_token.text in ABBREVIATIONS:
+                token.is_sent_start = False
+            else:
+                token.is_sent_start = True
+        # check if previous token contains more than 2 newline chars
+        elif prev_token and prev_token.i != 0 and prev_token.text.count("\n") >= 2:
             token.is_sent_start = True
-            continue
-        if token.text.replace("\n", "").replace("\r", "") == "":
-            token.is_sent_start = False
-        elif len(built_up_sentence) >= len(current_segment):
-            token.is_sent_start = True
-
-            # handle the rare (impossible?) case where spacy tokenizes over a sentence boundary that
-            # pysbd finds
-            built_up_sentence = " " * int(len(built_up_sentence) - len(current_segment))
-            built_up_sentence = token.text_with_ws
-            segment_index += 1
-            current_segment = segments[segment_index]
         else:
-            built_up_sentence += token.text_with_ws
             token.is_sent_start = False
-
     return doc

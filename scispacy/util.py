@@ -2,7 +2,7 @@ import spacy
 from spacy.language import Language
 from spacy.tokens import Doc
 
-from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
+from scispacy.custom_sentence_segmenter import pysbd_sentencizer
 from scispacy.custom_tokenizer import combined_rule_tokenizer
 
 
@@ -13,7 +13,7 @@ def save_model(nlp: Language, output_path: str):
 def create_combined_rule_model() -> Language:
     nlp = spacy.load("en_core_web_sm")
     nlp.tokenizer = combined_rule_tokenizer(nlp)
-    nlp.add_pipe(combined_rule_sentence_segmenter, first=True)
+    nlp.add_pipe(pysbd_sentencizer, first=True)
     return nlp
 
 

@@ -9,12 +9,12 @@ import pytest
 import spacy
 from spacy.language import Language as SpacyModelType
 
-from scispacy.custom_sentence_segmenter import combined_rule_sentence_segmenter
+from scispacy.custom_sentence_segmenter import pysbd_sentencizer
 
 class TestWhitespace:
 
     if SpacyModelType.factories.get('combined_rule_sentence_segmenter', None) is None:
-        SpacyModelType.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: combined_rule_sentence_segmenter
+        SpacyModelType.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: pysbd_sentencizer
     nlp = spacy.load("scispacy/models/combined_all_model")
 
     @pytest.mark.parametrize('text', ["lorem ipsum"])

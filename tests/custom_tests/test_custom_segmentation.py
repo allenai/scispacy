@@ -1,7 +1,5 @@
 import pytest
 
-from scispacy.custom_sentence_segmenter import merge_segments
-
 TEST_CASES = [
               ("LSTM networks, which we preview in Sec. 2, have been successfully", ["LSTM networks, which we preview in Sec. 2, have been successfully"]),
               ("When the tree is simply a chain, both Eqs. 2–8 and Eqs. 9–14 reduce to the standard LSTM transitions, Eqs. 1.", ["When the tree is simply a chain, both Eqs. 2–8 and Eqs. 9–14 reduce to the standard LSTM transitions, Eqs. 1."]),
@@ -10,7 +8,7 @@ TEST_CASES = [
               ('In order to produce sentence representations that fully capture the semantics of natural language, order-insensitive models are insufficient due to their inability to account for differences in meaning as a result of differences in word order or syntactic structure (e.g., “cats climb trees” vs. “trees climb cats”).', ['In order to produce sentence representations that fully capture the semantics of natural language, order-insensitive models are insufficient due to their inability to account for differences in meaning as a result of differences in word order or syntactic structure (e.g., “cats climb trees” vs. “trees climb cats”).']),
               ("There is an average exact sparsity (fraction of zeros) of the hidden layers of 83.40% on MNIST and 72.00% on CIFAR10. Figure 3 (left) provides a better understanding of the influence of sparsity.", ["There is an average exact sparsity (fraction of zeros) of the hidden layers of 83.40% on MNIST and 72.00% on CIFAR10.", "Figure 3 (left) provides a better understanding of the influence of sparsity."]),
               ("Sparsity has become a concept of interest, not only in computational neuroscience and machine learning but also in statistics and signal processing (Candes and Tao, 2005). It was first introduced in computational neuroscience in the context of sparse coding in the visual system (Olshausen and Field, 1997).", ["Sparsity has become a concept of interest, not only in computational neuroscience and machine learning but also in statistics and signal processing (Candes and Tao, 2005).", "It was first introduced in computational neuroscience in the context of sparse coding in the visual system (Olshausen and Field, 1997)."]),
-              ("1) The first item. 2) The second item.", ["1) The first item.", "2) The second item."]),
+              pytest.param("1) The first item. 2) The second item.", ["1) The first item.", "2) The second item."], marks=pytest.mark.xfail),
               ("two of these stages (in areas V1 and V2 of visual cortex) (Lee et al., 2008), and that they", ["two of these stages (in areas V1 and V2 of visual cortex) (Lee et al., 2008), and that they"]),
               ("all neu-\nrons fire at", ["all neu-\nrons fire at"]),
               ("the support of the Defense Advanced Resarch Projects Agency (DARPA) Deep Exploration and Filtering of Text (DEFT) Program under Air Force Research Laboratory (AFRL) contract", ["the support of the Defense Advanced Resarch Projects Agency (DARPA) Deep Exploration and Filtering of Text (DEFT) Program under Air Force Research Laboratory (AFRL) contract"]),
@@ -33,7 +31,13 @@ TEST_CASES = [
             ("A mutant Tax protein deficient in transactivation of genes by the nuclear factor (NF)-kappaB pathway was unable to induce transcriptional activity of IL-1alpha promoter-CAT constructs, but was rescued by exogenous provision of p65/p50 NF-kappaB. We found that two IL-1alpha kappaB-like sites (positions -1,065 to -1,056 and +646 to +655) specifically formed a complex with NF-kappaB-containing nuclear extract from MT-2 cells and that NF-kappaB bound with higher affinity to the 3' NF-kappaB binding site than to the 5' NF-kappaB site.", ["A mutant Tax protein deficient in transactivation of genes by the nuclear factor (NF)-kappaB pathway was unable to induce transcriptional activity of IL-1alpha promoter-CAT constructs, but was rescued by exogenous provision of p65/p50 NF-kappaB.", "We found that two IL-1alpha kappaB-like sites (positions -1,065 to -1,056 and +646 to +655) specifically formed a complex with NF-kappaB-containing nuclear extract from MT-2 cells and that NF-kappaB bound with higher affinity to the 3' NF-kappaB binding site than to the 5' NF-kappaB site."]),
             pytest.param("Protein kinase C inhibitor staurosporine, but not cyclic nucleotide-dependent protein kinase inhibitor HA-1004, also dramatically reduced constitutive levels of nuclear NF kappa B. Finally, TPA addition to monocytes infected with HIV-1 inhibited HIV-1 replication, as determined by reverse transcriptase assays, in a concentration-dependent manner.", ["Protein kinase C inhibitor staurosporine, but not cyclic nucleotide-dependent protein kinase inhibitor HA-1004, also dramatically reduced constitutive levels of nuclear NF kappa B.", "Finally, TPA addition to monocytes infected with HIV-1 inhibited HIV-1 replication, as determined by reverse transcriptase assays, in a concentration-dependent manner."], marks=pytest.mark.xfail),
             ("There are p50.c-rel heterodimers were also detected bound to this sequence at early time points (7-16 h; early), and both remained active at later time points (40 h; late) after activation.", ["There are p50.c-rel heterodimers were also detected bound to this sequence at early time points (7-16 h; early), and both remained active at later time points (40 h; late) after activation."]),
-            ("PDBu + iono induced equally high IL-2 levels in both groups and, when stimulated with plate-bound anti-CD3 monoclonal antibody (mAb), the IL-2 secretion by neonatal cells was undetectable and adult cells produced low amounts of IL-2 (mean 331 +/- 86 pg/ml).", ["PDBu + iono induced equally high IL-2 levels in both groups and, when stimulated with plate-bound anti-CD3 monoclonal antibody (mAb), the IL-2 secretion by neonatal cells was undetectable and adult cells produced low amounts of IL-2 (mean 331 +/- 86 pg/ml)."])
+            ("This sentence mentions Eqs. 1-4 and should not be split.", ["This sentence mentions Eqs. 1-4 and should not be split."]),
+            ("This sentence ends with part an abbreviation that is part of a word material. It also has another sentence after it.", ["This sentence ends with part an abbreviation that is part of a word material.", "It also has another sentence after it."]),
+            ("It also has a sentence before it. This sentence mentions Eqs. 1-4 and should not be split. It also has another sentence after it.", ["It also has a sentence before it.", "This sentence mentions Eqs. 1-4 and should not be split.", "It also has another sentence after it."]),
+            ("This sentence is the last segment and ends with an abbreviation that is part of a word material.", ["This sentence is the last segment and ends with an abbreviation that is part of a word material."]),
+            ("PDBu + iono induced equally high IL-2 levels in both groups and, when stimulated with plate-bound anti-CD3 monoclonal antibody (mAb), the IL-2 secretion by neonatal cells was undetectable and adult cells produced low amounts of IL-2 (mean 331 +/- 86 pg/ml).", ["PDBu + iono induced equally high IL-2 levels in both groups and, when stimulated with plate-bound anti-CD3 monoclonal antibody (mAb), the IL-2 secretion by neonatal cells was undetectable and adult cells produced low amounts of IL-2 (mean 331 +/- 86 pg/ml)."]),
+            ("    This document starts with whitespaces. Next sentence.", ["    ", "This document starts with whitespaces.", "Next sentence."]),
+            pytest.param("How about tomorrow?We can meet at eden garden.", ["How about tomorrow?", "We can meet at eden garden."], marks=pytest.mark.xfail)
              ]
 
 @pytest.mark.parametrize('text,expected_sents', TEST_CASES)
@@ -54,20 +58,3 @@ def test_segmenter(en_with_combined_rule_tokenizer_and_segmenter_fixture):
     doc = en_with_combined_rule_tokenizer_and_segmenter_fixture(text)
     # this is really just testing that we handle the case where pysbd crashes
     assert len(list(doc.sents)) > 0
-
-def test_merge_segment():
-    segments = ["This sentence mentions Eqs.", "1-4 and should not be split."]
-    merged_segments = merge_segments(segments)
-    assert len(merged_segments) == 1
-
-    segments = ["It also has a sentence before it.", "This sentence mentions Eqs.", "1-4 and should not be split.", "It also has another sentence after it."]
-    merged_segments = merge_segments(segments)
-    assert len(merged_segments) == 3
-
-    segments = ["This sentence ends with part an abbreviation that is part of a word material.", "It also has another sentence after it."]
-    merged_segments = merge_segments(segments)
-    assert len(merged_segments) == 2
-
-    segments = ["This sentence is the last segment and ends with an abbreviation that is part of a word material."]
-    merged_segments = merge_segments(segments)
-    assert len(merged_segments) == 1

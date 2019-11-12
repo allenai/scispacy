@@ -156,7 +156,7 @@ class CandidateGenerator:
         - extend the list `neighbors` with `None`s in place of empty vectors.
         - return the extended list of neighbors and distances.
         """
-        empty_vectors_boolean_flags = numpy.array(vectors.sum(axis=1) != 0).reshape(-1,)
+        empty_vectors_boolean_flags = numpy.array(vectors.sum(axis=1) != 0).reshape(-1)
         empty_vectors_count = vectors.shape[0] - sum(empty_vectors_boolean_flags)
         if self.verbose:
             print(f"Number of empty vectors: {empty_vectors_count}")
@@ -332,7 +332,7 @@ def create_tfidf_ann_index(
     print(f"Finding empty (all zeros) tfidf vectors")
     empty_tfidfs_boolean_flags = numpy.array(
         uml_concept_alias_tfidfs.sum(axis=1) != 0
-    ).reshape(-1,)
+    ).reshape(-1)
     number_of_non_empty_tfidfs = sum(empty_tfidfs_boolean_flags == False)  # noqa: E712
     total_number_of_tfidfs = numpy.size(uml_concept_alias_tfidfs, 0)
 
