@@ -92,8 +92,9 @@ def test_vocab_dir():
 
 @pytest.fixture()
 def combined_all_model_fixture():
+
     if SpacyModelType.factories.get('pysbd_sentencizer', None) is None:
-        SpacyModelType.factories['pysbd_sentencizer'] = lambda nlp, **cfg: pysbd_sentencizer # pylint: disable=line-too-long
+        SpacyModelType.factories['pysbd_sentencizer'] = lambda nlp, **cfg: pysbd_sentencizer
     nlp = get_spacy_model('scispacy/models/combined_all_model', True, True, True,
                           with_custom_tokenizer=True,
                           with_sentence_segmenter=False)

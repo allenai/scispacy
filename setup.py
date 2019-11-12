@@ -53,7 +53,8 @@ setup(
     tests_require=[
         "pytest",
         "pytest-cov",
-        "pylint",
+        "flake8",
+        "black",
         "mypy"
         ],
     python_requires='>=3.6.0',

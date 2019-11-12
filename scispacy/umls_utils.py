@@ -3,7 +3,11 @@ import json
 from collections import defaultdict
 
 from scispacy.file_cache import cached_path
-from scispacy.umls_semantic_type_tree import UmlsSemanticTypeTree, construct_umls_tree_from_tsv
+from scispacy.umls_semantic_type_tree import (
+    UmlsSemanticTypeTree,
+    construct_umls_tree_from_tsv,
+)
+
 
 class UmlsEntity(NamedTuple):
 
@@ -21,13 +25,22 @@ class UmlsEntity(NamedTuple):
         rep = rep + f"Definition: {self.definition}\n"
         rep = rep + f"TUI(s): {', '.join(self.types)}\n"
         if num_aliases > 10:
-            rep = rep + f"Aliases (abbreviated, total: {num_aliases}): \n\t {', '.join(self.aliases[:10])}"
+            rep = (
+                rep
+                + f"Aliases (abbreviated, total: {num_aliases}): \n\t {', '.join(self.aliases[:10])}"
+            )
         else:
-            rep = rep + f"Aliases: (total: {num_aliases}): \n\t {', '.join(self.aliases)}"
+            rep = (
+                rep + f"Aliases: (total: {num_aliases}): \n\t {', '.join(self.aliases)}"
+            )
         return rep
 
-DEFAULT_UMLS_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2017_aa_cat0129.json"
+
+DEFAULT_UMLS_PATH = (
+    "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2017_aa_cat0129.json"
+)
 DEFAULT_UMLS_TYPES_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_semantic_type_tree.tsv"
+
 
 class UmlsKnowledgeBase:
 
@@ -43,7 +56,11 @@ class UmlsKnowledgeBase:
 
     """
 
-    def __init__(self, file_path: str = DEFAULT_UMLS_PATH, types_file_path: str = DEFAULT_UMLS_TYPES_PATH):
+    def __init__(
+        self,
+        file_path: str = DEFAULT_UMLS_PATH,
+        types_file_path: str = DEFAULT_UMLS_TYPES_PATH,
+    ):
         raw = json.load(open(cached_path(file_path)))
 
         alias_to_cuis: Dict[str, Set[str]] = defaultdict(set)
@@ -57,11 +74,14 @@ class UmlsKnowledgeBase:
             self.cui_to_entity[concept["concept_id"]] = UmlsEntity(**concept)
 
         self.alias_to_cuis: Dict[str, Set[str]] = {**alias_to_cuis}
-        self.semantic_type_tree: UmlsSemanticTypeTree = construct_umls_tree_from_tsv(types_file_path)
+        self.semantic_type_tree: UmlsSemanticTypeTree = construct_umls_tree_from_tsv(
+            types_file_path
+        )
 
 
 # preferred definition sources (from S2)
-DEF_SOURCES_PREFERRED = {'NCI_BRIDG', 'NCI_NCI-GLOSS', 'NCI', 'GO', 'MSH', 'NCI_FDA'}
+DEF_SOURCES_PREFERRED = {"NCI_BRIDG", "NCI_NCI-GLOSS", "NCI", "GO", "MSH", "NCI_FDA"}
+
 
 def read_umls_file_headers(meta_path: str, filename: str) -> List[str]:
     """
@@ -79,16 +99,19 @@ def read_umls_file_headers(meta_path: str, filename: str) -> List[str]:
     Returns:
         a list of column names
     """
-    file_descriptors = f'{meta_path}/MRFILES.RRF'  # to get column names
+    file_descriptors = f"{meta_path}/MRFILES.RRF"  # to get column names
     with open(file_descriptors) as fin:
         for line in fin:
-            splits = line.split('|')
+            splits = line.split("|")
             found_filename = splits[0]
-            column_names = (splits[2] + ',').split(',')  # ugly hack because all files end with an empty column
+            column_names = (splits[2] + ",").split(
+                ","
+            )  # ugly hack because all files end with an empty column
             if found_filename in filename:
                 return column_names
-    assert False, f'Couldn\'t find column names for file {filename}'
+    assert False, f"Couldn't find column names for file {filename}"
     return None
+
 
 def read_umls_concepts(meta_path: str, concept_details: Dict):
     """
@@ -108,30 +131,43 @@ def read_umls_concepts(meta_path: str, concept_details: Dict):
         meta_path: path to the META directory of an UMLS release
         concept_details: a dictionary to be filled with concept informations
     """
-    concepts_filename = 'MRCONSO.RRF'
+    concepts_filename = "MRCONSO.RRF"
     headers = read_umls_file_headers(meta_path, concepts_filename)
-    with open(f'{meta_path}/{concepts_filename}') as fin:
+    with open(f"{meta_path}/{concepts_filename}") as fin:
         for line in fin:
-            splits = line.strip().split('|')
+            splits = line.strip().split("|")
             assert len(headers) == len(splits), (headers, splits)
             concept = dict(zip(headers, splits))
-            if concept['LAT'] != 'ENG' or concept['SUPPRESS'] != 'N':
+            if concept["LAT"] != "ENG" or concept["SUPPRESS"] != "N":
                 continue  # Keep English non-suppressed concepts only
 
-            concept_id = concept['CUI']
+            concept_id = concept["CUI"]
             if concept_id not in concept_details:  # a new concept
                 # add it to the dictionary with an empty list of aliases and types
-                concept_details[concept_id] = {'concept_id': concept_id, 'aliases': [], 'types': []}
+                concept_details[concept_id] = {
+                    "concept_id": concept_id,
+                    "aliases": [],
+                    "types": [],
+                }
 
-            concept_name = concept['STR']
+            concept_name = concept["STR"]
             # this condition is copied from S2. It checks if the concept name is canonical or not
-            is_canonical = concept['ISPREF'] == 'Y' and concept['TS'] == 'P' and concept['STT'] == 'PF'
+            is_canonical = (
+                concept["ISPREF"] == "Y"
+                and concept["TS"] == "P"
+                and concept["STT"] == "PF"
+            )
 
-            if not is_canonical or 'canonical_name' in concept_details[concept_id]:
+            if not is_canonical or "canonical_name" in concept_details[concept_id]:
                 # not a canonical name or a canonical name already found
-                concept_details[concept_id]['aliases'].append(concept_name)  # add it as an alias
+                concept_details[concept_id]["aliases"].append(
+                    concept_name
+                )  # add it as an alias
             else:
-                concept_details[concept_id]['canonical_name'] = concept_name  # set as canonical name
+                concept_details[concept_id][
+                    "canonical_name"
+                ] = concept_name  # set as canonical name
+
 
 def read_umls_types(meta_path: str, concept_details: Dict):
     """
@@ -146,17 +182,20 @@ def read_umls_types(meta_path: str, concept_details: Dict):
         meta_path: path to the META directory of an UMLS release
         concept_details: a dictionary to be filled with concept informations
     """
-    types_filename = 'MRSTY.RRF'
+    types_filename = "MRSTY.RRF"
     headers = read_umls_file_headers(meta_path, types_filename)
-    with open(f'{meta_path}/{types_filename}') as fin:
+    with open(f"{meta_path}/{types_filename}") as fin:
         for line in fin:
-            splits = line.strip().split('|')
+            splits = line.strip().split("|")
             assert len(headers) == len(splits)
             concept_type = dict(zip(headers, splits))
 
-            concept = concept_details.get(concept_type['CUI'])
-            if concept is not None:  # a small number of types are for concepts that don't exist
-                concept['types'].append(concept_type['TUI'])
+            concept = concept_details.get(concept_type["CUI"])
+            if (
+                concept is not None
+            ):  # a small number of types are for concepts that don't exist
+                concept["types"].append(concept_type["TUI"])
+
 
 def read_umls_definitions(meta_path: str, concept_details: Dict):
     """
@@ -171,23 +210,30 @@ def read_umls_definitions(meta_path: str, concept_details: Dict):
         meta_path: path to the META directory of an UMLS release
         concept_details: a dictionary to be filled with concept informations
     """
-    definitions_filename = 'MRDEF.RRF'
+    definitions_filename = "MRDEF.RRF"
     headers = read_umls_file_headers(meta_path, definitions_filename)
-    with open(f'{meta_path}/{definitions_filename}') as fin:
+    with open(f"{meta_path}/{definitions_filename}") as fin:
         headers = read_umls_file_headers(meta_path, definitions_filename)
         for line in fin:
-            splits = line.strip().split('|')
+            splits = line.strip().split("|")
             assert len(headers) == len(splits)
             definition = dict(zip(headers, splits))
 
-            if definition['SUPPRESS'] != 'N':
+            if definition["SUPPRESS"] != "N":
                 continue
-            is_from_preferred_source = definition['SAB'] in DEF_SOURCES_PREFERRED
-            concept = concept_details.get(definition['CUI'])
-            if concept is None:  # a small number of definitions are for concepts that don't exist
+            is_from_preferred_source = definition["SAB"] in DEF_SOURCES_PREFERRED
+            concept = concept_details.get(definition["CUI"])
+            if (
+                concept is None
+            ):  # a small number of definitions are for concepts that don't exist
                 continue
 
-            if 'definition' not in concept or  \
-                is_from_preferred_source and concept['is_from_preferred_source'] == 'N':
-                concept['definition'] = definition['DEF']
-                concept['is_from_preferred_source'] = 'Y' if is_from_preferred_source else 'N'
+            if (
+                "definition" not in concept
+                or is_from_preferred_source
+                and concept["is_from_preferred_source"] == "N"
+            ):
+                concept["definition"] = definition["DEF"]
+                concept["is_from_preferred_source"] = (
+                    "Y" if is_from_preferred_source else "N"
+                )

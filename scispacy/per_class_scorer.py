@@ -1,19 +1,20 @@
-
 from typing import Dict, List, Tuple, Set
 from collections import defaultdict
 import copy
 
-class PerClassScorer:
 
+class PerClassScorer:
     def __init__(self):
         # These will hold per label span counts.
         self._true_positives: Dict[str, int] = defaultdict(int)
         self._false_positives: Dict[str, int] = defaultdict(int)
         self._false_negatives: Dict[str, int] = defaultdict(int)
 
-    def __call__(self,
-                 predicted_spans: List[Tuple[int, int, str]],
-                 gold_spans: List[Tuple[int, int, str]]) -> None:
+    def __call__(
+        self,
+        predicted_spans: List[Tuple[int, int, str]],
+        gold_spans: List[Tuple[int, int, str]],
+    ) -> None:
 
         gold_spans = copy.copy(gold_spans)
         predicted_spans = copy.copy(predicted_spans)
@@ -55,9 +56,11 @@ class PerClassScorer:
         all_tags.update(self._false_negatives.keys())
         all_metrics = {}
         for tag in all_tags:
-            precision, recall, f1_measure = self._compute_metrics(self._true_positives[tag],
-                                                                  self._false_positives[tag],
-                                                                  self._false_negatives[tag])
+            precision, recall, f1_measure = self._compute_metrics(
+                self._true_positives[tag],
+                self._false_positives[tag],
+                self._false_negatives[tag],
+            )
             precision_key = "precision" + "-" + tag
             recall_key = "recall" + "-" + tag
             f1_key = "f1-measure" + "-" + tag
@@ -66,12 +69,18 @@ class PerClassScorer:
             all_metrics[f1_key] = f1_measure
 
         # Compute the precision, recall and f1 for all spans jointly.
-        sum_true_positives = sum({v for k, v  in self._true_positives.items() if k != "untyped"})
-        sum_false_positives = sum({v for k, v in self._false_positives.items() if k != "untyped"})
-        sum_false_negatives = sum({v for k, v in self._false_negatives.items() if k != "untyped"})
-        precision, recall, f1_measure = self._compute_metrics(sum_true_positives,
-                                                              sum_false_positives,
-                                                              sum_false_negatives)
+        sum_true_positives = sum(
+            {v for k, v in self._true_positives.items() if k != "untyped"}
+        )
+        sum_false_positives = sum(
+            {v for k, v in self._false_positives.items() if k != "untyped"}
+        )
+        sum_false_negatives = sum(
+            {v for k, v in self._false_negatives.items() if k != "untyped"}
+        )
+        precision, recall, f1_measure = self._compute_metrics(
+            sum_true_positives, sum_false_positives, sum_false_negatives
+        )
         all_metrics["precision-overall"] = precision
         all_metrics["recall-overall"] = recall
         all_metrics["f1-measure-overall"] = f1_measure
@@ -80,10 +89,14 @@ class PerClassScorer:
         return all_metrics
 
     @staticmethod
-    def _compute_metrics(true_positives: int, false_positives: int, false_negatives: int):
-        precision = float(true_positives) / float(true_positives + false_positives + 1e-13)
+    def _compute_metrics(
+        true_positives: int, false_positives: int, false_negatives: int
+    ):
+        precision = float(true_positives) / float(
+            true_positives + false_positives + 1e-13
+        )
         recall = float(true_positives) / float(true_positives + false_negatives + 1e-13)
-        f1_measure = 2. * ((precision * recall) / (precision + recall + 1e-13))
+        f1_measure = 2.0 * ((precision * recall) / (precision + recall + 1e-13))
         return precision, recall, f1_measure
 
     def reset(self):

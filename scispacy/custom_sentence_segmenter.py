@@ -1,4 +1,3 @@
-
 from typing import List
 
 import pysbd
@@ -6,7 +5,7 @@ import pysbd
 from spacy.tokens import Doc
 from pysbd.utils import TextSpan
 
-from scispacy.consts import ABBREVIATIONS  # pylint: disable-msg=E0611,E0401
+from scispacy.consts import ABBREVIATIONS
 
 
 def pysbd_sentencizer(doc: Doc) -> Doc:
@@ -26,8 +25,7 @@ def pysbd_sentencizer(doc: Doc) -> Doc:
     sents_char_spans: List[TextSpan] = segmenter.segment(doc.text)
 
     char_spans = [
-            doc.char_span(sent_span.start, sent_span.end)
-            for sent_span in sents_char_spans
+        doc.char_span(sent_span.start, sent_span.end) for sent_span in sents_char_spans
     ]
     start_token_char_offsets = [span[0].idx for span in char_spans if span is not None]
     for token in doc:
@@ -38,7 +36,7 @@ def pysbd_sentencizer(doc: Doc) -> Doc:
             else:
                 token.is_sent_start = True
         # check if previous token contains more than 2 newline chars
-        elif prev_token and prev_token.i != 0 and prev_token.text.count('\n') >= 2:
+        elif prev_token and prev_token.i != 0 and prev_token.text.count("\n") >= 2:
             token.is_sent_start = True
         else:
             token.is_sent_start = False

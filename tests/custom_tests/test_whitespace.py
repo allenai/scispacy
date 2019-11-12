@@ -14,7 +14,7 @@ from scispacy.custom_sentence_segmenter import pysbd_sentencizer
 class TestWhitespace:
 
     if SpacyModelType.factories.get('combined_rule_sentence_segmenter', None) is None:
-        SpacyModelType.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: pysbd_sentencizer # pylint: disable=line-too-long
+        SpacyModelType.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: pysbd_sentencizer
     nlp = spacy.load("scispacy/models/combined_all_model")
 
     @pytest.mark.parametrize('text', ["lorem ipsum"])
