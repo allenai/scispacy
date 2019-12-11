@@ -4,6 +4,10 @@ layout: default
 
 **scispaCy is a Python package containing [spaCy](https://spacy.io/) models for processing _biomedical_, _scientific_ or _clinical_ text.**
 
+
+## Interactive Demo
+Just looking to test out the models on your data? Check out our [demo](https://scispacy.apps.allenai.org).
+
 ## Installing
 ```python
 pip install scispacy

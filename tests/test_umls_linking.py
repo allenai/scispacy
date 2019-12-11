@@ -23,6 +23,7 @@ class TestUmlsLinker(unittest.TestCase):
     def test_naive_entity_linking(self):
         text = "There was a lot of Dipalmitoylphosphatidylcholine."
         doc = self.nlp(text)
+        doc.ents = (doc[5:6],)
 
         # Check that the linker returns nothing if we set the filter_for_definitions flag
         # and set the threshold very high for entities without definitions.
