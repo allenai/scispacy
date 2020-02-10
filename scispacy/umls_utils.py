@@ -15,6 +15,7 @@ class UmlsEntity(NamedTuple):
     canonical_name: str
     aliases: List[str]
     types: List[str]
+    codes: Dict[str, List[str]]
     definition: Optional[str] = None
 
     def __repr__(self):
@@ -148,6 +149,7 @@ def read_umls_concepts(meta_path: str, concept_details: Dict):
                     "concept_id": concept_id,
                     "aliases": [],
                     "types": [],
+                    "codes": defaultdict(list)
                 }
 
             concept_name = concept["STR"]
@@ -168,6 +170,7 @@ def read_umls_concepts(meta_path: str, concept_details: Dict):
                     "canonical_name"
                 ] = concept_name  # set as canonical name
 
+            concept_details[concept_id]['codes'][concept["SAB"]].append(concept["CODE"])
 
 def read_umls_types(meta_path: str, concept_details: Dict):
     """
