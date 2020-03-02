@@ -104,3 +104,13 @@ class TestAbbreviationDetector(unittest.TestCase):
         doc = self.nlp(text)
         doc2 = self.detector(doc)
         assert len(doc2._.abbreviations) == 0
+        
+    def test_issue_192(self):
+        # test for <short> (<long>) pattern
+        text = "blah SBMA (Spinal and bulbar muscular atrophy)"
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+
+        assert len(doc2._.abbreviations) == 1
+        assert doc2._.abbreviations[0] == doc[1:2]
+        assert doc2._.abbreviations[0]._.long_form == doc[3:8]

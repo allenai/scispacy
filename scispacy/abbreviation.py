@@ -94,8 +94,8 @@ def filter_matches(
             continue
         if end - start > 3:
             # Long form is inside the parens.
-            # Take two words before.
-            short_form_candidate = doc[start - 3 : start - 1]
+            # Take one word before.
+            short_form_candidate = doc[start - 2 : start - 1]
             if short_form_filter(short_form_candidate):
                 candidates.append((doc[start:end], short_form_candidate))
         else:
