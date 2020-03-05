@@ -87,15 +87,11 @@ def test_model_dir():
     return os.path.join("tests", "custom_tests", "data_fixtures", "tmp_model_dir")
 
 @pytest.fixture()
-def test_vocab_dir():
-    return os.path.join("SciSpaCy", "models", "combined_all_model", "vocab")
-
-@pytest.fixture()
 def combined_all_model_fixture():
 
     if SpacyModelType.factories.get('pysbd_sentencizer', None) is None:
         SpacyModelType.factories['pysbd_sentencizer'] = lambda nlp, **cfg: pysbd_sentencizer
-    nlp = get_spacy_model('scispacy/models/combined_all_model', True, True, True,
+    nlp = get_spacy_model('en_core_sci_sm', True, True, True,
                           with_custom_tokenizer=True,
                           with_sentence_segmenter=False)
     return nlp
