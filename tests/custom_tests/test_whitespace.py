@@ -15,7 +15,7 @@ class TestWhitespace:
 
     if SpacyModelType.factories.get('combined_rule_sentence_segmenter', None) is None:
         SpacyModelType.factories['combined_rule_sentence_segmenter'] = lambda nlp, **cfg: pysbd_sentencizer
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load("en_core_sci_sm")
 
     @pytest.mark.parametrize('text', ["lorem ipsum"])
     def test_tokenizer_splits_single_space(self, text):
