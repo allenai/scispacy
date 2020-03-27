@@ -107,7 +107,7 @@ def filter_matches(
             max_words = min(abbreviation_length + 5, abbreviation_length * 2)
             # Look up to max_words backwards
             long_form_candidate = doc[max(start - max_words - 1, 0) : start - 1]
-        
+
         # add candidate to candidates if candidates pass filters
         if short_form_filter(short_form_candidate):
             candidates.append((long_form_candidate, short_form_candidate))
@@ -116,7 +116,6 @@ def filter_matches(
 
 
 def short_form_filter(span: Span) -> bool:
-    print(f"Span in short form filter: {span}")
     # All words are between length 2 and 10
     if not all([2 <= len(x) < 10 for x in span]):
         return False
@@ -171,15 +170,9 @@ class AbbreviationDetector:
 
     def __call__(self, doc: Doc) -> Doc:
         matches = self.matcher(doc)
-        print(f"Matches: {[doc[match[1]:match[2]] for match in matches]}")
         matches_no_brackets = [(x[0], x[1] + 1, x[2] - 1) for x in matches]
-        print(
-            f"Matches no brackets: {[doc[match[1]:match[2]] for match in matches_no_brackets]}"
-        )
         filtered = filter_matches(matches_no_brackets, doc)
-        print(f"Filtered: {filtered}")
         occurences = self.find_matches_for(filtered, doc)
-        print(f"Occurrences: {occurences}")
 
         for (long_form, short_forms) in occurences:
             for short in short_forms:
