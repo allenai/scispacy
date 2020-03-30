@@ -96,26 +96,36 @@ def filter_matches(
             # Long form is inside the parens.
             # Take one word before.
             short_form_candidate = doc[start - 2 : start - 1]
-            if short_form_filter(short_form_candidate):
-                candidates.append((doc[start:end], short_form_candidate))
+            long_form_candidate = doc[start:end]
         else:
             # Normal case.
             # Short form is inside the parens.
+            short_form_candidate = doc[start:end]
+
             # Sum character lengths of contents of parens.
-            abbreviation_length = sum([len(x) for x in doc[start:end]])
+            abbreviation_length = sum([len(x) for x in short_form_candidate])
             max_words = min(abbreviation_length + 5, abbreviation_length * 2)
             # Look up to max_words backwards
             long_form_candidate = doc[max(start - max_words - 1, 0) : start - 1]
-            candidates.append((long_form_candidate, doc[start:end]))
+
+        # add candidate to candidates if candidates pass filters
+        if short_form_filter(short_form_candidate):
+            candidates.append((long_form_candidate, short_form_candidate))
+
     return candidates
 
 
 def short_form_filter(span: Span) -> bool:
     # All words are between length 2 and 10
-    if not all([2 < len(x) < 10 for x in span]):
+    if not all([2 <= len(x) < 10 for x in span]):
         return False
-    # At least one word is alpha numeric
-    if not any([x.is_alpha for x in span]):
+
+    # At least 50% of the short form should be alpha
+    if (sum([c.isalpha() for c in span.text]) / len(span.text)) < 0.5:
+        return False
+
+    # The first character of the short form should be alpha
+    if not span.text[0].isalpha():
         return False
     return True
 

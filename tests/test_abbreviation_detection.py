@@ -1,10 +1,15 @@
 import unittest
 import spacy
+import pytest
 
-from scispacy.abbreviation import AbbreviationDetector, find_abbreviation, filter_matches
+from scispacy.abbreviation import (
+    AbbreviationDetector,
+    find_abbreviation,
+    filter_matches,
+)
+
 
 class TestAbbreviationDetector(unittest.TestCase):
-
     def setUp(self):
         super().setUp()
         self.nlp = spacy.load("en_core_web_sm")
@@ -53,11 +58,11 @@ class TestAbbreviationDetector(unittest.TestCase):
     def test_filter_matches(self):
         doc = self.nlp(self.text)
         matches = self.detector.matcher(doc)
-        matches_no_brackets = [(x[0], x[1] + 1, x[2] -1) for x in matches]
+        matches_no_brackets = [(x[0], x[1] + 1, x[2] - 1) for x in matches]
         filtered = filter_matches(matches_no_brackets, doc)
 
         assert len(filtered) == 2
-        long, short  = filtered[0]
+        long, short = filtered[0]
         assert long.string == "Spinal and bulbar muscular atrophy "
         assert short.string == "SBMA"
         long, short = filtered[1]
@@ -71,7 +76,7 @@ class TestAbbreviationDetector(unittest.TestCase):
         doc2 = self.detector(doc)
         assert len(doc2._.abbreviations) == 3
 
-        correct  = set()
+        correct = set()
         span = doc[33:34]
         span._.long_form = doc[0:5]
         correct.add(span)
@@ -97,14 +102,16 @@ class TestAbbreviationDetector(unittest.TestCase):
         assert shorts == set()
 
     def test_issue_158(self):
-        text = "The PVO observations showed that the total transterminator flux "\
-               "was 23% of that at solar maximum and that the largest reductions in the "\
-               "number of ions transported antisunward occurred at the highest altitudes "\
-               "(Spenner et al., 1995)."
+        text = (
+            "The PVO observations showed that the total transterminator flux "
+            "was 23% of that at solar maximum and that the largest reductions in the "
+            "number of ions transported antisunward occurred at the highest altitudes "
+            "(Spenner et al., 1995)."
+        )
         doc = self.nlp(text)
         doc2 = self.detector(doc)
         assert len(doc2._.abbreviations) == 0
-        
+
     def test_issue_192(self):
         # test for <short> (<long>) pattern
         text = "blah SBMA (Spinal and bulbar muscular atrophy)"
@@ -114,3 +121,59 @@ class TestAbbreviationDetector(unittest.TestCase):
         assert len(doc2._.abbreviations) == 1
         assert doc2._.abbreviations[0] == doc[1:2]
         assert doc2._.abbreviations[0]._.long_form == doc[3:8]
+
+    def test_issue_161(self):
+        # test some troublesome cases in the abbreviation detector
+        text = "H2)]+(14)s.t. (1), (4).Similarly"
+        print(f"Text: {text}")
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0
+
+        text = ".(21)In (21), λ"
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0
+
+        text = "map expX (·) : R"
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0
+
+        text = "0,(3)with the following data: (3-i) (q̄"
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0
+
+        text = "Φg(h),ThΦg(v) ) , (h, v)"
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0
+
+        text = "dimension;(S-iii) The optimal control problem obtained in (S-ii) is con-verted"
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0
+
+        text = "z), πut (z)) )"
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0
+
+        text = "repositories he/she already worked with or from previous collaborators. Nevertheless, 88% of the first action of users to a repository (repository discovery) is"
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0
+
+        @pytest.mark.xfail
+        def test_difficult_cases(self):
+            # Don't see an obvious way of solving these. They require something more semantic to distinguish
+            text = "is equivalent to (iv) of Theorem"
+            doc = self.nlp(text)
+            doc2 = self.detector(doc)
+            assert len(doc2._.abbreviations) == 0
+
+            text = "or to fork.Users work more on their repositories (owners) than on"
+            doc = self.nlp(text)
+            doc2 = self.detector(doc)
+            assert len(doc2._.abbreviations) == 0
