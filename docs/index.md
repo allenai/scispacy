@@ -103,7 +103,7 @@ scispaCy models are trained on data from a variety of sources. In particular,
 we use:
 
 *   **[The GENIA 1.0 Treebank](https://nlp.stanford.edu/~mcclosky/biomedical.html)**, converted to basic Universal Dependencies using the [Stanford Dependency Converter](https://nlp.stanford.edu/software/stanford-dependencies.shtml).
-We have made this dataset available along with the original raw data here. TODO(Mark) add link.
+We have made this [dataset available along with the original raw data](https://github.com/allenai/genia-dependency-trees).
 *   **[word2vec word vectors](http://bio.nlplab.org/#word-vectors)** trained on the Pubmed Central Open Access Subset.
 *   **[The MedMentions Entity Linking dataset](https://github.com/chanzuckerberg/MedMentions)**, used for training a mention detector.
 *  **[Ontonotes 5.0](https://catalog.ldc.upenn.edu/LDC2013T19)** to make the parser and tagger more robust to non-biomedical text. Unfortunately this is not publically available.
