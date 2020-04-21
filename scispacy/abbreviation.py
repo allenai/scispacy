@@ -116,6 +116,10 @@ def filter_matches(
 
 
 def short_form_filter(span: Span) -> bool:
+    # Below filters assume we actually have some text
+    if len(span.text) == 0:
+        return False
+
     # All words are between length 2 and 10
     if not all([2 <= len(x) < 10 for x in span]):
         return False
