@@ -89,8 +89,8 @@ def filter_matches(
     for match in matcher_output:
         start = match[1]
         end = match[2]
-        # Ignore spans with more than 8 words in.
-        if end - start > 8:
+        # Ignore spans with more than 8 words in them, and spans at the start of the doc
+        if end - start > 8 or start == 1:
             continue
         if end - start > 3:
             # Long form is inside the parens.

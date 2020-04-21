@@ -165,15 +165,21 @@ class TestAbbreviationDetector(unittest.TestCase):
         doc2 = self.detector(doc)
         assert len(doc2._.abbreviations) == 0
 
-        @pytest.mark.xfail
-        def test_difficult_cases(self):
-            # Don't see an obvious way of solving these. They require something more semantic to distinguish
-            text = "is equivalent to (iv) of Theorem"
-            doc = self.nlp(text)
-            doc2 = self.detector(doc)
-            assert len(doc2._.abbreviations) == 0
+    def test_empty_span(self):
+        text = "(19, 9, 4) Hadamard Designs and Their Residual Designs"
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0
 
-            text = "or to fork.Users work more on their repositories (owners) than on"
-            doc = self.nlp(text)
-            doc2 = self.detector(doc)
-            assert len(doc2._.abbreviations) == 0
+    @pytest.mark.xfail
+    def test_difficult_cases(self):
+        # Don't see an obvious way of solving these. They require something more semantic to distinguish
+        text = "is equivalent to (iv) of Theorem"
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0
+
+        text = "or to fork.Users work more on their repositories (owners) than on"
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 0
