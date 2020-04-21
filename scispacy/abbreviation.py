@@ -89,8 +89,10 @@ def filter_matches(
     for match in matcher_output:
         start = match[1]
         end = match[2]
-        # Ignore spans with more than 8 words in.
-        if end - start > 8:
+        print(doc[start:end])
+        print(doc)
+        # Ignore spans with more than 8 words in them, and spans at the start of the doc
+        if end - start > 8 or start == 1:
             continue
         if end - start > 3:
             # Long form is inside the parens.
@@ -116,10 +118,6 @@ def filter_matches(
 
 
 def short_form_filter(span: Span) -> bool:
-    # Below filters assume we actually have some text
-    if len(span.text) == 0:
-        return False
-
     # All words are between length 2 and 10
     if not all([2 <= len(x) < 10 for x in span]):
         return False
