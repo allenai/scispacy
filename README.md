@@ -229,11 +229,22 @@ for umls_ent in entity._.umls_ents:
 
 If you use ScispaCy in your research, please cite [ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing](https://www.semanticscholar.org/paper/ScispaCy%3A-Fast-and-Robust-Models-for-Biomedical-Neumann-King/de28ec1d7bd38c8fc4e8ac59b6133800818b4e29). Additionally, please indicate which version and model of ScispaCy you used so that your research can be reproduced.
 ```
-@inproceedings{Neumann2019ScispaCyFA,
-  title={ScispaCy: Fast and Robust Models for Biomedical Natural Language Processing},
-  author={Mark Neumann and Daniel King and Iz Beltagy and Waleed Ammar},
-  year={2019},
-  Eprint={arXiv:1902.07669}
+@inproceedings{neumann-etal-2019-scispacy,
+    title = "{S}cispa{C}y: {F}ast and {R}obust {M}odels for {B}iomedical {N}atural {L}anguage {P}rocessing",
+    author = "Neumann, Mark  and
+      King, Daniel  and
+      Beltagy, Iz  and
+      Ammar, Waleed",
+    booktitle = "Proceedings of the 18th BioNLP Workshop and Shared Task",
+    month = aug,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W19-5034",
+    doi = "10.18653/v1/W19-5034",
+    pages = "319--327",
+    eprint = {arXiv:1902.07669},
+    abstract = "Despite recent advances in natural language processing, many statistical models for processing text perform extremely poorly under domain shift. Processing biomedical and clinical text is a critically important application area of natural language processing, for which there are few robust, practical, publicly available models. This paper describes scispaCy, a new Python library and models for practical biomedical/scientific text processing, which heavily leverages the spaCy library. We detail the performance of two packages of models released in scispaCy and demonstrate their robustness on several tasks and datasets. Models and code are available at https://allenai.github.io/scispacy/.",
 }
 ```
 
