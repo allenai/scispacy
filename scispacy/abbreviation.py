@@ -71,7 +71,7 @@ def find_abbreviation(
     word_lengths = 0
     starting_index = None
     for i, word in enumerate(long_form_candidate):
-        word_lengths += len(word)
+        word_lengths += len(word) + (i > 0)
         if word_lengths > long_index:
             starting_index = i
             break
