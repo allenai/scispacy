@@ -71,7 +71,7 @@ def find_abbreviation(
     word_lengths = 0
     starting_index = None
     for i, word in enumerate(long_form_candidate):
-        word_lengths += len(word)
+        word_lengths += len(word) + (i > 0)
         if word_lengths > long_index:
             starting_index = i
             break
@@ -105,8 +105,15 @@ def filter_matches(
             # Sum character lengths of contents of parens.
             abbreviation_length = sum([len(x) for x in short_form_candidate])
             max_words = min(abbreviation_length + 5, abbreviation_length * 2)
+
             # Look up to max_words backwards
-            long_form_candidate = doc[max(start - max_words - 1, 0) : start - 1]
+            long_form_start, long_form_end = max(start - max_words - 1, 0), start - 1
+
+            # Avoid spanning over contiguous sentences
+            if doc[long_form_start].sent.end <= doc[long_form_end].sent.start:
+                long_form_start = doc[long_form_end].sent.start
+
+            long_form_candidate = doc[long_form_start:long_form_end]
 
         # add candidate to candidates if candidates pass filters
         if short_form_filter(short_form_candidate):
@@ -117,7 +124,7 @@ def filter_matches(
 
 def short_form_filter(span: Span) -> bool:
     # All words are between length 2 and 10
-    if not all([2 <= len(x) < 10 for x in span]):
+    if not all([1 <= len(x) < 10 for x in span]):
         return False
 
     # At least 50% of the short form should be alpha
