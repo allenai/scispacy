@@ -171,6 +171,20 @@ class TestAbbreviationDetector(unittest.TestCase):
         doc2 = self.detector(doc)
         assert len(doc2._.abbreviations) == 0
 
+    def test_space_issue(self):
+        text = "by designing A Lite BERT (ALBERT) architecture that has significantly fewer parameters than a traditional BERT architecture."
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 1
+        assert doc2._.abbreviations[0]._.long_form.text == "A Lite BERT"
+
+    def test_multiple_spaces(self):
+        text = "by      designing A     Lite BERT (ALBERT) architecture that has significantly fewer parameters than a traditional BERT architecture."
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 1
+        assert doc2._.abbreviations[0]._.long_form.text == "A     Lite BERT"
+
     @pytest.mark.xfail
     def test_difficult_cases(self):
         # Don't see an obvious way of solving these. They require something more semantic to distinguish

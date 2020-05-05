@@ -61,9 +61,10 @@ def find_abbreviation(
         long_index -= 1
         short_index -= 1
 
-    # If we complete the string, we end up with -1 here,
-    # but really we want all of the text.
-    long_index = max(long_index, 0)
+    # The last subtraction will either take us on to a whitespace character, or
+    # off the front of the string (i.e. long_index == -1). Either way, we want to add
+    # one to get back to the start character of the long form
+    long_index += 1
 
     # Now we know the character index of the start of the character span,
     # here we just translate that to the first token beginning after that
@@ -71,7 +72,8 @@ def find_abbreviation(
     word_lengths = 0
     starting_index = None
     for i, word in enumerate(long_form_candidate):
-        word_lengths += len(word)
+        # need to add 1 for the space characters
+        word_lengths += len(word.text_with_ws)
         if word_lengths > long_index:
             starting_index = i
             break
