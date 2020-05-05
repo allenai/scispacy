@@ -171,7 +171,7 @@ class TestAbbreviationDetector(unittest.TestCase):
         doc2 = self.detector(doc)
         assert len(doc2._.abbreviations) == 0
 
-    def test_issue(self):
+    def test_space_issue(self):
         text = "by designing A Lite BERT (ALBERT) architecture that has significantly fewer parameters than a traditional BERT architecture."
         doc = self.nlp(text)
         doc2 = self.detector(doc)
