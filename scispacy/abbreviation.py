@@ -61,7 +61,9 @@ def find_abbreviation(
         long_index -= 1
         short_index -= 1
 
-    # The last subtraction takes us on to a space character
+    # The last subtraction will either take us on to a whitespace character, or
+    # off the front of the string (i.e. long_index == -1). Either way, we want to add
+    # one to get back to the start character of the long form
     long_index += 1
 
     # Now we know the character index of the start of the character span,
