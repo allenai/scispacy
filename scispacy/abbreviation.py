@@ -73,7 +73,7 @@ def find_abbreviation(
     starting_index = None
     for i, word in enumerate(long_form_candidate):
         # need to add 1 for the space characters
-        word_lengths += len(word) + 1
+        word_lengths += len(word.text_with_ws)
         if word_lengths > long_index:
             starting_index = i
             break
