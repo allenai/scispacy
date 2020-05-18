@@ -96,6 +96,7 @@ class UmlsKnowledgeBase(KnowledgeBase):
 
 class MeshKnowledgeBase(KnowledgeBase):
     def __init__(
-        self, file_path: str = "/Users/markn/code/scispacy/complete.jsonl",
+        self,
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/mesh_2020.jsonl",
     ):
         super().__init__(file_path)

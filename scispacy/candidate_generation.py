@@ -29,10 +29,10 @@ UmlsLinkerPaths = LinkerPaths(
 )
 
 MeshLinkerPaths = LinkerPaths(
-    ann_index="/Users/markn/code/scispacy/mesh_linker/nmslib_index.bin",
-    tfidf_vectorizer="/Users/markn/code/scispacy/mesh_linker/tfidf_vectorizer.joblib",  # noqa
-    tfidf_vectors="/Users/markn/code/scispacy/mesh_linker/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list="/Users/markn/code/scispacy/mesh_linker/concept_aliases.json",  # noqa
+    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/mesh_linking_model/nmslib_index.bin",
+    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/mesh_linking_model/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/mesh_linking_model/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/mesh_linking_model/concept_aliases.json",  # noqa
 )
 
 
