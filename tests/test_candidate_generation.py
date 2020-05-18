@@ -4,6 +4,7 @@ import tempfile
 from scispacy.candidate_generation import CandidateGenerator, create_tfidf_ann_index, MentionCandidate
 from scispacy.umls_utils import UmlsKnowledgeBase
 
+
 class TestCandidateGeneration(unittest.TestCase):
 
     def test_create_index(self):
@@ -13,7 +14,7 @@ class TestCandidateGeneration(unittest.TestCase):
             umls_concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(dir_name, umls_fixture)
 
         assert len(umls_concept_aliases) == 93
-        assert len(ann_index) == 93 # Number of deduplicated aliases + canonical ids
+        assert len(ann_index) == 93  # Number of deduplicated aliases + canonical ids
         tfidf_params = tfidf_vectorizer.get_params()
 
         assert tfidf_params["analyzer"] == "char_wb"
@@ -40,9 +41,9 @@ class TestCandidateGeneration(unittest.TestCase):
         # Test we don't crash with zero vectors
         results = candidate_generator(['ZZZZ'], 10)
         assert results == [[]]
-    
+
     def test_empty_list(self):
-        
+
         umls_fixture = UmlsKnowledgeBase("tests/fixtures/umls_test_fixture.json")
         with tempfile.TemporaryDirectory() as dir_name:
             umls_concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(dir_name, umls_fixture)
@@ -51,4 +52,3 @@ class TestCandidateGeneration(unittest.TestCase):
         results = candidate_generator([], 10)
 
         assert results == []
-

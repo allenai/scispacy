@@ -125,14 +125,14 @@ for abrv in doc._.abbreviations:
 >>> SBMA 	   	 (6, 7)     Spinal and bulbar muscular atrophy
 >>> AR   		 (29, 30)   androgen receptor
 ```
-### UmlsEntityLinker (Alpha feature)
+### EntityLinker
 
-The `UmlsEntityLinker` is a SpaCy component which performs linking to the Unified Medical Language System.
-Note that this is currently an alpha feature. The linker simply performs a string overlap search on named entities,
+The `EntityLinker` is a SpaCy component which performs linking to a knowledge base. Currently, the
+Unified Medical Language System and the Medical Subject Headings (MESH) are supported.
+The linker simply performs a string overlap search on named entities,
 comparing them with a knowledge base of 2.7 million concepts using an approximate nearest neighbours search.
 
-
-Because this component is a little rough around the edges, you may want to play around with some of the parameters
+You may want to play around with some of the parameters
 below to adapt to your use case (higher precision, higher recall etc).
 
 - `resolve_abbreviations : bool = True, optional (default = False)`
@@ -154,13 +154,13 @@ below to adapt to your use case (higher precision, higher recall etc).
     The maximum number of entities which will be returned for a given mention, regardless of
     how many are nearest neighbours are found.
 
-This class sets the `._.umls_ents` attribute on spacy Spans, which consists of a
-List[Tuple[str, float]] corresponding to the UMLS concept_id and the associated score
+This class sets the `._.kb_ents` attribute on spacy Spans, which consists of a
+List[Tuple[str, float]] corresponding to the KB concept_id and the associated score
 for a list of `max_entities_per_mention` number of entities.
 
-You can look up more information for a given id using the umls attribute of this class:
+You can look up more information for a given id using the kb attribute of this class:
 ```
-print(linker.umls.cui_to_entity[concept_id])
+print(linker.kb.cui_to_entity[concept_id])
 ```
 
 #### Example Usage
@@ -168,7 +168,7 @@ print(linker.umls.cui_to_entity[concept_id])
 import spacy
 import scispacy
 
-from scispacy.umls_linking import UmlsEntityLinker
+from scispacy.linking import EntityLinker
 
 nlp = spacy.load("en_core_sci_sm")
 
@@ -180,7 +180,7 @@ nlp = spacy.load("en_core_sci_sm")
 # the AbbreviationDetector pipe has already been added to the pipeline. Adding
 # the AbbreviationDetector pipe and setting resolve_abbreviations to True means
 # that linking will only be performed on the long form of abbreviations.
-linker = UmlsEntityLinker(resolve_abbreviations=True)
+linker = EntityLinker(resolve_abbreviations=True, name="umls")
 
 nlp.add_pipe(linker)
 
@@ -197,17 +197,17 @@ print("Name: ", entity)
 
 # Each entity is linked to UMLS with a score
 # (currently just char-3gram matching).
-for umls_ent in entity._.umls_ents:
-	print(linker.umls.cui_to_entity[umls_ent[0]])
-	
+for umls_ent in entity._.kb_ents:
+	print(linker.kb.cui_to_entity[umls_ent[0]])
+
 
 >>> CUI: C1839259, Name: Bulbo-Spinal Atrophy, X-Linked
->>> Definition: An X-linked recessive form of spinal muscular atrophy. It is due to a mutation of the 
+>>> Definition: An X-linked recessive form of spinal muscular atrophy. It is due to a mutation of the
   				gene encoding the ANDROGEN RECEPTOR.
 >>> TUI(s): T047
 >>> Aliases (abbreviated, total: 50):
          Bulbo-Spinal Atrophy, X-Linked, Bulbo-Spinal Atrophy, X-Linked, ....
-    
+
 >>> CUI: C0541794, Name: Skeletal muscle atrophy
 >>> Definition: A process, occurring in skeletal muscle, that is characterized by a decrease in protein content,
                 fiber diameter, force production and fatigue resistance in response to ...

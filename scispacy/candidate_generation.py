@@ -11,7 +11,7 @@ import nmslib
 from nmslib.dist import FloatIndex
 
 from scispacy.file_cache import cached_path
-from scispacy.umls_utils import KnowledgeBase, UmlsKnowledgeBase, MeshKnowledgeBase
+from scispacy.linking_utils import KnowledgeBase, UmlsKnowledgeBase, MeshKnowledgeBase
 
 
 class LinkerPaths(NamedTuple):
@@ -54,7 +54,7 @@ class MentionCandidate(NamedTuple):
     Parameters
     ----------
     concept_id : str, required.
-        The canonical concept id in UMLS.
+        The canonical concept id in the KB.
     aliases : List[str], required.
         The aliases that caused this entity to be linked.
     similarities : List[float], required.
@@ -100,13 +100,15 @@ def load_approximate_nearest_neighbours_index(
 
 class CandidateGenerator:
     """
-    A candidate generator for entity linking to the Unified Medical Language System (UMLS).
+    A candidate generator for entity linking to a KnowledgeBase. Currently, two defaults are available:
+     - Unified Medical Language System (UMLS).
+     - Medical Subject Headings (MESH).
 
     It uses a sklearn.TfidfVectorizer to embed mention text into a sparse embedding of character 3-grams.
     These are then compared via cosine distance in a pre-indexed approximate nearest neighbours index of
-    a subset of all entities and aliases in UMLS.
+    a subset of all entities and aliases in the KB.
 
-    Once the K nearest neighbours have been retrieved, they are canonicalized to their UMLS canonical ids.
+    Once the K nearest neighbours have been retrieved, they are canonicalized to their KB canonical ids.
     This step is required because the index also includes entity aliases, which map to a particular canonical
     entity. This point is important for two reasons:
 
@@ -129,10 +131,10 @@ class CandidateGenerator:
     tfidf_vectorizer: TfidfVectorizer
         The vectorizer used to encode mentions.
     ann_concept_aliases_list: List[str]
-        A list of strings, mapping the indices used in the ann_index to possible UMLS mentions.
+        A list of strings, mapping the indices used in the ann_index to possible KB mentions.
         This is essentially used a lookup between the ann index and actual mention strings.
-    umls: KnowledgeBase
-        A class representing canonical concepts from the Unified Medical Language System knowledge graph.
+    kb: KnowledgeBase
+        A class representing canonical concepts from the knowledge graph.
     verbose: bool
         Setting to true will print extra information about the generated candidates.
     ef_search: int
@@ -148,14 +150,16 @@ class CandidateGenerator:
         ann_index: FloatIndex = None,
         tfidf_vectorizer: TfidfVectorizer = None,
         ann_concept_aliases_list: List[str] = None,
+        # TODO(Mark): Remove in scispacy v1.0.
         umls: KnowledgeBase = None,
+        kb: KnowledgeBase = None,
         verbose: bool = False,
         ef_search: int = 200,
         name: str = None,
     ) -> None:
 
         if name is not None and any(
-            [ann_index, tfidf_vectorizer, ann_concept_aliases_list, umls]
+            [ann_index, tfidf_vectorizer, ann_concept_aliases_list, kb, umls]
         ):
             raise ValueError(
                 "You cannot pass both a name argument and other constuctor arguments."
@@ -178,8 +182,13 @@ class CandidateGenerator:
             open(cached_path(linker_paths.concept_aliases_list))
         )
 
-        self.umls = umls or DEFAULT_KNOWLEDGE_BASES[name]()
+        if umls is not None:
+            kb = umls
+        self.kb = kb or DEFAULT_KNOWLEDGE_BASES[name]()
         self.verbose = verbose
+
+        # TODO(Mark): Remove in scispacy v1.0.
+        self.umls = self.kb
 
     def nmslib_knn_with_zero_vectors(
         self, vectors: numpy.ndarray, k: int
@@ -255,7 +264,7 @@ class CandidateGenerator:
 
         Returns
         -------
-        A list of MentionCandidate objects per mention containing UMLS concept_ids and aliases
+        A list of MentionCandidate objects per mention containing KB concept_ids and aliases
         and distances which were mapped to. Note that these are lists for each concept id,
         because the index contains aliases which are canonicalized, so multiple values may map
         to the same canonical id.
@@ -288,7 +297,7 @@ class CandidateGenerator:
             concept_to_similarities: Dict[str, List[float]] = defaultdict(list)
             for neighbor_index, distance in zip(neighbors, distances):
                 mention = self.ann_concept_aliases_list[neighbor_index]
-                concepts_for_mention = self.umls.alias_to_cuis[mention]
+                concepts_for_mention = self.kb.alias_to_cuis[mention]
                 for concept_id in concepts_for_mention:
                     concept_to_mentions[concept_id].append(mention)
                     concept_to_similarities[concept_id].append(1.0 - distance)
@@ -304,7 +313,7 @@ class CandidateGenerator:
 
 
 def create_tfidf_ann_index(
-    out_path: str, umls: KnowledgeBase = None
+    out_path: str, kb: KnowledgeBase = None
 ) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
     """
     Build tfidf vectorizer and ann index.
@@ -313,8 +322,8 @@ def create_tfidf_ann_index(
     ----------
     out_path: str, required.
         The path where the various model pieces will be saved.
-    umls : KnowledgeBase, optional.
-        The umls kb items to generate the index and vectors for.
+    kb : KnowledgeBase, optional.
+        The kb items to generate the index and vectors for.
 
     """
     tfidf_vectorizer_path = f"{out_path}/tfidf_vectorizer.joblib"
@@ -322,7 +331,7 @@ def create_tfidf_ann_index(
     tfidf_vectors_path = f"{out_path}/tfidf_vectors_sparse.npz"
     uml_concept_aliases_path = f"{out_path}/concept_aliases.json"
 
-    umls = umls or UmlsKnowledgeBase()
+    kb = kb or UmlsKnowledgeBase()
 
     # nmslib hyperparameters (very important)
     # guide: https://github.com/nmslib/nmslib/blob/master/python_bindings/parameters.md
@@ -345,18 +354,18 @@ def create_tfidf_ann_index(
     print(
         f"No tfidf vectorizer on {tfidf_vectorizer_path} or ann index on {ann_index_path}"
     )
-    umls_concept_aliases = list(umls.alias_to_cuis.keys())
+    concept_aliases = list(kb.alias_to_cuis.keys())
 
     # NOTE: here we are creating the tf-idf vectorizer with float32 type, but we can serialize the
     # resulting vectors using float16, meaning they take up half the memory on disk. Unfortunately
     # we can't use the float16 format to actually run the vectorizer, because of this bug in sparse
     # matrix representations in scipy: https://github.com/scipy/scipy/issues/7408
-    print(f"Fitting tfidf vectorizer on {len(umls_concept_aliases)} aliases")
+    print(f"Fitting tfidf vectorizer on {len(concept_aliases)} aliases")
     tfidf_vectorizer = TfidfVectorizer(
         analyzer="char_wb", ngram_range=(3, 3), min_df=10, dtype=numpy.float32
     )
     start_time = datetime.datetime.now()
-    uml_concept_alias_tfidfs = tfidf_vectorizer.fit_transform(umls_concept_aliases)
+    concept_alias_tfidfs = tfidf_vectorizer.fit_transform(concept_aliases)
     print(f"Saving tfidf vectorizer to {tfidf_vectorizer_path}")
     joblib.dump(tfidf_vectorizer, tfidf_vectorizer_path)
     end_time = datetime.datetime.now()
@@ -365,43 +374,43 @@ def create_tfidf_ann_index(
 
     print("Finding empty (all zeros) tfidf vectors")
     empty_tfidfs_boolean_flags = numpy.array(
-        uml_concept_alias_tfidfs.sum(axis=1) != 0
+        concept_alias_tfidfs.sum(axis=1) != 0
     ).reshape(-1)
     number_of_non_empty_tfidfs = sum(empty_tfidfs_boolean_flags == False)  # noqa: E712
-    total_number_of_tfidfs = numpy.size(uml_concept_alias_tfidfs, 0)
+    total_number_of_tfidfs = numpy.size(concept_alias_tfidfs, 0)
 
     print(
         f"Deleting {number_of_non_empty_tfidfs}/{total_number_of_tfidfs} aliases because their tfidf is empty"
     )
     # remove empty tfidf vectors, otherwise nmslib will crash
-    umls_concept_aliases = [
+    concept_aliases = [
         alias
-        for alias, flag in zip(umls_concept_aliases, empty_tfidfs_boolean_flags)
+        for alias, flag in zip(concept_aliases, empty_tfidfs_boolean_flags)
         if flag
     ]
-    uml_concept_alias_tfidfs = uml_concept_alias_tfidfs[empty_tfidfs_boolean_flags]
-    assert len(umls_concept_aliases) == numpy.size(uml_concept_alias_tfidfs, 0)
+    concept_alias_tfidfs = concept_alias_tfidfs[empty_tfidfs_boolean_flags]
+    assert len(concept_aliases) == numpy.size(concept_alias_tfidfs, 0)
 
     print(
         f"Saving list of concept ids and tfidfs vectors to {uml_concept_aliases_path} and {tfidf_vectors_path}"
     )
-    json.dump(umls_concept_aliases, open(uml_concept_aliases_path, "w"))
+    json.dump(concept_aliases, open(uml_concept_aliases_path, "w"))
     scipy.sparse.save_npz(
-        tfidf_vectors_path, uml_concept_alias_tfidfs.astype(numpy.float16)
+        tfidf_vectors_path, concept_alias_tfidfs.astype(numpy.float16)
     )
 
-    print(f"Fitting ann index on {len(umls_concept_aliases)} aliases (takes 2 hours)")
+    print(f"Fitting ann index on {len(concept_aliases)} aliases (takes 2 hours)")
     start_time = datetime.datetime.now()
     ann_index = nmslib.init(
         method="hnsw",
         space="cosinesimil_sparse",
         data_type=nmslib.DataType.SPARSE_VECTOR,
     )
-    ann_index.addDataPointBatch(uml_concept_alias_tfidfs)
+    ann_index.addDataPointBatch(concept_alias_tfidfs)
     ann_index.createIndex(index_params, print_progress=True)
     ann_index.saveIndex(ann_index_path)
     end_time = datetime.datetime.now()
     elapsed_time = end_time - start_time
     print(f"Fitting ann index took {elapsed_time.total_seconds()} seconds")
 
-    return umls_concept_aliases, tfidf_vectorizer, ann_index
+    return concept_aliases, tfidf_vectorizer, ann_index
