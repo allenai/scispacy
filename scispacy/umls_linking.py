@@ -64,11 +64,12 @@ class UmlsEntityLinker:
         no_definition_threshold: float = 0.95,
         filter_for_definitions: bool = True,
         max_entities_per_mention: int = 5,
+        name: str = None
     ):
 
         Span.set_extension("umls_ents", default=[], force=True)
 
-        self.candidate_generator = candidate_generator or CandidateGenerator()
+        self.candidate_generator = candidate_generator or CandidateGenerator(name=name)
         self.resolve_abbreviations = resolve_abbreviations
         self.k = k
         self.threshold = threshold

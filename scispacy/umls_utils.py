@@ -9,12 +9,12 @@ from scispacy.umls_semantic_type_tree import (
 )
 
 
-class UmlsEntity(NamedTuple):
+class Entity(NamedTuple):
 
     concept_id: str
     canonical_name: str
     aliases: List[str]
-    types: List[str]
+    types: List[str] = []
     definition: Optional[str] = None
 
     def __repr__(self):
@@ -35,6 +35,8 @@ class UmlsEntity(NamedTuple):
             )
         return rep
 
+UmlsEntity = Entity
+
 
 DEFAULT_UMLS_PATH = (
     "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2017_aa_cat0129.json"
@@ -42,17 +44,17 @@ DEFAULT_UMLS_PATH = (
 DEFAULT_UMLS_TYPES_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_semantic_type_tree.tsv"
 
 
-class UmlsKnowledgeBase:
+class KnowledgeBase:
 
     """
-    A class representing two commonly needed views of the Unified Medical Language System:
-    1. A mapping from concept_id to a UmlsEntity NamedTuple with more information.
+    A class representing two commonly needed views of a Knowledge Base:
+    1. A mapping from concept_id to an Entity NamedTuple with more information.
     2. A mapping from aliases to the sets of concept ids for which they are aliases.
 
     Parameters
     ----------
     file_path: str, optional.
-        The file path to the json representation of UMLS to load.
+        The file path to the json/jsonl representation of the KB to load.
 
     """
 
@@ -61,22 +63,36 @@ class UmlsKnowledgeBase:
         file_path: str = DEFAULT_UMLS_PATH,
         types_file_path: str = DEFAULT_UMLS_TYPES_PATH,
     ):
-        raw = json.load(open(cached_path(file_path)))
+        if file_path.endswith("jsonl"):
+            raw = [json.loads(line) for line in open(cached_path(file_path))]
+        else:
+            raw = json.load(open(cached_path(file_path)))
 
         alias_to_cuis: Dict[str, Set[str]] = defaultdict(set)
-        self.cui_to_entity: Dict[str, UmlsEntity] = {}
+        self.cui_to_entity: Dict[str, Entity] = {}
 
         for concept in raw:
             unique_aliases = set(concept["aliases"])
             unique_aliases.add(concept["canonical_name"])
             for alias in unique_aliases:
                 alias_to_cuis[alias].add(concept["concept_id"])
-            self.cui_to_entity[concept["concept_id"]] = UmlsEntity(**concept)
+            self.cui_to_entity[concept["concept_id"]] = Entity(**concept)
 
         self.alias_to_cuis: Dict[str, Set[str]] = {**alias_to_cuis}
-        self.semantic_type_tree: UmlsSemanticTypeTree = construct_umls_tree_from_tsv(
-            types_file_path
-        )
+
+
+class UmlsKnowledgeBase:
+    def __init__(
+        self,
+        file_path: str = DEFAULT_UMLS_PATH,
+        types_file_path: str = DEFAULT_UMLS_TYPES_PATH,
+    ):
+
+    super().__init__(file_path)
+
+    self.semantic_type_tree: UmlsSemanticTypeTree = construct_umls_tree_from_tsv(
+        types_file_path
+    )
 
 
 # preferred definition sources (from S2)
