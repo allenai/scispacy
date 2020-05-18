@@ -35,6 +35,8 @@ class Entity(NamedTuple):
             )
         return rep
 
+
+# Keep this for backward compatability.
 UmlsEntity = Entity
 
 
@@ -81,18 +83,18 @@ class KnowledgeBase:
         self.alias_to_cuis: Dict[str, Set[str]] = {**alias_to_cuis}
 
 
-class UmlsKnowledgeBase:
+class UmlsKnowledgeBase(KnowledgeBase):
     def __init__(
         self,
         file_path: str = DEFAULT_UMLS_PATH,
         types_file_path: str = DEFAULT_UMLS_TYPES_PATH,
     ):
 
-    super().__init__(file_path)
+        super().__init__(file_path)
 
-    self.semantic_type_tree: UmlsSemanticTypeTree = construct_umls_tree_from_tsv(
-        types_file_path
-    )
+        self.semantic_type_tree: UmlsSemanticTypeTree = construct_umls_tree_from_tsv(
+            types_file_path
+        )
 
 
 # preferred definition sources (from S2)

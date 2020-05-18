@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, NamedTuple
+from typing import List, Dict, Tuple, NamedTuple, Type
 import json
 import datetime
 from collections import defaultdict
@@ -13,36 +13,24 @@ from nmslib.dist import FloatIndex
 from scispacy.file_cache import cached_path
 from scispacy.umls_utils import KnowledgeBase, UmlsKnowledgeBase
 
-DEFAULT_PATHS = {
-    "ann_index": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/nmslib_index.bin",
-    "tfidf_vectorizer": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectorizer.joblib",  # noqa
-    "tfidf_umls_vectors": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectors_sparse.npz",  # noqa
-    "concept_aliases_list": "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/concept_aliases.json",  # noqa
-}
-
 
 class LinkerPaths(NamedTuple):
-    
     ann_index: str
     tfidf_vectorizer: str
     tfidf_vectors: str
     concept_aliases_list: str
 
+
 UmlsLinkerPaths = LinkerPaths(
-    ann_index = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/nmslib_index.bin",
-    tfidf_vectorizer = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectorizer.joblib",  # noqa
-    tfidf_umls_vectors = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/concept_aliases.json",  # noqa
+    ann_index="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/nmslib_index.bin",
+    tfidf_vectorizer="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/concept_aliases.json",  # noqa
 )
 
-DEFAULT_PATHS = {
-    "umls": UmlsLinkerPaths
-}
+DEFAULT_PATHS: Dict[str, LinkerPaths] = {"umls": UmlsLinkerPaths}
 
-DEFAULT_KNOWLEDGE_BASES = {
-    "umls": UmlsKnowledgeBase
-}
-
+DEFAULT_KNOWLEDGE_BASES: Dict[str, Type[KnowledgeBase]] = {"umls": UmlsKnowledgeBase}
 
 
 class MentionCandidate(NamedTuple):
@@ -66,8 +54,7 @@ class MentionCandidate(NamedTuple):
 
 
 def load_approximate_nearest_neighbours_index(
-    linker_paths: LinkerPaths,
-    ef_search: int = 200,
+    linker_paths: LinkerPaths, ef_search: int = 200,
 ) -> FloatIndex:
     """
     Load an approximate nearest neighbours index from disk.
@@ -82,7 +69,7 @@ def load_approximate_nearest_neighbours_index(
         of magnitude for a small performance hit.
     """
     concept_alias_tfidfs = scipy.sparse.load_npz(
-        cached_path(linker_paths.tfidf_vectors_path)
+        cached_path(linker_paths.tfidf_vectors)
     ).astype(numpy.float32)
     ann_index = nmslib.init(
         method="hnsw",
@@ -90,7 +77,7 @@ def load_approximate_nearest_neighbours_index(
         data_type=nmslib.DataType.SPARSE_VECTOR,
     )
     ann_index.addDataPointBatch(concept_alias_tfidfs)
-    ann_index.loadIndex(cached_path(linker_paths.ann_index_path))
+    ann_index.loadIndex(cached_path(linker_paths.ann_index))
     query_time_params = {"efSearch": ef_search}
     ann_index.setQueryTimeParams(query_time_params)
 
@@ -138,7 +125,8 @@ class CandidateGenerator:
         The efs search parameter used in the index. This substantially effects runtime speed
         (higher is slower but slightly more accurate). Note that this parameter is ignored
         if a preconstructed ann_index is passed.
-
+    name: str, optional (default = None)
+        The name of the pretrained entity linker to load. Must be one of 'umls' or 'mesh'.
     """
 
     def __init__(
@@ -149,23 +137,31 @@ class CandidateGenerator:
         umls: KnowledgeBase = None,
         verbose: bool = False,
         ef_search: int = 200,
-        name: str = None
+        name: str = None,
     ) -> None:
 
-        if name is not None and any([ann_index, tfidf_vectorizer, ann_concept_aliases_list, umls]):
-            raise ValueError("You cannot pass both a name argument and other constuctor arguments.")
+        if name is not None and any(
+            [ann_index, tfidf_vectorizer, ann_concept_aliases_list, umls]
+        ):
+            raise ValueError(
+                "You cannot pass both a name argument and other constuctor arguments."
+            )
+
+        # Set the name to the default, after we have checked
+        # the compatability with the args above.
+        if name is None:
+            name = "umls"
 
         linker_paths = DEFAULT_PATHS.get(name, UmlsLinkerPaths)
-        
+
         self.ann_index = ann_index or load_approximate_nearest_neighbours_index(
-            linker_paths=linker_paths,
-            ef_search=ef_search
+            linker_paths=linker_paths, ef_search=ef_search
         )
         self.vectorizer = tfidf_vectorizer or joblib.load(
             cached_path(linker_paths.tfidf_vectorizer)
         )
         self.ann_concept_aliases_list = ann_concept_aliases_list or json.load(
-            open(cached_path(linker_paths.concept_aliases_list)
+            open(cached_path(linker_paths.concept_aliases_list))
         )
 
         self.umls = umls or DEFAULT_KNOWLEDGE_BASES[name]()

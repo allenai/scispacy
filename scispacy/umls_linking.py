@@ -64,7 +64,7 @@ class UmlsEntityLinker:
         no_definition_threshold: float = 0.95,
         filter_for_definitions: bool = True,
         max_entities_per_mention: int = 5,
-        name: str = None
+        name: str = None,
     ):
 
         Span.set_extension("umls_ents", default=[], force=True)
