@@ -329,7 +329,7 @@ def create_tfidf_ann_index(
     total_time = end_time - start_time
     print(f"Fitting and saving vectorizer took {total_time.total_seconds()} seconds")
 
-    print(f"Finding empty (all zeros) tfidf vectors")
+    print("Finding empty (all zeros) tfidf vectors")
     empty_tfidfs_boolean_flags = numpy.array(
         uml_concept_alias_tfidfs.sum(axis=1) != 0
     ).reshape(-1)
