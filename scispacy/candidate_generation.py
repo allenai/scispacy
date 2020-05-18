@@ -11,7 +11,7 @@ import nmslib
 from nmslib.dist import FloatIndex
 
 from scispacy.file_cache import cached_path
-from scispacy.umls_utils import KnowledgeBase, UmlsKnowledgeBase
+from scispacy.umls_utils import KnowledgeBase, UmlsKnowledgeBase, MeshKnowledgeBase
 
 
 class LinkerPaths(NamedTuple):
@@ -28,9 +28,23 @@ UmlsLinkerPaths = LinkerPaths(
     concept_aliases_list="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linking_model/concept_aliases.json",  # noqa
 )
 
-DEFAULT_PATHS: Dict[str, LinkerPaths] = {"umls": UmlsLinkerPaths}
+MeshLinkerPaths = LinkerPaths(
+    ann_index="/Users/markn/code/scispacy/mesh_linker/nmslib_index.bin",
+    tfidf_vectorizer="/Users/markn/code/scispacy/mesh_linker/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="/Users/markn/code/scispacy/mesh_linker/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="/Users/markn/code/scispacy/mesh_linker/concept_aliases.json",  # noqa
+)
 
-DEFAULT_KNOWLEDGE_BASES: Dict[str, Type[KnowledgeBase]] = {"umls": UmlsKnowledgeBase}
+
+DEFAULT_PATHS: Dict[str, LinkerPaths] = {
+    "umls": UmlsLinkerPaths,
+    "mesh": MeshLinkerPaths,
+}
+
+DEFAULT_KNOWLEDGE_BASES: Dict[str, Type[KnowledgeBase]] = {
+    "umls": UmlsKnowledgeBase,
+    "mesh": MeshKnowledgeBase,
+}
 
 
 class MentionCandidate(NamedTuple):
@@ -290,7 +304,7 @@ class CandidateGenerator:
 
 
 def create_tfidf_ann_index(
-    out_path: str, kb: KnowledgeBase = None
+    out_path: str, umls: KnowledgeBase = None
 ) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
     """
     Build tfidf vectorizer and ann index.

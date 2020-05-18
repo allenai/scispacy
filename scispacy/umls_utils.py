@@ -47,7 +47,6 @@ DEFAULT_UMLS_TYPES_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/da
 
 
 class KnowledgeBase:
-
     """
     A class representing two commonly needed views of a Knowledge Base:
     1. A mapping from concept_id to an Entity NamedTuple with more information.
@@ -55,16 +54,18 @@ class KnowledgeBase:
 
     Parameters
     ----------
-    file_path: str, optional.
+    file_path: str, required.
         The file path to the json/jsonl representation of the KB to load.
-
     """
 
     def __init__(
-        self,
-        file_path: str = DEFAULT_UMLS_PATH,
-        types_file_path: str = DEFAULT_UMLS_TYPES_PATH,
+        self, file_path: str = None,
     ):
+        if file_path is None:
+            raise ValueError(
+                "Do not use the default arguments to KnowledgeBase. "
+                "Instead, use a subclass (e.g UmlsKnowledgeBase) or pass a path to a kb."
+            )
         if file_path.endswith("jsonl"):
             raw = [json.loads(line) for line in open(cached_path(file_path))]
         else:
@@ -95,6 +96,13 @@ class UmlsKnowledgeBase(KnowledgeBase):
         self.semantic_type_tree: UmlsSemanticTypeTree = construct_umls_tree_from_tsv(
             types_file_path
         )
+
+
+class MeshKnowledgeBase(KnowledgeBase):
+    def __init__(
+        self, file_path: str = "/Users/markn/code/scispacy/complete.jsonl",
+    ):
+        super().__init__(file_path)
 
 
 # preferred definition sources (from S2)
