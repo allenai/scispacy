@@ -2,7 +2,7 @@ numpy
 spacy>=2.2.1
 spacy-lookups-data
 pandas
-awscli
+requests>=2.0.0,<3.0.0
 conllu
 
 # Candidate generation and entity linking

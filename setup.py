@@ -42,7 +42,7 @@ setup(
     license="Apache",
     install_requires=[
         "spacy>=2.2.1",
-        "awscli",
+        "requests>=2.0.0,<3.0.0"
         "conllu",
         "numpy",
         "joblib",
