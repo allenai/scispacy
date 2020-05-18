@@ -117,7 +117,7 @@ class CandidateGenerator:
     ann_concept_aliases_list: List[str]
         A list of strings, mapping the indices used in the ann_index to possible UMLS mentions.
         This is essentially used a lookup between the ann index and actual mention strings.
-    umls: UmlsKnowledgeBase
+    umls: KnowledgeBase
         A class representing canonical concepts from the Unified Medical Language System knowledge graph.
     verbose: bool
         Setting to true will print extra information about the generated candidates.
@@ -290,19 +290,16 @@ class CandidateGenerator:
 
 
 def create_tfidf_ann_index(
-    out_path: str, umls: UmlsKnowledgeBase = None
+    out_path: str, kb: KnowledgeBase = None
 ) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
     """
     Build tfidf vectorizer and ann index.
-
-    Warning: Running this function on the whole of UMLS requires ~ 200GB of RAM ...
-    TODO: Make this not take 200GB of RAM.
 
     Parameters
     ----------
     out_path: str, required.
         The path where the various model pieces will be saved.
-    umls : UmlsKnowledgeBase, optional.
+    umls : KnowledgeBase, optional.
         The umls kb items to generate the index and vectors for.
 
     """
