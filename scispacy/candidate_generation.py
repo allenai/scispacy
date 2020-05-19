@@ -165,7 +165,6 @@ class CandidateGenerator:
         tfidf_vectorizer: TfidfVectorizer = None,
         ann_concept_aliases_list: List[str] = None,
         # TODO(Mark): Remove in scispacy v1.0.
-        umls: KnowledgeBase = None,
         kb: KnowledgeBase = None,
         verbose: bool = False,
         ef_search: int = 200,
@@ -196,8 +195,6 @@ class CandidateGenerator:
             open(cached_path(linker_paths.concept_aliases_list))
         )
 
-        if umls is not None:
-            kb = umls
         self.kb = kb or DEFAULT_KNOWLEDGE_BASES[name]()
         self.verbose = verbose
 
