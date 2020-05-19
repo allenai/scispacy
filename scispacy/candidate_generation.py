@@ -164,7 +164,6 @@ class CandidateGenerator:
         ann_index: FloatIndex = None,
         tfidf_vectorizer: TfidfVectorizer = None,
         ann_concept_aliases_list: List[str] = None,
-        # TODO(Mark): Remove in scispacy v1.0.
         kb: KnowledgeBase = None,
         verbose: bool = False,
         ef_search: int = 200,
