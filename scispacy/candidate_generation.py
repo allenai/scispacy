@@ -171,7 +171,7 @@ class CandidateGenerator:
     ) -> None:
 
         if name is not None and any(
-            [ann_index, tfidf_vectorizer, ann_concept_aliases_list, kb, umls]
+            [ann_index, tfidf_vectorizer, ann_concept_aliases_list, kb]
         ):
             raise ValueError(
                 "You cannot pass both a name argument and other constuctor arguments."
