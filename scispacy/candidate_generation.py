@@ -15,6 +15,18 @@ from scispacy.linking_utils import KnowledgeBase, UmlsKnowledgeBase, MeshKnowled
 
 
 class LinkerPaths(NamedTuple):
+    """
+    Encapsulates all the (possibly remote) paths to data for a scispacy CandidateGenerator.
+    ann_index: str
+        Path to the approximate nearest neighbours index.
+    tfidf_vectorizer: str
+        Path to the joblib serialized sklearn TfidfVectorizer.
+    tfidf_vectors: str
+        Path to the float-16 encoded tf-idf vectors for the entities in the KB.
+    concept_aliases_list: str
+        Path to the indices mapping concepts to aliases in the index.
+    """
+
     ann_index: str
     tfidf_vectorizer: str
     tfidf_vectors: str
@@ -103,6 +115,8 @@ class CandidateGenerator:
     A candidate generator for entity linking to a KnowledgeBase. Currently, two defaults are available:
      - Unified Medical Language System (UMLS).
      - Medical Subject Headings (MESH).
+
+    To use these configured default KBs, pass the `name` parameter, either 'umls' or 'mesh'.
 
     It uses a sklearn.TfidfVectorizer to embed mention text into a sparse embedding of character 3-grams.
     These are then compared via cosine distance in a pre-indexed approximate nearest neighbours index of

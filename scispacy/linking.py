@@ -12,9 +12,10 @@ class EntityLinker:
     Currently, there are two defaults: the Unified Medical Language System (UMLS) and
     the Medical Subject Headings (MESH) dictionary.
 
+    To use these configured default KBs, pass the `name` parameter, either 'umls' or 'mesh'.
+
     Currently this implementation just compares string similarity, returning
     entities above a given threshold.
-
 
     This class sets the `._.kb_ents` attribute on spacy Spans, which consists of a
     List[Tuple[str, float]] corresponding to the KB concept_id and the associated score
