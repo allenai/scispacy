@@ -1,5 +1,5 @@
 numpy
-spacy>=2.2.1
+spacy>=2.3.0,<3.0.0
 spacy-lookups-data
 pandas
 requests>=2.0.0,<3.0.0
