@@ -151,7 +151,6 @@ def create_model(
         lexeme = nlp.vocab[word]
         lexeme.rank = i
         lexeme.prob = prob
-        lexeme.is_oov = False
         # Decode as a little-endian string, so that we can do & 15 to get
         # the first 4 bits. See _parse_features.pyx
         lexeme.cluster = 0
@@ -163,7 +162,6 @@ def create_model(
         for i, word in enumerate(vector_keys):
             if word not in nlp.vocab and expand_vectors:
                 lexeme = nlp.vocab[word]
-                lexeme.is_oov = False
                 lex_added += 1
             elif word in nlp.vocab and not expand_vectors:
                 new_keys.append(word)
