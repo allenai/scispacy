@@ -18,13 +18,16 @@ import itertools
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from scispacy.file_cache import cached_path
 
-def train_parser_and_tagger(train_json_path: str,
-                            dev_json_path: str,
-                            test_json_path: str,
-                            model_output_dir: str,
-                            model_path: str = None,
-                            ontonotes_path: str = None,
-                            ontonotes_train_percent: float = 0.0):
+
+def train_parser_and_tagger(
+    train_json_path: str,
+    dev_json_path: str,
+    test_json_path: str,
+    model_output_dir: str,
+    model_path: str = None,
+    ontonotes_path: str = None,
+    ontonotes_train_percent: float = 0.0,
+):
     """Function to train the spacy parser and tagger from a blank model, with the default, en_core_web_sm vocab.
        Training setup is mostly copied from the spacy cli train command.
 
@@ -45,20 +48,20 @@ def train_parser_and_tagger(train_json_path: str,
     if model_path is not None:
         nlp = spacy.load(model_path)
     else:
-        lang_class = util.get_lang_class('en')
+        lang_class = util.get_lang_class("en")
         nlp = lang_class()
 
-    if 'tagger' not in nlp.pipe_names:
-        tagger = nlp.create_pipe('tagger')
+    if "tagger" not in nlp.pipe_names:
+        tagger = nlp.create_pipe("tagger")
         nlp.add_pipe(tagger, first=True)
     else:
-        tagger = nlp.get_pipe('tagger')
+        tagger = nlp.get_pipe("tagger")
 
-    if 'parser' not in nlp.pipe_names:
-        parser = nlp.create_pipe('parser')
+    if "parser" not in nlp.pipe_names:
+        parser = nlp.create_pipe("parser")
         nlp.add_pipe(parser)
     else:
-        parser = nlp.get_pipe('parser')
+        parser = nlp.get_pipe("parser")
 
     train_corpus = GoldCorpus(train_json_path, dev_json_path)
     test_corpus = GoldCorpus(train_json_path, test_json_path)
@@ -71,7 +74,7 @@ def train_parser_and_tagger(train_json_path: str,
         onto_test_corpus = GoldCorpus(onto_train_path, onto_test_path)
 
     dropout_rates = util.decaying(0.2, 0.2, 0.0)
-    batch_sizes = util.compounding(1., 16., 1.001)
+    batch_sizes = util.compounding(1.0, 16.0, 1.001)
 
     if model_path is not None:
         meta = nlp.meta
@@ -91,10 +94,14 @@ def train_parser_and_tagger(train_json_path: str,
 
     n_train_words = train_corpus.count_train()
 
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in  ['tagger', 'parser']]
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in ["tagger", "parser"]]
     with nlp.disable_pipes(*other_pipes):
         if ontonotes_path:
-            optimizer = nlp.begin_training(lambda: itertools.chain(train_corpus.train_tuples, onto_train_corpus.train_tuples))
+            optimizer = nlp.begin_training(
+                lambda: itertools.chain(
+                    train_corpus.train_tuples, onto_train_corpus.train_tuples
+                )
+            )
         else:
             optimizer = nlp.begin_training(lambda: train_corpus.train_tuples)
         nlp._optimizer = None
@@ -106,13 +113,17 @@ def train_parser_and_tagger(train_json_path: str,
     if ontonotes_path:
         onto_train_docs = onto_train_corpus.train_docs(nlp)
         onto_train_docs = list([doc for doc in onto_train_docs if len(doc[0]) > 0])
-        num_onto_docs = int(float(ontonotes_train_percent)*len(onto_train_docs))
+        num_onto_docs = int(float(ontonotes_train_percent) * len(onto_train_docs))
         randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
         train_mixture += randomly_sampled_onto
 
     row_head, output_stats = _configure_training_output(nlp.pipe_names, -1, False)
     row_widths = [len(w) for w in row_head]
-    row_settings = {"widths": row_widths, "aligns": tuple(["r" for i in row_head]), "spacing": 2}
+    row_settings = {
+        "widths": row_widths,
+        "aligns": tuple(["r" for i in row_head]),
+        "spacing": 2,
+    }
 
     print("")
     msg.row(row_head, **row_settings)
@@ -128,17 +139,24 @@ def train_parser_and_tagger(train_json_path: str,
                 minibatches = list(util.minibatch(train_docs, size=batch_sizes))
                 for batch in minibatches:
                     docs, golds = zip(*batch)
-                    nlp.update(docs, golds, sgd=optimizer,
-                            drop=next(dropout_rates), losses=losses)
+                    nlp.update(
+                        docs,
+                        golds,
+                        sgd=optimizer,
+                        drop=next(dropout_rates),
+                        losses=losses,
+                    )
                     pbar.update(sum(len(doc) for doc in docs))
 
         # save intermediate model and output results on the dev set
         with nlp.use_params(optimizer.averages):
-            epoch_model_path = os.path.join(model_output_dir, "model"+str(i))
+            epoch_model_path = os.path.join(model_output_dir, "model" + str(i))
             os.makedirs(epoch_model_path, exist_ok=True)
             nlp.to_disk(epoch_model_path)
 
-            with open(os.path.join(model_output_dir, "model"+str(i), "meta.json"), "w") as meta_fp:
+            with open(
+                os.path.join(model_output_dir, "model" + str(i), "meta.json"), "w"
+            ) as meta_fp:
                 meta_fp.write(json.dumps(meta))
 
             nlp_loaded = util.load_model_from_path(epoch_model_path)
@@ -149,12 +167,17 @@ def train_parser_and_tagger(train_json_path: str,
             scorer = nlp_loaded.evaluate(dev_docs)
             end_time = timer()
             gpu_wps = None
-            cpu_wps = nwords/(end_time-start_time)
+            cpu_wps = nwords / (end_time - start_time)
 
             if ontonotes_path:
-                onto_dev_docs = list([doc for doc in onto_train_corpus.dev_docs(nlp_loaded) if len(doc[0]) > 0])
+                onto_dev_docs = list(
+                    [
+                        doc
+                        for doc in onto_train_corpus.dev_docs(nlp_loaded)
+                        if len(doc[0]) > 0
+                    ]
+                )
                 onto_scorer = nlp_loaded.evaluate(onto_dev_docs)
-
 
         if scorer.scores["uas"] > best_epoch_uas:
             best_epoch_uas = scorer.scores["uas"]
@@ -166,7 +189,12 @@ def train_parser_and_tagger(train_json_path: str,
 
         if ontonotes_path:
             progress = _get_progress(
-                i, losses, onto_scorer.scores, output_stats, cpu_wps=cpu_wps, gpu_wps=gpu_wps
+                i,
+                losses,
+                onto_scorer.scores,
+                output_stats,
+                cpu_wps=cpu_wps,
+                gpu_wps=gpu_wps,
             )
             msg.row(progress, **row_settings)
 
@@ -174,8 +202,9 @@ def train_parser_and_tagger(train_json_path: str,
     final_model_path = os.path.join(model_output_dir, "best")
     if os.path.exists(final_model_path):
         shutil.rmtree(final_model_path)
-    shutil.copytree(os.path.join(model_output_dir, "model" + str(best_epoch)),
-                    final_model_path)
+    shutil.copytree(
+        os.path.join(model_output_dir, "model" + str(best_epoch)), final_model_path
+    )
 
     nlp_loaded = util.load_model_from_path(final_model_path)
     start_time = timer()
@@ -185,7 +214,7 @@ def train_parser_and_tagger(train_json_path: str,
     scorer = nlp_loaded.evaluate(test_docs)
     end_time = timer()
     gpu_wps = None
-    cpu_wps = nwords/(end_time-start_time)
+    cpu_wps = nwords / (end_time - start_time)
     meta["speed"] = {"gpu": None, "nwords": nwords, "cpu": cpu_wps}
 
     print("Retrained genia evaluation")
@@ -200,7 +229,9 @@ def train_parser_and_tagger(train_json_path: str,
         meta_fp.write(json.dumps(meta))
 
     if ontonotes_path:
-        onto_test_docs = list([doc for doc in onto_test_corpus.dev_docs(nlp_loaded) if len(doc[0]) > 0])
+        onto_test_docs = list(
+            [doc for doc in onto_test_corpus.dev_docs(nlp_loaded) if len(doc[0]) > 0]
+        )
         print("Retrained ontonotes evaluation")
         scorer_onto_retrained = nlp_loaded.evaluate(onto_test_docs)
         print("Test results:")
@@ -209,54 +240,52 @@ def train_parser_and_tagger(train_json_path: str,
         print("Tag %:", scorer_onto_retrained.tags_acc)
         print("Token acc:", scorer_onto_retrained.token_acc)
 
-        with open(os.path.join(model_output_dir, "ontonotes_test.json"), "w+") as metric_file:
+        with open(
+            os.path.join(model_output_dir, "ontonotes_test.json"), "w+"
+        ) as metric_file:
             json.dump(scorer_onto_retrained.scores, metric_file)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '--train_json_path',
-        help="Path to the json formatted training data"
+        "--train_json_path", help="Path to the json formatted training data"
+    )
+
+    parser.add_argument("--dev_json_path", help="Path to the json formatted dev data")
+
+    parser.add_argument("--test_json_path", help="Path to the json formatted test data")
+
+    parser.add_argument(
+        "--model_path", default=None, help="Path to the spacy model to load"
     )
 
     parser.add_argument(
-        '--dev_json_path',
-        help="Path to the json formatted dev data"
+        "--model_output_dir",
+        help="Path to the directory to output the trained models to",
     )
 
     parser.add_argument(
-        '--test_json_path',
-        help="Path to the json formatted test data"
-    )
-
-    parser.add_argument(
-        '--model_path',
+        "--ontonotes_path",
         default=None,
-        help="Path to the spacy model to load"
-    )
-
-
-    parser.add_argument(
-        '--model_output_dir',
-        help="Path to the directory to output the trained models to"
+        help="Path to the ontonotes folder in spacy format",
     )
 
     parser.add_argument(
-        '--ontonotes_path',
-        default=None,
-        help="Path to the ontonotes folder in spacy format"
-    )
-
-    parser.add_argument(
-        '--ontonotes_train_percent',
+        "--ontonotes_train_percent",
         default=0.0,
-        help="Percentage of ontonotes training data to mix in with the genia data")
+        help="Percentage of ontonotes training data to mix in with the genia data",
+    )
 
     args = parser.parse_args()
-    train_parser_and_tagger(args.train_json_path,
-                            args.dev_json_path,
-                            args.test_json_path,
-                            args.model_output_dir,
-                            args.model_path,
-                            args.ontonotes_path,
-                            args.ontonotes_train_percent)
+    train_parser_and_tagger(
+        args.train_json_path,
+        args.dev_json_path,
+        args.test_json_path,
+        args.model_output_dir,
+        args.model_path,
+        args.ontonotes_path,
+        args.ontonotes_train_percent,
+    )
+
