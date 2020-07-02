@@ -26,27 +26,45 @@ from scispacy.version import VERSION
 
 msg = Printer()
 
+
 @plac.annotations(
-        lang=("model language", "positional", None, str),
-        output_dir=("model output directory", "positional", None, str),
-        freqs_loc=("location of words frequencies file", "positional", None, str),
-        vectors_loc=("optional: location of vectors file in Word2Vec format "
-                     "(either as .txt or zipped as .zip or .tar.gz)", "option",
-                     "v", str),
-        no_expand_vectors=("optional: Whether to expand vocab with words found in vector file",
-                           "flag", "x", bool),
-        meta_overrides=("optional: meta_json file to load.",
-                        "option", "m", str),
-        prune_vectors=("optional: number of vectors to prune to",
-                       "option", "V", int),
-        min_word_frequency=("optional: Word frequency to prune vocab to.",
-                       "option", "mwf", int),
-        vectors_name=("optional: Name for the word vectors.",
-                       "option", "vn", str)
+    lang=("model language", "positional", None, str),
+    output_dir=("model output directory", "positional", None, str),
+    freqs_loc=("location of words frequencies file", "positional", None, str),
+    vectors_loc=(
+        "optional: location of vectors file in Word2Vec format "
+        "(either as .txt or zipped as .zip or .tar.gz)",
+        "option",
+        "v",
+        str,
+    ),
+    no_expand_vectors=(
+        "optional: Whether to expand vocab with words found in vector file",
+        "flag",
+        "x",
+        bool,
+    ),
+    meta_overrides=("optional: meta_json file to load.", "option", "m", str),
+    prune_vectors=("optional: number of vectors to prune to", "option", "V", int),
+    min_word_frequency=(
+        "optional: Word frequency to prune vocab to.",
+        "option",
+        "mwf",
+        int,
+    ),
+    vectors_name=("optional: Name for the word vectors.", "option", "vn", str),
 )
-def init_model(lang, output_dir, freqs_loc=None,
-               vectors_loc=None, no_expand_vectors=False,
-               meta_overrides=None, prune_vectors=-1, min_word_frequency=50, vectors_name = None):
+def init_model(
+    lang,
+    output_dir,
+    freqs_loc=None,
+    vectors_loc=None,
+    no_expand_vectors=False,
+    meta_overrides=None,
+    prune_vectors=-1,
+    min_word_frequency=50,
+    vectors_name=None,
+):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
     and word vectors.
@@ -61,9 +79,24 @@ def init_model(lang, output_dir, freqs_loc=None,
 
     if freqs_loc is not None and not freqs_loc.exists():
         msg.fail("Can't find words frequencies file", freqs_loc, exits=1)
-    probs, oov_prob = read_freqs(freqs_loc, min_freq=min_word_frequency) if freqs_loc is not None else ({}, -20)
-    vectors_data, vector_keys = read_vectors(vectors_loc) if vectors_loc else (None, None)
-    nlp = create_model(lang, probs, oov_prob, vectors_data, vector_keys, not no_expand_vectors, prune_vectors, vectors_name)
+    probs, oov_prob = (
+        read_freqs(freqs_loc, min_freq=min_word_frequency)
+        if freqs_loc is not None
+        else ({}, -20)
+    )
+    vectors_data, vector_keys = (
+        read_vectors(vectors_loc) if vectors_loc else (None, None)
+    )
+    nlp = create_model(
+        lang,
+        probs,
+        oov_prob,
+        vectors_data,
+        vector_keys,
+        not no_expand_vectors,
+        prune_vectors,
+        vectors_name,
+    )
 
     # Insert our custom tokenizer into the base model.
     nlp.tokenizer = combined_rule_tokenizer(nlp)
@@ -78,30 +111,43 @@ def init_model(lang, output_dir, freqs_loc=None,
     nlp.to_disk(output_dir)
     return nlp
 
+
 def open_file(loc):
-    '''Handle .gz, .tar.gz or unzipped files'''
+    """Handle .gz, .tar.gz or unzipped files"""
     loc = ensure_path(loc)
     print("Open loc")
     if tarfile.is_tarfile(str(loc)):
-        return tarfile.open(str(loc), 'r:gz')
-    elif loc.parts[-1].endswith('gz'):
-        return (line.decode('utf8') for line in gzip.open(str(loc), 'r'))
-    elif loc.parts[-1].endswith('zip'):
+        return tarfile.open(str(loc), "r:gz")
+    elif loc.parts[-1].endswith("gz"):
+        return (line.decode("utf8") for line in gzip.open(str(loc), "r"))
+    elif loc.parts[-1].endswith("zip"):
         zip_file = zipfile.ZipFile(str(loc))
         names = zip_file.namelist()
         file_ = zip_file.open(names[0])
-        return (line.decode('utf8') for line in file_)
+        return (line.decode("utf8") for line in file_)
     else:
-        return loc.open('r', encoding='utf8')
+        return loc.open("r", encoding="utf8")
 
-def create_model(lang, probs, oov_prob, vectors_data, vector_keys, expand_vectors, prune_vectors, vectors_name):
+
+def create_model(
+    lang,
+    probs,
+    oov_prob,
+    vectors_data,
+    vector_keys,
+    expand_vectors,
+    prune_vectors,
+    vectors_name,
+):
     print("Creating model...")
     lang_class = get_lang_class(lang)
     nlp = lang_class()
     for lexeme in nlp.vocab:
         lexeme.rank = 0
     lex_added = 0
-    for i, (word, prob) in enumerate(tqdm(sorted(probs.items(), key=lambda item: item[1], reverse=True))):
+    for i, (word, prob) in enumerate(
+        tqdm(sorted(probs.items(), key=lambda item: item[1], reverse=True))
+    ):
         lexeme = nlp.vocab[word]
         lexeme.rank = i
         lexeme.prob = prob
@@ -110,7 +156,7 @@ def create_model(lang, probs, oov_prob, vectors_data, vector_keys, expand_vector
         # the first 4 bits. See _parse_features.pyx
         lexeme.cluster = 0
         lex_added += 1
-    nlp.vocab.cfg.update({'oov_prob': oov_prob})
+    nlp.vocab.cfg.update({"oov_prob": oov_prob})
     if vector_keys is not None:
         new_keys = []
         new_indices = []
@@ -125,9 +171,13 @@ def create_model(lang, probs, oov_prob, vectors_data, vector_keys, expand_vector
 
         if len(vectors_data):
             if expand_vectors:
-                nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys, name=vectors_name)
+                nlp.vocab.vectors = Vectors(
+                    data=vectors_data, keys=vector_keys, name=vectors_name
+                )
             else:
-                nlp.vocab.vectors = Vectors(data=vectors_data[new_indices], keys=new_keys, name=vectors_name)
+                nlp.vocab.vectors = Vectors(
+                    data=vectors_data[new_indices], keys=new_keys, name=vectors_name
+                )
             nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
 
         if prune_vectors >= 1:
@@ -144,15 +194,15 @@ def read_vectors(vectors_loc):
     print("Reading vectors from %s" % vectors_loc)
     f = open_file(vectors_loc)
     shape = tuple(int(size) for size in next(f).split())
-    vectors_data = numpy.zeros(shape=shape, dtype='f')
+    vectors_data = numpy.zeros(shape=shape, dtype="f")
     vectors_keys = []
     for i, line in enumerate(tqdm(f)):
         line = line.rstrip()
-        pieces = line.rsplit(' ', vectors_data.shape[1]+1)
+        pieces = line.rsplit(" ", vectors_data.shape[1] + 1)
         word = pieces.pop(0)
         if len(pieces) != vectors_data.shape[1]:
             raise ValueError(Errors.E094.format(line_num=i, loc=vectors_loc))
-        vectors_data[i] = numpy.asarray(pieces, dtype='f')
+        vectors_data[i] = numpy.asarray(pieces, dtype="f")
         vectors_keys.append(word)
     return vectors_data, vectors_keys
 
@@ -163,7 +213,7 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
     total = 0
     with freqs_loc.open() as f:
         for i, line in enumerate(f):
-            freq, doc_freq, key = line.rstrip().split('\t', 2)
+            freq, doc_freq, key = line.rstrip().split("\t", 2)
             freq = int(freq)
             counts.inc(i + 1, freq)
             total += freq
@@ -172,7 +222,7 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
     probs = {}
     with freqs_loc.open() as f:
         for line in tqdm(f):
-            freq, doc_freq, key = line.rstrip().split('\t', 2)
+            freq, doc_freq, key = line.rstrip().split("\t", 2)
             doc_freq = int(doc_freq)
             freq = int(freq)
             if doc_freq >= min_doc_freq and freq >= min_freq and len(key) < max_length:
@@ -187,5 +237,5 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
     return probs, oov_prob
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     plac.call(init_model)
