@@ -15,7 +15,7 @@ if [[ -z "${MODEL_PATH}" ]]; then
   echo "(optionally export the ONTONOTES_PATH and ONTONOTES_PERCENT variables to mix ontonotes data in with training.)"
   exit 1
 fi
-echo ${ONTONOTES_PATH}
+
 if [[ -n "${ONTONOTES_PATH}" ]]; then
   python scripts/train_parser_and_tagger.py \
     --train_json_path ${GENIA_TRAIN} \
