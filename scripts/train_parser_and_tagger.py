@@ -111,7 +111,8 @@ def train_parser_and_tagger(
 
     train_mixture = train_docs
     if ontonotes_path:
-        onto_train_docs = onto_train_corpus.train_docs(nlp)
+        # Ignoring misaligned because the ontonotes raw text does not always match the tokenized text
+        onto_train_docs = onto_train_corpus.train_docs(nlp, ignore_misaligned=True)
         onto_train_docs = list([doc for doc in onto_train_docs if len(doc[0]) > 0])
         num_onto_docs = int(float(ontonotes_train_percent) * len(onto_train_docs))
         randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
@@ -170,10 +171,13 @@ def train_parser_and_tagger(
             cpu_wps = nwords / (end_time - start_time)
 
             if ontonotes_path:
+                # Ignoring misaligned docs because the ontonotes raw text does not always match the tokenized text
                 onto_dev_docs = list(
                     [
                         doc
-                        for doc in onto_train_corpus.dev_docs(nlp_loaded)
+                        for doc in onto_train_corpus.dev_docs(
+                            nlp_loaded, ignore_misaligned=True
+                        )
                         if len(doc[0]) > 0
                     ]
                 )
@@ -229,8 +233,13 @@ def train_parser_and_tagger(
         meta_fp.write(json.dumps(meta))
 
     if ontonotes_path:
+        # Ignoring misaligned docs because the ontonotes raw text does not always match the tokenized text
         onto_test_docs = list(
-            [doc for doc in onto_test_corpus.dev_docs(nlp_loaded) if len(doc[0]) > 0]
+            [
+                doc
+                for doc in onto_test_corpus.dev_docs(nlp_loaded, ignore_misaligned=True)
+                if len(doc[0]) > 0
+            ]
         )
         print("Retrained ontonotes evaluation")
         scorer_onto_retrained = nlp_loaded.evaluate(onto_test_docs)
