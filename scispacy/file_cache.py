@@ -126,7 +126,7 @@ def get_from_cache(url: str, cache_dir: str = None) -> str:
     if not os.path.exists(cache_path):
         # Download to temporary file, then copy to cache dir once finished.
         # Otherwise you get corrupt cache entries if the download gets interrupted.
-        with tempfile.NamedTemporaryFile() as temp_file:
+        with tempfile.NamedTemporaryFile() as temp_file:  # type: IO
             print(f"{url} not found in cache, downloading to {temp_file.name}")
 
             # GET file object
