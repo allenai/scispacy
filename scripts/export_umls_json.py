@@ -1,6 +1,6 @@
 """
 
-Convert a umls release to a json file of concepts.
+Convert a umls release to a jsonl file of concepts.
 
 """
 import json
@@ -73,10 +73,11 @@ def main(meta_path: str, output_path: str, source: str = None):
         if 'is_from_preferred_source' in concept:
             del concept['is_from_preferred_source']
 
-    print('Exporting to the a json file {} ...'.format(output_path))
+    print('Exporting to the a jsonl file {} ...'.format(output_path))
     with open(output_path, 'w') as fout:
-        json.dump(list(concept_details.values()), fout)
 
+        for value in concept_details.values():
+            fout.write(json.dumps(value) + "\n")
     print('DONE.')
 
 
@@ -88,13 +89,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--output_path',
-        help="Path to the output json file"
+        help="Path to the output jsonl file"
     )
     parser.add_argument(
         '--source',
         type=str,
         default=None,
-        help="Path to the output json file"
+        help="Whether to filter for a only a single UMLS source."
     )
     args = parser.parse_args()
     main(args.meta_path, args.output_path, args.source)
