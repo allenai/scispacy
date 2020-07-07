@@ -152,6 +152,7 @@ def train_parser_and_tagger(train_json_path: str,
             cpu_wps = nwords/(end_time-start_time)
 
             if ontonotes_path:
+                # Ignoring misaligned docs because the ontonotes raw text does not always match the tokenized text
                 onto_dev_docs = list([doc for doc in onto_train_corpus.dev_docs(nlp_loaded, ignore_misaligned=True) if len(doc[0]) > 0])
                 onto_scorer = nlp_loaded.evaluate(onto_dev_docs)
 
@@ -200,18 +201,8 @@ def train_parser_and_tagger(train_json_path: str,
         meta_fp.write(json.dumps(meta))
 
     if ontonotes_path:
-<<<<<<< HEAD
         # Ignoring misaligned docs because the ontonotes raw text does not always match the tokenized text
-        onto_test_docs = list(
-            [
-                doc
-                for doc in onto_test_corpus.dev_docs(nlp_loaded, ignore_misaligned=True)
-                if len(doc[0]) > 0
-            ]
-        )
-=======
-        onto_test_docs = list([doc for doc in onto_test_corpus.dev_docs(nlp_loaded) if len(doc[0]) > 0])
->>>>>>> parent of ae9a36e... Black format train_parser_and_tagger.py
+        onto_test_docs = list([doc for doc in onto_test_corpus.dev_docs(nlp_loaded, ignore_misaligned=True) if len(doc[0]) > 0])
         print("Retrained ontonotes evaluation")
         scorer_onto_retrained = nlp_loaded.evaluate(onto_test_docs)
         print("Test results:")
