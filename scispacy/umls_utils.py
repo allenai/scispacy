@@ -37,7 +37,7 @@ def read_umls_file_headers(meta_path: str, filename: str) -> List[str]:
     return None
 
 
-def read_umls_concepts(meta_path: str, concept_details: Dict):
+def read_umls_concepts(meta_path: str, concept_details: Dict, source: str = None):
     """
     Read the concepts file MRCONSO.RRF from a UMLS release and store it in
     concept_details dictionary. Each concept is represented with
@@ -64,6 +64,10 @@ def read_umls_concepts(meta_path: str, concept_details: Dict):
             concept = dict(zip(headers, splits))
             if concept["LAT"] != "ENG" or concept["SUPPRESS"] != "N":
                 continue  # Keep English non-suppressed concepts only
+
+            if source is not None:
+                if concept["SAB"] != source:
+                    continue
 
             concept_id = concept["CUI"]
             if concept_id not in concept_details:  # a new concept
