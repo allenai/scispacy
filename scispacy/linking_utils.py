@@ -113,7 +113,7 @@ class GeneOntology(KnowledgeBase):
 class HumanPhenotypeOntology(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/umls_2020_human_phenotype_ontology.jsonl",
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/umls_2020_human_phenotype_ontology.jsonl",  # noqa
     ):
         super().__init__(file_path)
 
@@ -121,6 +121,6 @@ class HumanPhenotypeOntology(KnowledgeBase):
 class RxNorm(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/umls_2020_human_phenotype_ontology.jsonl",
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/umls_2020_human_phenotype_ontology.jsonl",  # noqa
     ):
         super().__init__(file_path)
