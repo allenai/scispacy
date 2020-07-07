@@ -26,7 +26,7 @@ COPY tests/ tests/
 COPY .flake8 .flake8
 
 RUN pip install -r requirements.in
-RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz
+RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz
 RUN python -m spacy download en_core_web_sm
 RUN python -m spacy download en_core_web_md
 

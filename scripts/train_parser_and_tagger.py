@@ -102,13 +102,13 @@ def train_parser_and_tagger(train_json_path: str,
     train_docs = train_corpus.train_docs(nlp)
     train_docs = list(train_docs)
 
-    train_mixture = train_docs
     if ontonotes_path:
-        onto_train_docs = onto_train_corpus.train_docs(nlp)
+        # Ignoring misaligned because the ontonotes raw text does not always match the tokenized text
+        onto_train_docs = onto_train_corpus.train_docs(nlp, ignore_misaligned=True)
         onto_train_docs = list([doc for doc in onto_train_docs if len(doc[0]) > 0])
         num_onto_docs = int(float(ontonotes_train_percent)*len(onto_train_docs))
         randomly_sampled_onto = random.sample(onto_train_docs, num_onto_docs)
-        train_mixture += randomly_sampled_onto
+        train_docs += randomly_sampled_onto
 
     row_head, output_stats = _configure_training_output(nlp.pipe_names, -1, False)
     row_widths = [len(w) for w in row_head]
@@ -121,7 +121,7 @@ def train_parser_and_tagger(train_json_path: str,
     best_epoch = 0
     best_epoch_uas = 0.0
     for i in range(20):
-        random.shuffle(train_mixture)
+        random.shuffle(train_docs)
         with nlp.disable_pipes(*other_pipes):
             with tqdm(total=n_train_words, leave=False) as pbar:
                 losses = {}
@@ -152,7 +152,8 @@ def train_parser_and_tagger(train_json_path: str,
             cpu_wps = nwords/(end_time-start_time)
 
             if ontonotes_path:
-                onto_dev_docs = list([doc for doc in onto_train_corpus.dev_docs(nlp_loaded) if len(doc[0]) > 0])
+                # Ignoring misaligned docs because the ontonotes raw text does not always match the tokenized text
+                onto_dev_docs = list([doc for doc in onto_train_corpus.dev_docs(nlp_loaded, ignore_misaligned=True) if len(doc[0]) > 0])
                 onto_scorer = nlp_loaded.evaluate(onto_dev_docs)
 
 
@@ -200,7 +201,8 @@ def train_parser_and_tagger(train_json_path: str,
         meta_fp.write(json.dumps(meta))
 
     if ontonotes_path:
-        onto_test_docs = list([doc for doc in onto_test_corpus.dev_docs(nlp_loaded) if len(doc[0]) > 0])
+        # Ignoring misaligned docs because the ontonotes raw text does not always match the tokenized text
+        onto_test_docs = list([doc for doc in onto_test_corpus.dev_docs(nlp_loaded, ignore_misaligned=True) if len(doc[0]) > 0])
         print("Retrained ontonotes evaluation")
         scorer_onto_retrained = nlp_loaded.evaluate(onto_test_docs)
         print("Test results:")
