@@ -20,38 +20,28 @@ from scispacy.umls_semantic_type_tree import construct_umls_tree_from_tsv
 from scispacy.train_utils import evaluate_ner
 
 
-def train_ner(
-    output_dir: str,
-    data_path: str,
-    run_test: bool = None,
-    model: str = None,
-    n_iter: int = 100,
-    label_granularity: int = None,
-):
+def train_ner(output_dir: str,
+              data_path: str,
+              run_test: bool = None,
+              model: str = None,
+              n_iter: int = 100,
+              label_granularity: int = None):
 
     if label_granularity is not None:
-        umls_tree = construct_umls_tree_from_tsv(
-            "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_semantic_type_tree.tsv"
-        )
+        umls_tree = construct_umls_tree_from_tsv("https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_semantic_type_tree.tsv")
         label_mapping = umls_tree.get_collapsed_type_id_map_at_level(label_granularity)
         if label_granularity == 0:
             span_only = True
     else:
         label_mapping = None
         span_only = False
-    train_data, dev_data, test_data = read_full_med_mentions(
-        data_path, label_mapping, span_only
-    )
+    train_data, dev_data, test_data = read_full_med_mentions(data_path, label_mapping, span_only)
     os.makedirs(output_dir, exist_ok=True)
     if run_test:
         nlp = spacy.load(model)
         print("Loaded model '%s'" % model)
-        evaluate_ner(
-            nlp, dev_data, dump_path=os.path.join(output_dir, "dev_metrics.json")
-        )
-        evaluate_ner(
-            nlp, test_data, dump_path=os.path.join(output_dir, "test_metrics.json")
-        )
+        evaluate_ner(nlp, dev_data, dump_path=os.path.join(output_dir, "dev_metrics.json"))
+        evaluate_ner(nlp, test_data, dump_path=os.path.join(output_dir, "test_metrics.json"))
     else:
         train(model, train_data, dev_data, output_dir, n_iter)
 
@@ -62,42 +52,38 @@ def train(model, train_data, dev_data, output_dir, n_iter):
         nlp = spacy.load(model)  # load existing spaCy model
         print("Loaded model '%s'" % model)
     else:
-        nlp = spacy.blank("en")  # create blank Language class
+        nlp = spacy.blank('en')  # create blank Language class
         print("Created blank 'en' model")
 
     # create the built-in pipeline components and add them to the pipeline
     # nlp.create_pipe works for built-ins that are registered with spaCy
-    if "ner" not in nlp.pipe_names and "parser" in nlp.pipe_names:
-        ner = nlp.create_pipe("ner")
+    if 'ner' not in nlp.pipe_names and "parser" in nlp.pipe_names:
+        ner = nlp.create_pipe('ner')
         nlp.add_pipe(ner, after="parser")
-    if "ner" not in nlp.pipe_names and "tagger" in nlp.pipe_names:
-        ner = nlp.create_pipe("ner")
+    if 'ner' not in nlp.pipe_names and "tagger" in nlp.pipe_names:
+        ner = nlp.create_pipe('ner')
         nlp.add_pipe(ner, after="tagger")
-    elif "ner" not in nlp.pipe_names:
-        ner = nlp.create_pipe("ner")
+    elif 'ner' not in nlp.pipe_names:
+        ner = nlp.create_pipe('ner')
         nlp.add_pipe(ner, last=True)
     # otherwise, get it so we can add labels
     else:
-        ner = nlp.get_pipe("ner")
+        ner = nlp.get_pipe('ner')
 
     # add labels
     for _, annotations in train_data:
-        for ent in annotations.get("entities"):
+        for ent in annotations.get('entities'):
             ner.add_label(ent[2])
 
     # get names of other pipes to disable them during training
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
 
-    dropout_rates = util.decaying(
-        util.env_opt("dropout_from", 0.2),
-        util.env_opt("dropout_to", 0.2),
-        util.env_opt("dropout_decay", 0.005),
-    )
-    batch_sizes = util.compounding(
-        util.env_opt("batch_from", 1),
-        util.env_opt("batch_to", 32),
-        util.env_opt("batch_compound", 1.001),
-    )
+    dropout_rates = util.decaying(util.env_opt('dropout_from', 0.2),
+                                  util.env_opt('dropout_to', 0.2),
+                                  util.env_opt('dropout_decay', 0.005))
+    batch_sizes = util.compounding(util.env_opt('batch_from', 1),
+                                   util.env_opt('batch_to', 32),
+                                   util.env_opt('batch_compound', 1.001))
 
     with nlp.disable_pipes(*other_pipes):
         optimizer = nlp.begin_training()
@@ -115,16 +101,11 @@ def train(model, train_data, dev_data, output_dir, n_iter):
             with tqdm.tqdm(total=total, leave=True) as pbar:
                 for batch in minibatch(train_data, size=batch_sizes):
                     docs, golds = zip(*batch)
-                    nlp.update(
-                        docs,
-                        golds,
-                        sgd=optimizer,
-                        losses=losses,
-                        drop=next(dropout_rates),
-                    )
+                    nlp.update(docs, golds, sgd=optimizer,
+                               losses=losses, drop=next(dropout_rates))
                     pbar.update(len(batch))
                     if count % 100 == 0 and count > 0:
-                        print("sum loss: %s" % losses["ner"])
+                        print('sum loss: %s' % losses['ner'])
                     count += 1
 
         # save model to output directory
@@ -148,7 +129,8 @@ def train(model, train_data, dev_data, output_dir, n_iter):
     best_model_path = Path(output_dir + "/" + "best")
     if os.path.exists(best_model_path):
         shutil.rmtree(best_model_path)
-    shutil.copytree(os.path.join(output_dir, str(best_epoch)), best_model_path)
+    shutil.copytree(os.path.join(output_dir, str(best_epoch)),
+                    best_model_path)
 
     # test the saved model
     print("Loading from", best_model_path)
@@ -160,30 +142,40 @@ def train(model, train_data, dev_data, output_dir, n_iter):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--model_output_dir",
-        help="Path to the directory to output the trained models to",
-    )
-
-    parser.add_argument("--data_path", help="Path to the data directory.")
-
-    parser.add_argument(
-        "--run_test", help="Whether to run evaluation on the test dataset."
+            '--model_output_dir',
+            help="Path to the directory to output the trained models to"
     )
 
     parser.add_argument(
-        "--model_path", default=None, help="Path to the spacy model to load"
+            '--data_path',
+            help="Path to the data directory."
     )
-    parser.add_argument("--iterations", type=int, help="Number of iterations to run.")
+
     parser.add_argument(
-        "--label_granularity", type=int, help="granularity of the labels, between 1-7."
+            '--run_test',
+            help="Whether to run evaluation on the test dataset."
+    )
+
+    parser.add_argument(
+            '--model_path',
+            default=None,
+            help="Path to the spacy model to load"
+    )
+    parser.add_argument(
+            '--iterations',
+            type=int,
+            help="Number of iterations to run."
+    )
+    parser.add_argument(
+            '--label_granularity',
+            type=int,
+            help="granularity of the labels, between 1-7."
     )
 
     args = parser.parse_args()
-    train_ner(
-        args.model_output_dir,
-        args.data_path,
-        args.run_test,
-        args.model_path,
-        args.iterations,
-        args.label_granularity,
-    )
+    train_ner(args.model_output_dir,
+              args.data_path,
+              args.run_test,
+              args.model_path,
+              args.iterations,
+              args.label_granularity)
