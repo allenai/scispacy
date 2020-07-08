@@ -54,6 +54,8 @@ def read_umls_concepts(meta_path: str, concept_details: Dict, source: str = None
     Args:
         meta_path: path to the META directory of an UMLS release
         concept_details: a dictionary to be filled with concept informations
+        source: An optional source identifier, used as a filter to extract only a
+                specific source from UMLS.
     """
     concepts_filename = "MRCONSO.RRF"
     headers = read_umls_file_headers(meta_path, concepts_filename)
