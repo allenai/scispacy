@@ -127,10 +127,17 @@ for abrv in doc._.abbreviations:
 ```
 ### EntityLinker
 
-The `EntityLinker` is a SpaCy component which performs linking to a knowledge base. Currently, the
-Unified Medical Language System and the Medical Subject Headings (MESH) are supported.
-The linker simply performs a string overlap search on named entities,
-comparing them with a knowledge base of 2.7 million concepts using an approximate nearest neighbours search.
+The `EntityLinker` is a SpaCy component which performs linking to a knowledge base. The linker simply performs
+a string overlap - based search (char-3grams) on named entities, comparing them with the concepts in a knowledge base
+using an approximate nearest neighbours search.
+
+Currently (v2.5.0), there are 5 supported linkers:
+
+- `umls`: Links to the [Unified Medical Language System](https://www.nlm.nih.gov/research/umls/index.html), levels 0,1,2 and 9. This has ~3M concepts.
+- `mesh`: Links to the [Medical Subject Headings](https://www.nlm.nih.gov/mesh/meshhome.html). This contains a smaller set of higher quality entities, which are used for indexing in Pubmed. MeSH contains ~30k entities. NOTE: The MeSH KB is derrived directly from MeSH itself, and as such uses different unique identifiers than the other KBs.
+- `rxnorm`: Links to the [RxNorm](https://www.nlm.nih.gov/research/umls/rxnorm/index.html) ontology. RxNorm contains ~100k concepts focused on normalized names for clinical drugs. It is comprised of several other drug vocabularies commonly used in pharmacy management and drug interaction, including First Databank, Micromedex, and the Gold Standard Drug Database.
+- `go`: Links to the [Gene Ontology](http://geneontology.org/). The Gene Ontology contains ~67k concepts focused on the functions of genes.
+- `hpo`: Links to the [Human Phenotype Ontology](https://hpo.jax.org/app/). The Human Phenotype Ontology contains 16k concepts focused on phenotypic abnormalities encountered in human disease.
 
 You may want to play around with some of the parameters
 below to adapt to your use case (higher precision, higher recall etc).

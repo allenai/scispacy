@@ -1,13 +1,13 @@
 """
 
-Convert a umls release to a json file of concepts.
+Convert a umls release to a jsonl file of concepts.
 
 """
 import json
 import argparse
 from scispacy import umls_utils
 
-def main(meta_path, output_path):
+def main(meta_path: str, output_path: str, source: str = None):
 
     concept_details = {}  # dictionary of concept_id -> {
                           #                 'concept_id': str,
@@ -18,7 +18,7 @@ def main(meta_path, output_path):
                           # }
 
     print('Reading concepts ... ')
-    umls_utils.read_umls_concepts(meta_path, concept_details)
+    umls_utils.read_umls_concepts(meta_path, concept_details, source)
 
     print('Reading types ... ')
     umls_utils.read_umls_types(meta_path, concept_details)
@@ -73,11 +73,13 @@ def main(meta_path, output_path):
         if 'is_from_preferred_source' in concept:
             del concept['is_from_preferred_source']
 
-    print('Exporting to the a json file {} ...'.format(output_path))
+    print('Exporting to the a jsonl file {} ...'.format(output_path))
     with open(output_path, 'w') as fout:
-        json.dump(list(concept_details.values()), fout)
 
+        for value in concept_details.values():
+            fout.write(json.dumps(value) + "\n")
     print('DONE.')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -87,7 +89,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--output_path',
-        help="Path to the output json file"
+        help="Path to the output jsonl file"
+    )
+    parser.add_argument(
+        '--source',
+        type=str,
+        default=None,
+        help="Whether to filter for a only a single UMLS source."
     )
     args = parser.parse_args()
-    main(args.meta_path, args.output_path)
+    main(args.meta_path, args.output_path, args.source)
