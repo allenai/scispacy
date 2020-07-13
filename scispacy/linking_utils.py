@@ -121,6 +121,6 @@ class HumanPhenotypeOntology(KnowledgeBase):
 class RxNorm(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/umls_2020_human_phenotype_ontology.jsonl",  # noqa
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/umls_2020_rxnorm.jsonl",  # noqa
     ):
         super().__init__(file_path)
