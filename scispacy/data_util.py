@@ -254,7 +254,7 @@ def _handle_sentence(examples: List[Tuple[str, str]]) -> SpacyNerExample:
         else:
             if in_entity:
                 end_index = current_index - 1
-                entities.append((start_index, end_index, entity_type))
+                entities.append((start_index, end_index, entity_type.replace("-", "_")))
             in_entity = False
             entity_type = ""
             start_index = -1
