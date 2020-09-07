@@ -56,7 +56,8 @@ class EntityLinker:
     max_entities_per_mention : int, optional, default = 5
         The maximum number of entities which will be returned for a given mention, regardless of
         how many are nearest neighbours are found.
-
+    name: str, optional (default = None)
+        The name of the pretrained entity linker to load.
     """
 
     def __init__(
