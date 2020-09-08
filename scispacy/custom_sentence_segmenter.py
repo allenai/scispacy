@@ -25,13 +25,22 @@ def pysbd_sentencizer(doc: Doc) -> Doc:
     sents_char_spans: List[TextSpan] = segmenter.segment(doc.text)
 
     char_spans = [
-        doc.char_span(sent_span.start, sent_span.end) for sent_span in sents_char_spans
+        doc.char_span(
+            sent_span.start,
+            # strip off trailing spaces when creating spans to accomodate spacy
+            sent_span.end - (len(sent_span.sent) - len(sent_span.sent.rstrip(" "))),
+        )
+        for sent_span in sents_char_spans
     ]
     start_token_char_offsets = [span[0].idx for span in char_spans if span is not None]
     for token in doc:
         prev_token = token.nbor(-1) if token.i != 0 else None
         if token.idx in start_token_char_offsets:
-            if prev_token and prev_token.text in ABBREVIATIONS:
+            if prev_token and (
+                prev_token.text in ABBREVIATIONS
+                # Glom new lines at the beginning of the text onto the following sentence
+                or (prev_token.i == 0 and all(c == "\n" for c in prev_token.text))
+            ):
                 token.is_sent_start = False
             else:
                 token.is_sent_start = True

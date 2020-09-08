@@ -88,12 +88,12 @@ def construct_umls_tree_from_tsv(filepath: str) -> UmlsSemanticTypeTree:
 
     Name TAB UMLS Semantic Type TAB Tree Depth
 
-    Event	T051	1
-      Activity	T052	2
-        Behavior	T053	3
-          Social Behavior	T054	4
-          Individual Behavior	T055	4
-        Daily or Recreational Activity	T056	3
+    Event    T051    1
+      Activity    T052    2
+        Behavior    T053    3
+          Social Behavior    T054    4
+          Individual Behavior    T055    4
+        Daily or Recreational Activity    T056    3
     """
 
     node_stack: Deque[SemanticTypeNode] = deque()
