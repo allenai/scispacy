@@ -27,6 +27,7 @@ def pysbd_sentencizer(doc: Doc) -> Doc:
     char_spans = [
         doc.char_span(
             sent_span.start,
+            # strip off trailing spaces when creating spans to accomodate spacy
             sent_span.end - (len(sent_span.sent) - len(sent_span.sent.rstrip(" "))),
         )
         for sent_span in sents_char_spans
@@ -37,6 +38,7 @@ def pysbd_sentencizer(doc: Doc) -> Doc:
         if token.idx in start_token_char_offsets:
             if prev_token and (
                 prev_token.text in ABBREVIATIONS
+                # Glom new lines at the beginning of the text onto the following sentence
                 or (prev_token.i == 0 and all(c == "\n" for c in prev_token.text))
             ):
                 token.is_sent_start = False
