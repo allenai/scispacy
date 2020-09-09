@@ -25,8 +25,8 @@ def remove_new_lines(text: str) -> str:
 
 def combined_rule_prefixes() -> List[str]:
     """Helper function that returns the prefix pattern for the tokenizer.
-       It is a helper function to accomodate spacy tests that only test
-       prefixes.
+    It is a helper function to accomodate spacy tests that only test
+    prefixes.
     """
     # add lookahead assertions for brackets (may not work properly for unbalanced brackets)
     prefix_punct = char_classes.PUNCT.replace("|", " ")
@@ -47,13 +47,13 @@ def combined_rule_prefixes() -> List[str]:
 
 def combined_rule_tokenizer(nlp: Language) -> Tokenizer:
     """Creates a custom tokenizer on top of spaCy's default tokenizer. The
-       intended use of this function is to replace the tokenizer in a spaCy
-       pipeline like so:
+    intended use of this function is to replace the tokenizer in a spaCy
+    pipeline like so:
 
-            nlp = spacy.load("some_spacy_model")
-            nlp.tokenizer = combined_rule_tokenizer(nlp)
+         nlp = spacy.load("some_spacy_model")
+         nlp.tokenizer = combined_rule_tokenizer(nlp)
 
-       @param nlp: a loaded spaCy model
+    @param nlp: a loaded spaCy model
     """
     # remove the first hyphen to prevent tokenization of the normal hyphen
     hyphens = char_classes.HYPHENS.replace("-|", "", 1)
