@@ -36,9 +36,7 @@ class Entity(NamedTuple):
         return rep
 
 
-DEFAULT_UMLS_PATH = (
-    "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/kbs/2020-10-09/umls_2020_aa_cat0129.jsonl"
-)
+DEFAULT_UMLS_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/kbs/2020-10-09/umls_2020_aa_cat0129.jsonl"
 DEFAULT_UMLS_TYPES_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_semantic_type_tree.tsv"
 
 
@@ -55,8 +53,7 @@ class KnowledgeBase:
     """
 
     def __init__(
-        self,
-        file_path: str = None,
+        self, file_path: str = None,
     ):
         if file_path is None:
             raise ValueError(

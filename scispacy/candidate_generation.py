@@ -48,7 +48,7 @@ UmlsLinkerPaths = LinkerPaths(
 )
 
 MeshLinkerPaths = LinkerPaths(
-    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/mesh/nmslib_index.bin",
+    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/nmslib_index.bin",  # noqa
     tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/tfidf_vectorizer.joblib",  # noqa
     tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/tfidf_vectors_sparse.npz",  # noqa
     concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/concept_aliases.json",  # noqa
@@ -114,8 +114,7 @@ class MentionCandidate(NamedTuple):
 
 
 def load_approximate_nearest_neighbours_index(
-    linker_paths: LinkerPaths,
-    ef_search: int = 200,
+    linker_paths: LinkerPaths, ef_search: int = 200,
 ) -> FloatIndex:
     """
     Load an approximate nearest neighbours index from disk.
