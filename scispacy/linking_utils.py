@@ -37,7 +37,7 @@ class Entity(NamedTuple):
 
 
 DEFAULT_UMLS_PATH = (
-    "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2020_aa_cat0129.jsonl"
+    "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/kbs/2020-10-09/umls_2020_aa_cat0129.jsonl"
 )
 DEFAULT_UMLS_TYPES_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_semantic_type_tree.tsv"
 
@@ -98,7 +98,7 @@ class UmlsKnowledgeBase(KnowledgeBase):
 class Mesh(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/mesh_2020.jsonl",
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2020-10-09/mesh_2020.jsonl",
     ):
         super().__init__(file_path)
 
@@ -106,7 +106,7 @@ class Mesh(KnowledgeBase):
 class GeneOntology(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/umls_2020_gene_ontology.jsonl",
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2020-10-09/umls_2020_go.jsonl",
     ):
         super().__init__(file_path)
 
@@ -114,7 +114,7 @@ class GeneOntology(KnowledgeBase):
 class HumanPhenotypeOntology(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/umls_2020_human_phenotype_ontology.jsonl",  # noqa
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2020-10-09/umls_2020_hpo.jsonl",  # noqa
     ):
         super().__init__(file_path)
 
@@ -122,6 +122,6 @@ class HumanPhenotypeOntology(KnowledgeBase):
 class RxNorm(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/umls_2020_rxnorm.jsonl",  # noqa
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2020-10-09/umls_2020_rxnorm.jsonl",  # noqa
     ):
         super().__init__(file_path)
