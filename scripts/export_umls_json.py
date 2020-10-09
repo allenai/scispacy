@@ -63,6 +63,10 @@ def main(meta_path: str, output_path: str, source: str = None):
 
     print('Deleting unused fields and choosing a canonical name from aliases ... ')
     for concept in concept_details.values():
+
+        # Some concepts have many duplicate aliases. Here we remove them.
+        concept["aliases"] = list(set(concept["aliases"]))
+
         # if a concept doesn't have a canonical name, use the first alias instead
         if 'canonical_name' not in concept:
             aliases = concept['aliases']

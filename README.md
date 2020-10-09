@@ -1,4 +1,3 @@
-
 <p align="center"><img width="50%" src="docs/scispacy-logo.png" /></p>
 
 

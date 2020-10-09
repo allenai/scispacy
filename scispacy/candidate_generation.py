@@ -41,38 +41,38 @@ class LinkerPaths(NamedTuple):
 
 
 UmlsLinkerPaths = LinkerPaths(
-    ann_index="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls/nmslib_index.bin",
-    tfidf_vectorizer="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls/tfidf_vectorizer.joblib",  # noqa
-    tfidf_vectors="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls/concept_aliases.json",  # noqa
+    ann_index="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2020-10-09/umls/nmslib_index.bin",  # noqa
+    tfidf_vectorizer="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2020-10-09/umls/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2020-10-09/umls/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2020-10-09/umls/concept_aliases.json",  # noqa
 )
 
 MeshLinkerPaths = LinkerPaths(
-    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/mesh_linking_model/nmslib_index.bin",
-    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/mesh_linking_model/tfidf_vectorizer.joblib",  # noqa
-    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/mesh_linking_model/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/mesh_linking_model/concept_aliases.json",  # noqa
+    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/nmslib_index.bin",  # noqa
+    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/concept_aliases.json",  # noqa
 )
 
 GeneOntologyLinkerPaths = LinkerPaths(
-    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/gene_ontology/nmslib_index.bin",
-    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/gene_ontology/tfidf_vectorizer.joblib",  # noqa
-    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/gene_ontology/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/gene_ontology/concept_aliases.json",  # noqa
+    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/go/nmslib_index.bin",  # noqa
+    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/go/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/go/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/go/concept_aliases.json",  # noqa
 )
 
 HumanPhenotypeOntologyLinkerPaths = LinkerPaths(
-    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/human_phenotype_ontology/nmslib_index.bin",
-    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/human_phenotype_ontology/tfidf_vectorizer.joblib",  # noqa
-    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/human_phenotype_ontology/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/human_phenotype_ontology/concept_aliases.json",  # noqa
+    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/hpo/nmslib_index.bin",  # noqa
+    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/hpo/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/hpo/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/hpo/concept_aliases.json",  # noqa
 )
 
 RxNormLinkerPaths = LinkerPaths(
-    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/rxnorm/nmslib_index.bin",
-    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/rxnorm/tfidf_vectorizer.joblib",  # noqa
-    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/rxnorm/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/rxnorm/concept_aliases.json",  # noqa
+    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/rxnorm/nmslib_index.bin",  # noqa
+    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/rxnorm/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/rxnorm/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/rxnorm/concept_aliases.json",  # noqa
 )
 
 
