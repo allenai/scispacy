@@ -13,7 +13,7 @@ class TestHyponymDetector(unittest.TestCase):
         self.detector = HyponymDetector(self.nlp, extended=True)
         self.nlp.add_pipe(self.detector, last=True)
 
-    def test_pipe_sentence(self):
+    def test_sentences(self):
         text = ("Recognizing that the preferred habitats for the species "
                 "are in the valleys, systematic planting of keystone plant "
                 "species such as fig trees (Ficus) creates the best microhabitats.")
@@ -21,6 +21,14 @@ class TestHyponymDetector(unittest.TestCase):
         fig_trees = doc[21:23]
         keystone_plant_species = doc[16:19]
         assert doc._.hearst_patterns == [('such_as', keystone_plant_species, fig_trees)]
+
+        doc = self.nlp("SARS, or other coronaviruses, are bad.")
+        assert doc._.hearst_patterns == [("other", doc[4:5], doc[0:1])]
+        doc = self.nlp("Coronaviruses, including SARS and MERS, are bad.")
+        assert doc._.hearst_patterns == [
+            ("include", doc[0:1], doc[3:4]),
+            ("include", doc[0:1], doc[5:6])
+        ]
 
     def test_find_noun_compound_head(self):
 

@@ -26,7 +26,6 @@ BASE_PATTERNS = [
     {
         "label": "other",
         "pattern": [
-            det,
             hyponym,
             punct,
             {"LEMMA": {"IN": ["and", "or"]}},
