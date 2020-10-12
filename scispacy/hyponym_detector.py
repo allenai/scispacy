@@ -11,9 +11,14 @@ class HyponymDetector:
     A spaCy pipe for detecting hyponyms using Hearst patterns.
     This class sets the following attributes:
 
-    - `Doc._.hearst_patterns` attribute on a spaCy Doc, which consists of
-    a List[Tuple[str, List[str], str]] corresonding to the extracted general term, specific terms, and
-    the string that matched a Hearst pattern.
+    - `Doc._.hearst_patterns`: A List[Tuple[str, Span, Span]] corresonding to
+       the matching predicate, extracted general term and specific term
+       that matched a Hearst pattern.
+    - `Token._.is_hypernym`: Whether the token is a hypernym.
+    - `Token._.hyponyms`: The hyponyms for this token.
+    - `Token._.is_hyponym`: Whether the token is a hyponym.
+    - `Token._.hypernym`: The hypernym for this token.
+
     Parts of the implementation taken from
     https://github.com/mmichelsonIF/hearst_patterns_python/blob/master/hearstPatterns/hearstPatterns.py
     and
@@ -40,7 +45,6 @@ class HyponymDetector:
         Token.set_extension("hyponyms", default=[], force=True)
         Token.set_extension("is_hyponym", default=False, force=True)
         Token.set_extension("hypernym", default=None, force=True)
-        Token.set_extension("predicate", default=None, force=True)
 
         self.predicates = []
         self.first = set()
@@ -120,13 +124,11 @@ class HyponymDetector:
 
             # hypernym recorded as True and list of hyponyms created
             hypernym._.is_hypernym = True
-            hypernym._.predicate = predicate
             hypernym._.hyponyms.append(hyponym)
 
             # hyponym recorded as True and its hypernym is recorded
             hyponym._.is_hyponym = True
             hyponym._.hypernym = hypernym
-            hyponym._.predicate = predicate
 
             # iterate over conjunct list attached to hyponym
             for token in hyponym.conjuncts:
@@ -134,7 +136,6 @@ class HyponymDetector:
                     hypernym._.hyponyms.append(token)
                     token._.is_hyponym = True
                     token._.hypernym = hypernym
-                    hyponym._.predicate = predicate
 
             # For the document level, we expand to contain noun phrases.
             hypernym_extended = self.expand_to_noun_compound(hypernym, doc)
