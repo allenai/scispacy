@@ -1,0 +1,126 @@
+from spacy.matcher import Matcher
+from spacy.tokens import Token, Doc
+
+from scispacy.hearst_patterns import BASE_PATTERNS, EXTENDED_PATTERNS
+
+
+class HyponymDetector:
+    name = "HyponymDetector"
+
+    """
+    A spaCy pipe for detecting hyponyms using Hearst patterns.
+    This class sets the following attributes:
+
+    - `Doc._.hearst_patterns` attribute on a spaCy Doc, which consists of
+    a List[Tuple[str, List[str], str]] corresonding to the extracted general term, specific terms, and
+    the string that matched a Hearst pattern.
+    Parts of the implementation taken from
+    https://github.com/mmichelsonIF/hearst_patterns_python/blob/master/hearstPatterns/hearstPatterns.py
+    and
+    https://github.com/Fourthought/CNDPipeline/blob/master/cndlib/hpspacy.py
+
+    The pipe can be used with an instantiated spacy model like so:
+    ```
+    hyponym_pipe = HyponymDetector(extended=True)
+    nlp.add_pipe(hyponym_pipe, last=True)
+    """
+
+    def __init__(self, nlp, extended=False):
+
+        self.nlp = nlp
+
+        self.patterns = BASE_PATTERNS
+        if extended:
+            self.patterns.extend(EXTENDED_PATTERNS)
+
+        self.matcher = Matcher(self.nlp.vocab)
+
+        Doc.set_extension("hearst_patterns", default=[], force=True)
+        Token.set_extension("is_hypernym", default=False, force=True)
+        Token.set_extension("hyponyms", default=[], force=True)
+        Token.set_extension("is_hyponym", default=False, force=True)
+        Token.set_extension("hypernym", default=None, force=True)
+        Token.set_extension("predicate", default=None, force=True)
+
+        self.predicates = []
+        self.first = []
+        self.last = []
+
+        # add patterns to matcher
+        for pattern in self.patterns:
+            self.matcher.add(pattern["label"], None, pattern["pattern"])
+
+            # gather list of predicates where the hypernym appears first
+            if pattern["position"] == "first":
+                self.first.append(pattern["label"])
+
+            # gather list of predicates where the hypernym appears last
+            if pattern["position"] == "last":
+                self.last.append(pattern["label"])
+
+    def maybe_expand(self, token: Token, doc: Doc):
+        """
+        Expand a token to it's noun phrase based
+        on a simple POS tag heuristic.
+        """
+        if token.left_edge.pos_ in {"PROPN", "NOUN", "PRON"}:
+            return doc[token.left_edge.i : token.i + 1]
+        return token
+
+    def __call__(self, doc: Doc):
+        """
+        Runs the matcher on the Doc object and sets token and
+        doc level attributes for hypernym and hyponym relations.
+        """
+        # Find matches in doc
+        matches = self.matcher(doc)
+
+        # If none are found then return None
+        if not matches:
+            return doc
+
+        for match_id, start, end in matches:
+            predicate = self.nlp.vocab.strings[match_id]
+
+            # if the predicate is in the list where the hypernym is last, else hypernym is first
+            if predicate in self.last:
+                hypernym = doc[end - 1]
+                hyponym = doc[start]
+            else:
+                # An inelegent way to deal with the "such_NOUN_as pattern"
+                # since the first token is not the hypernym.
+                if doc[start].lemma_ == "such":
+                    start += 1
+                hypernym = doc[start]
+                hyponym = doc[end - 1]
+
+            # hypernym recorded as True and list of hyponyms created
+            hypernym._.is_hypernym = True
+            hypernym._.predicate = predicate
+            hypernym._.hyponyms.append(hyponym)
+
+            # hyponym recorded as True and its hypernym is recorded
+            hyponym._.is_hyponym = True
+            hyponym._.hypernym = hypernym
+            hyponym._.predicate = predicate
+
+            # iterate over conjunct list attached to hyponym
+            for token in hyponym.conjuncts:
+                if token != hypernym and token is not None:
+                    hypernym._.hyponyms.append(token)
+                    token._.is_hyponym = True
+                    token._.hypernym = hypernym
+                    hyponym._.predicate = predicate
+
+            # For the document level, we expand to contain noun phrases.
+            hypernym_extended = self.maybe_expand(hypernym, doc)
+            hyponym_extended = self.maybe_expand(hyponym, doc)
+            doc._.hearst_patterns.append((predicate, hypernym_extended, hyponym_extended))
+
+            for token in hyponym.conjuncts:
+
+                token_extended = self.maybe_expand(token, doc)
+                if token != hypernym and token is not None:
+                    doc._.hearst_patterns.append((predicate, hypernym_extended, token_extended))
+
+        return doc
