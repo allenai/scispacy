@@ -14,10 +14,6 @@ class HyponymDetector:
     - `Doc._.hearst_patterns`: A List[Tuple[str, Span, Span]] corresonding to
        the matching predicate, extracted general term and specific term
        that matched a Hearst pattern.
-    - `Token._.is_hypernym`: Whether the token is a hypernym.
-    - `Token._.hyponyms`: The hyponyms for this token.
-    - `Token._.is_hyponym`: Whether the token is a hyponym.
-    - `Token._.hypernym`: The hypernym for this token.
 
     Parts of the implementation taken from
     https://github.com/mmichelsonIF/hearst_patterns_python/blob/master/hearstPatterns/hearstPatterns.py
@@ -41,10 +37,6 @@ class HyponymDetector:
         self.matcher = Matcher(self.nlp.vocab)
 
         Doc.set_extension("hearst_patterns", default=[], force=True)
-        Token.set_extension("is_hypernym", default=False, force=True)
-        Token.set_extension("hyponyms", default=[], force=True)
-        Token.set_extension("is_hyponym", default=False, force=True)
-        Token.set_extension("hypernym", default=None, force=True)
 
         self.predicates = []
         self.first = set()
@@ -122,24 +114,10 @@ class HyponymDetector:
             hypernym = self.find_noun_compound_head(hypernym)
             hyponym = self.find_noun_compound_head(hyponym)
 
-            # hypernym recorded as True and list of hyponyms created
-            hypernym._.is_hypernym = True
-            hypernym._.hyponyms.append(hyponym)
-
-            # hyponym recorded as True and its hypernym is recorded
-            hyponym._.is_hyponym = True
-            hyponym._.hypernym = hypernym
-
-            # iterate over conjunct list attached to hyponym
-            for token in hyponym.conjuncts:
-                if token != hypernym and token is not None:
-                    hypernym._.hyponyms.append(token)
-                    token._.is_hyponym = True
-                    token._.hypernym = hypernym
-
             # For the document level, we expand to contain noun phrases.
             hypernym_extended = self.expand_to_noun_compound(hypernym, doc)
             hyponym_extended = self.expand_to_noun_compound(hyponym, doc)
+
             doc._.hearst_patterns.append(
                 (predicate, hypernym_extended, hyponym_extended)
             )
