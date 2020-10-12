@@ -43,8 +43,8 @@ class HyponymDetector:
         Token.set_extension("predicate", default=None, force=True)
 
         self.predicates = []
-        self.first = []
-        self.last = []
+        self.first = set()
+        self.last = set()
 
         # add patterns to matcher
         for pattern in self.patterns:
@@ -52,19 +52,40 @@ class HyponymDetector:
 
             # gather list of predicates where the hypernym appears first
             if pattern["position"] == "first":
-                self.first.append(pattern["label"])
+                self.first.add(pattern["label"])
 
             # gather list of predicates where the hypernym appears last
             if pattern["position"] == "last":
-                self.last.append(pattern["label"])
+                self.last.add(pattern["label"])
 
-    def maybe_expand(self, token: Token, doc: Doc):
+    def expand_to_noun_compound(self, token: Token, doc: Doc):
         """
         Expand a token to it's noun phrase based
         on a simple POS tag heuristic.
         """
-        if token.left_edge.pos_ in {"PROPN", "NOUN", "PRON"}:
-            return doc[token.left_edge.i : token.i + 1]
+
+        start = token.i
+        while True:
+            previous = doc[start - 1]
+            if previous.pos_ in {"PROPN", "NOUN", "PRON"}:
+                start -= 1
+            else:
+                break
+
+        end = token.i + 1
+        while True:
+            previous = doc[end]
+            if previous.pos_ in {"PROPN", "NOUN", "PRON"}:
+                end += 1
+            else:
+                break
+
+        return doc[start:end]
+
+    def find_noun_compound_head(self, token: Token):
+
+        while token.head.pos_ in {"PROPN", "NOUN", "PRON"} and token.dep_ == "compound":
+            token = token.head
         return token
 
     def __call__(self, doc: Doc):
@@ -94,6 +115,9 @@ class HyponymDetector:
                 hypernym = doc[start]
                 hyponym = doc[end - 1]
 
+            hypernym = self.find_noun_compound_head(hypernym)
+            hyponym = self.find_noun_compound_head(hyponym)
+
             # hypernym recorded as True and list of hyponyms created
             hypernym._.is_hypernym = True
             hypernym._.predicate = predicate
@@ -113,14 +137,18 @@ class HyponymDetector:
                     hyponym._.predicate = predicate
 
             # For the document level, we expand to contain noun phrases.
-            hypernym_extended = self.maybe_expand(hypernym, doc)
-            hyponym_extended = self.maybe_expand(hyponym, doc)
-            doc._.hearst_patterns.append((predicate, hypernym_extended, hyponym_extended))
+            hypernym_extended = self.expand_to_noun_compound(hypernym, doc)
+            hyponym_extended = self.expand_to_noun_compound(hyponym, doc)
+            doc._.hearst_patterns.append(
+                (predicate, hypernym_extended, hyponym_extended)
+            )
 
             for token in hyponym.conjuncts:
 
-                token_extended = self.maybe_expand(token, doc)
+                token_extended = self.expand_to_noun_compound(token, doc)
                 if token != hypernym and token is not None:
-                    doc._.hearst_patterns.append((predicate, hypernym_extended, token_extended))
+                    doc._.hearst_patterns.append(
+                        (predicate, hypernym_extended, token_extended)
+                    )
 
         return doc
