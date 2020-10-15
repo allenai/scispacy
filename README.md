@@ -229,6 +229,34 @@ for umls_ent in entity._.kb_ents:
          AR protein, human, Androgen Receptor, Dihydrotestosterone Receptor, AR, DHTR, NR3C4, ...
 ```
 
+### Hearst Patterns (v3.0)
+
+This component implements [Automatic Aquisition of Hyponyms from Large Text Corpora](https://www.aclweb.org/anthology/C92-2082.pdf) using the SpaCy Matcher component.
+
+Passing `extended=True` to the `HyponymDetector` will use the extended set of hearst patterns, which include higher recall but lower precision hyponymy relations (e.g X compared to Y, X similar to Y, etc).
+
+This component produces a doc level attribute on the spacy doc: `doc._.hearst_patterns`, which is a list containing tuples of extracted hyponym pairs. The tuples contain:
+
+- The relation rule used to extract the hyponym (type: `str`)
+- The more general concept  (type: `spacy.Span`)
+- The more specific concept (type: `spacy.Span`)
+
+
+#### Usage:
+
+```python
+import spacy
+from scispacy.hyponym_detector import HyponymDetector
+
+nlp = spacy.load("en_core_sci_sm")
+hyponym_pipe = HyponymDetector(nlp, extended=True)
+nlp.add_pipe(hyponym_pipe, last=True)
+
+doc = nlp("Keystone plant species such as fig trees are good for the soil.")
+
+print(doc._.hearst_patterns)
+>>> [('such_as', Keystone plant species, fig trees)]
+```
 
 
 ## Citing
