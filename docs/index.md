@@ -17,13 +17,13 @@ pip install <Model URL>
 
 | Model          | Description       | Install URL
 |:---------------|:------------------|:----------|
-| en_core_sci_sm | A full spaCy pipeline for biomedical data. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz)|
-| en_core_sci_md |  A full spaCy pipeline for biomedical data with a larger vocabulary and 50k word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_md-0.2.5.tar.gz)|
-| en_core_sci_lg |  A full spaCy pipeline for biomedical data with a larger vocabulary and 600k word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_lg-0.2.5.tar.gz)|
-| en_ner_craft_md|  A spaCy NER model trained on the CRAFT corpus.|[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_ner_craft_md-0.2.5.tar.gz)|
-| en_ner_jnlpba_md | A spaCy NER model trained on the JNLPBA corpus.| [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_ner_jnlpba_md-0.2.5.tar.gz)|
-| en_ner_bc5cdr_md |  A spaCy NER model trained on the BC5CDR corpus. | [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_ner_bc5cdr_md-0.2.5.tar.gz)|
-| en_ner_bionlp13cg_md |  A spaCy NER model trained on the BIONLP13CG corpus. | [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_ner_bionlp13cg_md-0.2.5.tar.gz)|
+| en_core_sci_sm | A full spaCy pipeline for biomedical data. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_core_sci_sm-0.3.0.tar.gz)|
+| en_core_sci_md |  A full spaCy pipeline for biomedical data with a larger vocabulary and 50k word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_core_sci_md-0.3.0.tar.gz)|
+| en_core_sci_lg |  A full spaCy pipeline for biomedical data with a larger vocabulary and 600k word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_core_sci_lg-0.3.0.tar.gz)|
+| en_ner_craft_md|  A spaCy NER model trained on the CRAFT corpus.|[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_ner_craft_md-0.3.0.tar.gz)|
+| en_ner_jnlpba_md | A spaCy NER model trained on the JNLPBA corpus.| [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_ner_jnlpba_md-0.3.0.tar.gz)|
+| en_ner_bc5cdr_md |  A spaCy NER model trained on the BC5CDR corpus. | [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_ner_bc5cdr_md-0.3.0.tar.gz)|
+| en_ner_bionlp13cg_md |  A spaCy NER model trained on the BIONLP13CG corpus. | [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_ner_bionlp13cg_md-0.3.0.tar.gz)|
 
 
 
@@ -34,17 +34,17 @@ Our models achieve performance within 3% of published state of the art dependenc
 
 | model          | UAS | LAS   | POS   | Mentions (F1) | Web UAS | 
 |:---------------|:----|:------|:------|:---|:---|
-| en_core_sci_sm | 89.26| 87.38  |  98.38  |  67.14  |  87.18  |
-| en_core_sci_md | 89.92| 88.01  |  98.54  |  69.46  |  88.20  |
-| en_core_sci_lg | 89.81| 88.02  |  98.57  |  69.29  |  88.11  |
+| en_core_sci_sm | 89.36| 87.43  |  98.35  |  67.25  |  88.16  |
+| en_core_sci_md | 89.82| 87.93  |  98.59  |  69.12  |  88.58  |
+| en_core_sci_lg | 89.83| 87.85  |  98.55  |  69.07  |  88.59  |
 
 
 | model          | F1 |   Entity Types|
 |:---------------|:-----|:--------|
-| en_ner_craft_md | 75.02|GGP, SO, TAXON, CHEBI, GO, CL|
-| en_ner_jnlpba_md | 73.56| DNA, CELL_TYPE, CELL_LINE, RNA, PROTEIN |
-| en_ner_bc5cdr_md | 84.94| DISEASE, CHEMICAL|
-| en_ner_bionlp13cg_md | 78.09| AMINO_ACID, ANATOMICAL_SYSTEM, CANCER, CELL, CELLULAR_COMPONENT, DEVELOPING_ANATOMICAL_STRUCTURE, GENE_OR_GENE_PRODUCT, IMMATERIAL_ANATOMICAL_ENTITY, MULTI-TISSUE_STRUCTURE, ORGAN, ORGANISM, ORGANISM_SUBDIVISION, ORGANISM_SUBSTANCE, PATHOLOGICAL_FORMATION, SIMPLE_CHEMICAL, TISSUE |
+| en_ner_craft_md | 77.03|GGP, SO, TAXON, CHEBI, GO, CL|
+| en_ner_jnlpba_md | 73.45| DNA, CELL_TYPE, CELL_LINE, RNA, PROTEIN |
+| en_ner_bc5cdr_md | 84.12| DISEASE, CHEMICAL|
+| en_ner_bionlp13cg_md | 79.33| AMINO_ACID, ANATOMICAL_SYSTEM, CANCER, CELL, CELLULAR_COMPONENT, DEVELOPING_ANATOMICAL_STRUCTURE, GENE_OR_GENE_PRODUCT, IMMATERIAL_ANATOMICAL_ENTITY, MULTI-TISSUE_STRUCTURE, ORGAN, ORGANISM, ORGANISM_SUBDIVISION, ORGANISM_SUBSTANCE, PATHOLOGICAL_FORMATION, SIMPLE_CHEMICAL, TISSUE |
 
 
 ### Example Usage
