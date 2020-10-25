@@ -62,6 +62,8 @@ class HyponymDetector:
 
         start = token.i
         while True:
+            if start==0:
+                break
             previous = doc[start - 1]
             if previous.pos_ in {"PROPN", "NOUN", "PRON"}:
                 start -= 1
@@ -70,7 +72,10 @@ class HyponymDetector:
 
         end = token.i + 1
         while True:
-            previous = doc[end]
+            try:
+                previous = doc[end]
+            except IndexError:
+                break
             if previous.pos_ in {"PROPN", "NOUN", "PRON"}:
                 end += 1
             else:
