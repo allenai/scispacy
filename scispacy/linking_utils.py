@@ -25,20 +25,13 @@ class Entity(NamedTuple):
         rep = rep + f"Definition: {self.definition}\n"
         rep = rep + f"TUI(s): {', '.join(self.types)}\n"
         if num_aliases > 10:
-            rep = (
-                rep
-                + f"Aliases (abbreviated, total: {num_aliases}): \n\t {', '.join(self.aliases[:10])}"
-            )
+            rep = rep + f"Aliases (abbreviated, total: {num_aliases}): \n\t {', '.join(self.aliases[:10])}"
         else:
-            rep = (
-                rep + f"Aliases: (total: {num_aliases}): \n\t {', '.join(self.aliases)}"
-            )
+            rep = rep + f"Aliases: (total: {num_aliases}): \n\t {', '.join(self.aliases)}"
         return rep
 
 
-DEFAULT_UMLS_PATH = (
-    "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2020_aa_cat0129.jsonl"
-)
+DEFAULT_UMLS_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_2020_aa_cat0129.jsonl"
 DEFAULT_UMLS_TYPES_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_semantic_type_tree.tsv"
 
 
@@ -90,9 +83,7 @@ class UmlsKnowledgeBase(KnowledgeBase):
 
         super().__init__(file_path)
 
-        self.semantic_type_tree: UmlsSemanticTypeTree = construct_umls_tree_from_tsv(
-            types_file_path
-        )
+        self.semantic_type_tree: UmlsSemanticTypeTree = construct_umls_tree_from_tsv(types_file_path)
 
 
 class Mesh(KnowledgeBase):
