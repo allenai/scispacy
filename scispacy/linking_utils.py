@@ -62,7 +62,7 @@ class KnowledgeBase:
                 "Instead, use a subclass (e.g UmlsKnowledgeBase) or pass a path to a kb."
             )
         if file_path.endswith("jsonl"):
-            raw = [json.loads(line) for line in open(cached_path(file_path))]
+            raw = (json.loads(line) for line in open(cached_path(file_path)))
         else:
             raw = json.load(open(cached_path(file_path)))
 
