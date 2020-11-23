@@ -123,7 +123,9 @@ def get_from_cache(url: str, cache_dir: str = None) -> str:
     # get cache path to put the file
     cache_path = os.path.join(cache_dir, filename)
 
-    if not os.path.exists(cache_path):
+    local_file_path = os.path.join(cache_dir, url.split("/")[-1])
+
+    if not os.path.exists(cache_path) and not os.path.exists(local_file_path):
         # Download to temporary file, then copy to cache dir once finished.
         # Otherwise you get corrupt cache entries if the download gets interrupted.
         with tempfile.NamedTemporaryFile() as temp_file:  # type: IO
@@ -148,4 +150,6 @@ def get_from_cache(url: str, cache_dir: str = None) -> str:
             with open(meta_path, "w") as meta_file:
                 json.dump(meta, meta_file)
 
+    if os.path.exists(local_file_path):
+        return local_file_path
     return cache_path
