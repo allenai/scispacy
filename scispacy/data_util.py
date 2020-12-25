@@ -39,11 +39,14 @@ def process_example(lines: List[str]) -> MedMentionExample:
 
     entities = []
     for entity_line in lines[2:]:
+        print(entity_line)
         _, start, end, mention, mention_type, umls_id = entity_line.split("\t")
+        print(start, end, mention, mention_type, umls_id)
         mention_type = mention_type.split(",")[0]
         entities.append(
             MedMentionEntity(int(start), int(end), mention, mention_type, umls_id)
         )
+    print(title + " " + abstract)
     return MedMentionExample(
         title, abstract, title + " " + abstract, pubmed_id, entities
     )
@@ -53,7 +56,7 @@ def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
     """
     Iterates over a Med Mentions file, yielding examples.
     """
-    with open(filename, "r") as med_mentions_file:
+    with open(filename, "r", encoding='utf-8') as med_mentions_file:
         lines = []
         for line in med_mentions_file:
             line = line.strip()
