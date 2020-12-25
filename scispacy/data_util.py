@@ -44,7 +44,6 @@ def process_example(lines: List[str]) -> MedMentionExample:
         entities.append(
             MedMentionEntity(int(start), int(end), mention, mention_type, umls_id)
         )
-
     return MedMentionExample(
         title, abstract, title + " " + abstract, pubmed_id, entities
     )
