@@ -53,7 +53,7 @@ def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
     """
     Iterates over a Med Mentions file, yielding examples.
     """
-    with open(filename, "r", encoding='utf-8') as med_mentions_file:
+    with open(filename, "r", encoding="utf-8") as med_mentions_file:
         lines = []
         for line in med_mentions_file:
             line = line.strip()
