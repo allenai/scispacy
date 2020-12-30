@@ -11,19 +11,39 @@ directories: ["assets", "project_data", "output"]
 
 workflows:
   all-sm:
+    - download
     - convert-shared
     - convert-sm
     - parser-tagger-train-sm
+    - ner-train-sm
   all-md:
+    - download
     - convert-shared
     - convert-md
     - vectors-init-md
     - parser-tagger-train-md
+    - ner-train-md
   all-lg:
+    - download
     - convert-shared
     - convert-lg
     - vectors-init-lg
     - parser-tagger-train-lg
+    - ner-train-lg
+  all:
+    - download
+    - convert-shared
+    - convert-sm
+    - convert-md
+    - convert-lg
+    - vectors-init-md
+    - vectors-init-lg
+    - parser-tagger-train-sm
+    - parser-tagger-train-md
+    - parser-tagger-train-lg
+    - ner-train-sm
+    - ner-train-md
+    - ner-train-lg
 
 commands:
   - name: download
@@ -40,6 +60,7 @@ commands:
       - "aws s3 cp s3://ai2-s2-scispacy/data/med_mentions.tar.gz assets/med_mentions.tar.gz"
       - "tar -xzvf assets/med_mentions.tar.gz -C assets/"
       - "rm assets/med_mentions.tar.gz"
+      - "aws s3 cp s3://ai2-s2-scispacy/data/ner/ assets --recursive --exclude '*' --include '*.tsv'"
     outputs:
       - "assets/gorc_subset.freqs"
       - "assets/pubmed_with_header.txt.gz"
@@ -50,6 +71,18 @@ commands:
       - "assets/en-core-web/dev"
       - "assets/en-core-web/test"
       - "assets/corpus_pubtator.txt"
+      - "assets/BC5CDR-IOB/train.tsv"
+      - "assets/BC5CDR-IOB/devel.tsv"
+      - "assets/BC5CDR-IOB/test.tsv"
+      - "assets/JNLPBA-IOB/train.tsv"
+      - "assets/JNLPBA-IOB/devel.tsv"
+      - "assets/JNLPBA-IOB/test.tsv"
+      - "assets/CRAFT-IOB/train.tsv"
+      - "assets/CRAFT-IOB/devel.tsv"
+      - "assets/CRAFT-IOB/test.tsv"
+      - "assets/BioNLP13CG-IOB/train.tsv"
+      - "assets/BioNLP13CG-IOB/devel.tsv"
+      - "assets/BioNLP13CG-IOB/test.tsv"
 
   - name: convert-shared
     help: "Convert the data to spaCy's format"
@@ -80,43 +113,43 @@ commands:
     outputs:
       - "project_data/vocab_sm.jsonl"
 
-  # - name: convert-md
-  #   help: "Convert the data to spaCy's format"
-  #   script:
-  #     - "python scripts/convert_freqs.py --input_path assets/gorc_subset.freqs --output_path project_data/vocab_md.jsonl --min_word_frequency 150"
-  #   deps:
-  #     - "assets/gorc_subset.freqs"
-  #   outputs:
-  #     - "project_data/vocab_md.jsonl"
+  - name: convert-md
+    help: "Convert the data to spaCy's format"
+    script:
+      - "python scripts/convert_freqs.py --input_path assets/gorc_subset.freqs --output_path project_data/vocab_md.jsonl --min_word_frequency 150"
+    deps:
+      - "assets/gorc_subset.freqs"
+    outputs:
+      - "project_data/vocab_md.jsonl"
 
-  # - name: convert-lg
-  #   help: "Convert the data to spaCy's format"
-  #   script:
-  #     - "python scripts/convert_freqs.py --input_path assets/gorc_subset.freqs --output_path project_data/vocab_lg.jsonl --min_word_frequency 50"
-  #   deps:
-  #     - "assets/gorc_subset.freqs"
-  #   outputs:
-  #     - "project_data/vocab_lg.jsonl"
+  - name: convert-lg
+    help: "Convert the data to spaCy's format"
+    script:
+      - "python scripts/convert_freqs.py --input_path assets/gorc_subset.freqs --output_path project_data/vocab_lg.jsonl --min_word_frequency 50"
+    deps:
+      - "assets/gorc_subset.freqs"
+    outputs:
+      - "project_data/vocab_lg.jsonl"
 
-  # - name: vectors-init-md
-  #   help: "Initialize the vectors"
-  #   script:
-  #     - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_md_base --prune 50000 --name en_core_sci_md.vectors --lexemes-jsonl project_data/vocab_medium.jsonl"
-  #   deps:
-  #     - "project_data/vocab_medium.jsonl"
-  #     - "assets/pubmed_with_header.txt.gz"
-  #   outputs:
-  #     - "output/en_core_sci_md_vectors"
+  - name: vectors-init-md
+    help: "Initialize the vectors"
+    script:
+      - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_md_base --prune 50000 --name en_core_sci_md.vectors --lexemes-jsonl project_data/vocab_medium.jsonl"
+    deps:
+      - "project_data/vocab_medium.jsonl"
+      - "assets/pubmed_with_header.txt.gz"
+    outputs:
+      - "output/en_core_sci_md_vectors"
 
-  # - name: vectors-init-lg
-  #   help: "Initialize the vectors"
-  #   script:
-  #     - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_lg_base --prune 600000 --name en_core_sci_lg.vectors --lexemes-jsonl project_data/vocab_large.jsonl"
-  #   deps:
-  #     - "project_data/vocab_large.jsonl"
-  #     - "assets/pubmed_with_header.txt.gz"
-  #   outputs:
-  #     - "output/en_core_sci_lg_vectors"
+  - name: vectors-init-lg
+    help: "Initialize the vectors"
+    script:
+      - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_lg_base --prune 600000 --name en_core_sci_lg.vectors --lexemes-jsonl project_data/vocab_large.jsonl"
+    deps:
+      - "project_data/vocab_large.jsonl"
+      - "assets/pubmed_with_header.txt.gz"
+    outputs:
+      - "output/en_core_sci_lg_vectors"
 
   - name: parser-tagger-train-sm
     help: "Train the base models"
@@ -166,39 +199,35 @@ commands:
     deps:
       - "configs/ner_sm.cfg"
       - "output/en_core_sci_sm_parser_tagger"
+      - "assets/corpus_pubtator.txt"
     outputs:
       - "output/en_core_sci_sm_ner"
 
-  # - name: base-train-md
-  #   help: "Initialize the base models"
-  #   script:
-  #     - "spacy init nlp configs/base_md.cfg output/en_core_sci_md_base --code scripts/base_project_code.py"
-  #   deps:
-  #     - "configs/base_md.cfg"
-  #     - "output/en_core_sci_md_vectors"
-  #     - "project_data/genia_train.spacy"
-  #     - "project_data/genia_dev.spacy"
-  #     - "project_data/genia_test.spacy"
-  #   outputs:
-  #     - "output/en_core_sci_md_base"
+  - name: ner-train-md
+    help: "Train the main ner"
+    script:
+      - "spacy train configs/ner_md.cfg --output output/en_core_sci_md_ner --code scispacy/base_project_code.py"
+    deps:
+      - "configs/ner_md.cfg"
+      - "output/en_core_sci_md_parser_tagger"
+      - "assets/corpus_pubtator.txt"
+      - "output/en_core_sci_md_vectors"
+    outputs:
+      - "output/en_core_sci_md_ner"
 
-  # - name: base-train-lg
-  #   help: "Initialize the base models"
-  #   script:
-  #     - "spacy init nlp configs/base_lg.cfg output/en_core_sci_lg_base --code scripts/base_project_code.py"
-  #   deps:
-  #     - "configs/base_lg.cfg"
-  #     - "output/en_core_sci_lg_vectors"
-  #     - "project_data/genia_train.spacy"
-  #     - "project_data/genia_dev.spacy"
-  #     - "project_data/genia_test.spacy"
-  #   outputs:
-  #     - "output/en_core_sci_lg_base"
+  - name: ner-train-lg
+    help: "Train the main ner"
+    script:
+      - "spacy train configs/ner_lg.cfg --output output/en_core_sci_lg_ner --code scispacy/base_project_code.py"
+    deps:
+      - "configs/ner_lg.cfg"
+      - "output/en_core_sci_lg_parser_tagger"
+      - "assets/corpus_pubtator.txt"
+      - "output/en_core_sci_lg_vectors"
+    outputs:
+      - "output/en_core_sci_lg_ner"
   
   # TODO: can't evaluate using CLI until --code is incorporated into evaluate command, or tokenizer replacement is changed to not need --code
   # - name: evaluate-parser-tagger-sm
-  #   help: "Evaluate the parser and tagger"
-  #   script:
-  #     - "spacy evaluate output/en_core_sci_sm_parser_tagger project_data/genia_test.spacy"
 
-  # TODOs: ner not working yet, specialized ner, end to end small test, fully train everything and see what happens, evaluate everything, package command
+  # TODOs: specialized ner, end to end small test, fully train everything and see what happens, evaluate everything, package command
