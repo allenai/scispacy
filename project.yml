@@ -227,7 +227,7 @@ commands:
     outputs:
       - "output/en_core_sci_lg_ner"
 
-  - name: ner-train-specalized
+  - name: ner-train-specialized
     help: "Train the specialized NER models"
     script:
       - "spacy train configs/ner_bc5cdr.cfg --output output/en_ner_bc5cdr_md --code scispacy/base_project_code.py"
