@@ -136,7 +136,7 @@ commands:
     script:
       - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_md_base --prune 50000 --name en_core_sci_md.vectors --lexemes-jsonl project_data/vocab_medium.jsonl"
     deps:
-      - "project_data/vocab_medium.jsonl"
+      - "project_data/vocab_md.jsonl"
       - "assets/pubmed_with_header.txt.gz"
     outputs:
       - "output/en_core_sci_md_vectors"
@@ -146,7 +146,7 @@ commands:
     script:
       - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_lg_base --prune 600000 --name en_core_sci_lg.vectors --lexemes-jsonl project_data/vocab_large.jsonl"
     deps:
-      - "project_data/vocab_large.jsonl"
+      - "project_data/vocab_lg.jsonl"
       - "assets/pubmed_with_header.txt.gz"
     outputs:
       - "output/en_core_sci_lg_vectors"
