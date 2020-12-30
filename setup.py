@@ -41,7 +41,7 @@ setup(
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     license="Apache",
     install_requires=[
-        "spacy>=2.3.0,<3.0.0",
+        "spacy-nightly",
         "requests>=2.0.0,<3.0.0" "conllu",
         "numpy",
         "joblib",

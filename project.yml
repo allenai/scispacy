@@ -1,0 +1,168 @@
+title: "scispaCy pipeline"
+description: "All the steps needed in the scispaCy pipeline"
+
+vars:
+  freqs_loc: "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/gorc_subset.freqs"
+  vectors_loc: "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/pubmed_with_header.txt.gz"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "project_data", "output"]
+
+workflows:
+  all-sm:
+    - convert-shared
+    - convert-sm
+    - base-init-sm
+  all-md:
+    - convert-shared
+    - convert-md
+    - vectors-init-md
+    - base-init-md
+  all-lg:
+    - convert-shared
+    - convert-lg
+    - vectors-init-lg
+    - base-init-lg
+  all:
+    - convert-shared
+    - convert-sm
+    - base-init-sm
+    - convert-md
+    - vectors-init-md
+    - base-init-md
+    - convert-lg
+    - vectors-init-lg
+    - base-init-lg
+
+commands:
+  - name: download
+    help: "Download the necessary files"
+    script:
+      - "aws s3 cp s3://ai2-s2-scispacy/data/gorc_subset.freqs assets/gorc_subset.freqs --no-sign-request"
+      - "aws s3 cp s3://ai2-s2-scispacy/data/pubmed_with_header.txt.gz assets/pubmed_with_header.txt.gz --no-sign-request"
+      - "aws s3 cp s3://ai2-s2-scispacy/data/genia/train.json assets/genia_train.json --no-sign-request"
+      - "aws s3 cp s3://ai2-s2-scispacy/data/genia/dev.json assets/genia_dev.json --no-sign-request"
+      - "aws s3 cp s3://ai2-s2-scispacy/data/genia/test.json assets/genia_test.json --no-sign-request"
+      - "aws s3 cp s3://ai2-s2-scispacy/data/en-core-web.tgz assets/en-core-web.tgz"
+      - "tar -xzvf assets/en-core-web.tgz -C assets/"
+      - "rm assets/en-core-web.tgz"
+    outputs:
+      - "assets/gorc_subset.freqs"
+      - "assets/pubmed_with_header.txt.gz"
+      - "assets/genia_train.json"
+      - "assets/genia_dev.json"
+      - "assets/genia_test.json"
+      - "assets/en-core-web"
+
+  - name: convert-shared
+    help: "Convert the data to spaCy's format"
+    script:
+      - "spacy convert assets/genia_train.json project_data --converter json --file-type spacy"
+      - "spacy convert assets/genia_dev.json project_data --converter json --file-type spacy"
+      - "spacy convert assets/genia_test.json project_data --converter json --file-type spacy"
+      - "spacy convert assets/en-core-web project_data --converter json --file-type spacy"
+    deps:
+      - "assets/genia_train.json"
+      - "assets/genia_dev.json"
+      - "assets/genia_test.json"
+      - "assets/en-core-web"
+    outputs:
+      - "project_data/genia_train.spacy"
+      - "project_data/genia_dev.spacy"
+      - "project_data/genia_test.spacy"
+      - "project_data/train"
+      - "project_data/dev"
+      - "project_data/test"
+
+  - name: convert-sm
+    help: "Convert the data to spaCy's format"
+    script:
+      - "python scripts/convert_freqs.py --input_path assets/gorc_subset.freqs --output_path project_data/vocab_sm.jsonl --min_word_frequency 1000"
+    deps:
+      - "assets/gorc_subset.freqs"
+    outputs:
+      - "project_data/vocab_sm.jsonl"
+
+  # - name: convert-md
+  #   help: "Convert the data to spaCy's format"
+  #   script:
+  #     - "python scripts/convert_freqs.py --input_path assets/gorc_subset.freqs --output_path project_data/vocab_md.jsonl --min_word_frequency 150"
+  #   deps:
+  #     - "assets/gorc_subset.freqs"
+  #   outputs:
+  #     - "project_data/vocab_md.jsonl"
+
+  # - name: convert-lg
+  #   help: "Convert the data to spaCy's format"
+  #   script:
+  #     - "python scripts/convert_freqs.py --input_path assets/gorc_subset.freqs --output_path project_data/vocab_lg.jsonl --min_word_frequency 50"
+  #   deps:
+  #     - "assets/gorc_subset.freqs"
+  #   outputs:
+  #     - "project_data/vocab_lg.jsonl"
+
+  # - name: vectors-init-md
+  #   help: "Initialize the vectors"
+  #   script:
+  #     - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_md_base --prune 50000 --name en_core_sci_md.vectors --lexemes-jsonl project_data/vocab_medium.jsonl"
+  #   deps:
+  #     - "project_data/vocab_medium.jsonl"
+  #     - "assets/pubmed_with_header.txt.gz"
+  #   outputs:
+  #     - "output/en_core_sci_md_vectors"
+
+  # - name: vectors-init-lg
+  #   help: "Initialize the vectors"
+  #   script:
+  #     - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_lg_base --prune 600000 --name en_core_sci_lg.vectors --lexemes-jsonl project_data/vocab_large.jsonl"
+  #   deps:
+  #     - "project_data/vocab_large.jsonl"
+  #     - "assets/pubmed_with_header.txt.gz"
+  #   outputs:
+  #     - "output/en_core_sci_lg_vectors"
+
+  - name: parser-tagger-train-sm
+    help: "Train the base models"
+    script:
+      - "spacy train configs/base_sm.cfg --output output/en_core_sci_sm_parser_tagger --code scispacy/base_project_code.py"
+    deps:
+      - "configs/base_sm.cfg"
+      - "project_data/genia_train.spacy"
+      - "project_data/genia_dev.spacy"
+      - "project_data/genia_test.spacy"
+      - "project_data/train"
+    outputs:
+      - "output/en_core_sci_sm_parser_tagger"
+
+  # - name: base-train-md
+  #   help: "Initialize the base models"
+  #   script:
+  #     - "spacy init nlp configs/base_md.cfg output/en_core_sci_md_base --code scripts/base_project_code.py"
+  #   deps:
+  #     - "configs/base_md.cfg"
+  #     - "output/en_core_sci_md_vectors"
+  #     - "project_data/genia_train.spacy"
+  #     - "project_data/genia_dev.spacy"
+  #     - "project_data/genia_test.spacy"
+  #   outputs:
+  #     - "output/en_core_sci_md_base"
+
+  # - name: base-train-lg
+  #   help: "Initialize the base models"
+  #   script:
+  #     - "spacy init nlp configs/base_lg.cfg output/en_core_sci_lg_base --code scripts/base_project_code.py"
+  #   deps:
+  #     - "configs/base_lg.cfg"
+  #     - "output/en_core_sci_lg_vectors"
+  #     - "project_data/genia_train.spacy"
+  #     - "project_data/genia_dev.spacy"
+  #     - "project_data/genia_test.spacy"
+  #   outputs:
+  #     - "output/en_core_sci_lg_base"
+  
+  # TODO: can't evaluate using CLI until --code is incorporated into evaluate command, or tokenizer replacement is changed to not need --code
+  # - name: evaluate-parser-tagger-sm
+  #   help: "Evaluate the parser and tagger"
+  #   script:
+  #     - "spacy evaluate output/en_core_sci_sm_parser_tagger project_data/genia_test.spacy"
