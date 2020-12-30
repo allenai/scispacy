@@ -198,7 +198,7 @@ commands:
       - "spacy train configs/ner_sm.cfg --output output/en_core_sci_sm_ner --code scispacy/base_project_code.py"
     deps:
       - "configs/ner_sm.cfg"
-      - "output/en_core_sci_sm_parser_tagger"
+      - "output/en_core_sci_sm_parser_tagger/model-best"
       - "assets/corpus_pubtator.txt"
     outputs:
       - "output/en_core_sci_sm_ner"
@@ -209,7 +209,7 @@ commands:
       - "spacy train configs/ner_md.cfg --output output/en_core_sci_md_ner --code scispacy/base_project_code.py"
     deps:
       - "configs/ner_md.cfg"
-      - "output/en_core_sci_md_parser_tagger"
+      - "output/en_core_sci_md_parser_tagger/model-best"
       - "assets/corpus_pubtator.txt"
       - "output/en_core_sci_md_vectors"
     outputs:
@@ -221,11 +221,34 @@ commands:
       - "spacy train configs/ner_lg.cfg --output output/en_core_sci_lg_ner --code scispacy/base_project_code.py"
     deps:
       - "configs/ner_lg.cfg"
-      - "output/en_core_sci_lg_parser_tagger"
+      - "output/en_core_sci_lg_parser_tagger/model-best"
       - "assets/corpus_pubtator.txt"
       - "output/en_core_sci_lg_vectors"
     outputs:
       - "output/en_core_sci_lg_ner"
+
+  - name: ner-train-specalized
+    help: "Train the specialized NER models"
+    script:
+      - "spacy train configs/ner_bc5cdr.cfg --output output/en_ner_bc5cdr_md --code scispacy/base_project_code.py"
+      - "spacy train configs/ner_bionlp13cg.cfg --output output/en_ner_bionlp13cg_md --code scispacy/base_project_code.py"
+      - "spacy train configs/ner_craft.cfg --output output/en_ner_craft_md --code scispacy/base_project_code.py"
+      - "spacy train configs/ner_jnlpba.cfg --output output/en_ner_jnlpba_md --code scispacy/base_project_code.py"
+    deps:
+      - "assets/corpus_pubtator.txt"
+      - "assets/BC5CDR-IOB/train.tsv"
+      - "assets/BC5CDR-IOB/devel.tsv"
+      - "assets/BC5CDR-IOB/test.tsv"
+      - "assets/JNLPBA-IOB/train.tsv"
+      - "assets/JNLPBA-IOB/devel.tsv"
+      - "assets/JNLPBA-IOB/test.tsv"
+      - "assets/CRAFT-IOB/train.tsv"
+      - "assets/CRAFT-IOB/devel.tsv"
+      - "assets/CRAFT-IOB/test.tsv"
+      - "assets/BioNLP13CG-IOB/train.tsv"
+      - "assets/BioNLP13CG-IOB/devel.tsv"
+      - "assets/BioNLP13CG-IOB/test.tsv"
+      - "output/en_core_sci_md_ner/model-best"
   
   # TODO: can't evaluate using CLI until --code is incorporated into evaluate command, or tokenizer replacement is changed to not need --code
   # - name: evaluate-parser-tagger-sm
