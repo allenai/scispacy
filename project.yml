@@ -13,27 +13,17 @@ workflows:
   all-sm:
     - convert-shared
     - convert-sm
-    - base-init-sm
+    - parser-tagger-train-sm
   all-md:
     - convert-shared
     - convert-md
     - vectors-init-md
-    - base-init-md
+    - parser-tagger-train-md
   all-lg:
     - convert-shared
     - convert-lg
     - vectors-init-lg
-    - base-init-lg
-  all:
-    - convert-shared
-    - convert-sm
-    - base-init-sm
-    - convert-md
-    - vectors-init-md
-    - base-init-md
-    - convert-lg
-    - vectors-init-lg
-    - base-init-lg
+    - parser-tagger-train-lg
 
 commands:
   - name: download
@@ -134,6 +124,34 @@ commands:
       - "project_data/train"
     outputs:
       - "output/en_core_sci_sm_parser_tagger"
+
+  - name: parser-tagger-train-md
+    help: "Train the base models"
+    script:
+      - "spacy train configs/base_md.cfg --output output/en_core_sci_md_parser_tagger --code scispacy/base_project_code.py"
+    deps:
+      - "configs/base_md.cfg"
+      - "project_data/genia_train.spacy"
+      - "project_data/genia_dev.spacy"
+      - "project_data/genia_test.spacy"
+      - "project_data/train"
+      - "output/en_core_sci_md_vectors"
+    outputs:
+      - "output/en_core_sci_md_parser_tagger"
+
+  - name: parser-tagger-train-lg
+    help: "Train the base models"
+    script:
+      - "spacy train configs/base_lg.cfg --output output/en_core_sci_lg_parser_tagger --code scispacy/base_project_code.py"
+    deps:
+      - "configs/base_lg.cfg"
+      - "project_data/genia_train.spacy"
+      - "project_data/genia_dev.spacy"
+      - "project_data/genia_test.spacy"
+      - "project_data/train"
+      - "output/en_core_sci_lg_vectors"
+    outputs:
+      - "output/en_core_sci_lg_parser_tagger"
 
   # - name: base-train-md
   #   help: "Initialize the base models"
