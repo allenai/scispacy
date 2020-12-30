@@ -4,9 +4,11 @@ from pathlib import Path
 import random
 import itertools
 import spacy
-from spacy.training import Corpus
+import warnings
+from spacy.training import Corpus, Example
 
 from scispacy.custom_tokenizer import combined_rule_tokenizer
+from scispacy.data_util import read_full_med_mentions
 
 
 def iter_sample(iterable, sample_percent):
@@ -66,17 +68,27 @@ def parser_tagger_data(
     return mixed_corpus
 
 
-@spacy.registry.callbacks("ontonotes_dev")
-def ontonotes_dev_callback():
-    def ontonotes_dev():
-        pass
+@spacy.registry.readers("med_mentions_reader")
+def med_mentions_reader(directory_path, split):
+    train, dev, test = read_full_med_mentions(
+        directory_path, label_mapping=None, span_only=True, spacy_format=True
+    )
 
-    return ontonotes_dev
+    def corpus(nlp):
+        if split == "train":
+            original_examples = train
+        elif split == "dev":
+            original_examples = dev
+        elif split == "test":
+            original_examples = test
+        else:
+            raise Exception(f"Unexpected split {split}")
 
+        for original_example in original_examples:
+            doc = nlp.make_doc(original_example[0])
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=UserWarning)
+                spacy_example = Example.from_dict(doc, original_example[1])
+            yield spacy_example
 
-@spacy.registry.callbacks("ontonotes_test")
-def ontonotes_test_callback():
-    def ontonotes_test():
-        pass
-
-    return ontonotes_test
+    return corpus

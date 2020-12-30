@@ -37,13 +37,19 @@ commands:
       - "aws s3 cp s3://ai2-s2-scispacy/data/en-core-web.tgz assets/en-core-web.tgz"
       - "tar -xzvf assets/en-core-web.tgz -C assets/"
       - "rm assets/en-core-web.tgz"
+      - "aws s3 cp s3://ai2-s2-scispacy/data/med_mentions.tar.gz assets/med_mentions.tar.gz"
+      - "tar -xzvf assets/med_mentions.tar.gz -C assets/"
+      - "rm assets/med_mentions.tar.gz"
     outputs:
       - "assets/gorc_subset.freqs"
       - "assets/pubmed_with_header.txt.gz"
       - "assets/genia_train.json"
       - "assets/genia_dev.json"
       - "assets/genia_test.json"
-      - "assets/en-core-web"
+      - "assets/en-core-web/train"
+      - "assets/en-core-web/dev"
+      - "assets/en-core-web/test"
+      - "assets/corpus_pubtator.txt"
 
   - name: convert-shared
     help: "Convert the data to spaCy's format"
@@ -152,6 +158,16 @@ commands:
       - "output/en_core_sci_lg_vectors"
     outputs:
       - "output/en_core_sci_lg_parser_tagger"
+  
+  - name: ner-train-sm
+    help: "Train the main ner"
+    script:
+      - "spacy train configs/ner_sm.cfg --output output/en_core_sci_sm_ner --code scispacy/base_project_code.py"
+    deps:
+      - "configs/ner_sm.cfg"
+      - "output/en_core_sci_sm_parser_tagger"
+    outputs:
+      - "output/en_core_sci_sm_ner"
 
   # - name: base-train-md
   #   help: "Initialize the base models"
@@ -184,3 +200,5 @@ commands:
   #   help: "Evaluate the parser and tagger"
   #   script:
   #     - "spacy evaluate output/en_core_sci_sm_parser_tagger project_data/genia_test.spacy"
+
+  # TODOs: ner not working yet, specialized ner, end to end small test, fully train everything and see what happens, evaluate everything, package command
