@@ -134,7 +134,7 @@ commands:
   - name: vectors-init-md
     help: "Initialize the vectors"
     script:
-      - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_md_base --prune 50000 --name en_core_sci_md.vectors --lexemes-jsonl project_data/vocab_medium.jsonl"
+      - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_md_base --prune 50000 --name en_core_sci_md.vectors --lexemes-jsonl project_data/vocab_md.jsonl"
     deps:
       - "project_data/vocab_md.jsonl"
       - "assets/pubmed_with_header.txt.gz"
@@ -144,7 +144,7 @@ commands:
   - name: vectors-init-lg
     help: "Initialize the vectors"
     script:
-      - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_lg_base --prune 600000 --name en_core_sci_lg.vectors --lexemes-jsonl project_data/vocab_large.jsonl"
+      - "spacy init vectors en assets/pubmed_with_header.txt.gz output/en_core_sci_lg_base --prune 600000 --name en_core_sci_lg.vectors --lexemes-jsonl project_data/vocab_lg.jsonl"
     deps:
       - "project_data/vocab_lg.jsonl"
       - "assets/pubmed_with_header.txt.gz"
@@ -230,4 +230,5 @@ commands:
   # TODO: can't evaluate using CLI until --code is incorporated into evaluate command, or tokenizer replacement is changed to not need --code
   # - name: evaluate-parser-tagger-sm
 
-  # TODOs: specialized ner, end to end small test, fully train everything and see what happens, evaluate everything, package command
+  # TODOs: specialized ner, end to end small test, fully train everything and see what happens, evaluate everything, package command, 
+  #         figure out whether we need to do something with the vocab files
