@@ -8,7 +8,7 @@ import warnings
 from spacy.training import Corpus, Example
 
 from scispacy.custom_tokenizer import combined_rule_tokenizer
-from scispacy.data_util import read_full_med_mentions
+from scispacy.data_util import read_full_med_mentions, read_ner_from_tsv
 
 
 def iter_sample(iterable, sample_percent):
@@ -84,6 +84,21 @@ def med_mentions_reader(directory_path, split):
         else:
             raise Exception(f"Unexpected split {split}")
 
+        for original_example in original_examples:
+            doc = nlp.make_doc(original_example[0])
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=UserWarning)
+                spacy_example = Example.from_dict(doc, original_example[1])
+            yield spacy_example
+
+    return corpus
+
+
+@spacy.registry.readers("specialized_ner_reader")
+def specialized_ner_reader(file_path):
+    original_examples = read_ner_from_tsv(file_path)
+
+    def corpus(nlp):
         for original_example in original_examples:
             doc = nlp.make_doc(original_example[0])
             with warnings.catch_warnings():
