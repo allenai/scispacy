@@ -351,6 +351,7 @@ class CandidateGenerator:
                 MentionCandidate(concept, mentions, concept_to_similarities[concept])
                 for concept, mentions in concept_to_mentions.items()
             ]
+            mention_candidates = sorted(mention_candidates, key=lambda c: c.concept_id)
 
             batch_mention_candidates.append(mention_candidates)
 

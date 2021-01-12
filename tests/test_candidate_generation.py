@@ -31,7 +31,7 @@ class TestCandidateGeneration(unittest.TestCase):
         results = candidate_generator(['(131)I-Macroaggregated Albumin'], 10)
 
         canonical_ids = [x.concept_id for x in results[0]]
-        assert canonical_ids == ['C0000005', 'C0000015', 'C0000102', 'C0000103', 'C0000074']
+        assert canonical_ids == ['C0000005', 'C0000015', 'C0000074', 'C0000102', 'C0000103']
 
         # The mention was an exact match, so should have a distance of zero to a concept:
         assert results[0][0] == MentionCandidate(concept_id='C0000005',
