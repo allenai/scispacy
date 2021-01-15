@@ -48,18 +48,18 @@ workflows:
     - vectors-init-md
     - vectors-init-lg
     - parser-tagger-train-sm
-    - evaluate-parser-tagger-sm
     - parser-tagger-train-md
-    - evaluate-parser-tagger-md
     - parser-tagger-train-lg
-    - evaluate-parser-tagger-lg
     - ner-train-sm
-    - evaluate-ner-sm
     - ner-train-md
-    - evaluate-ner-md
     - ner-train-lg
-    - evaluate-ner-lg
     - ner-train-specialized
+    - evaluate-parser-tagger-sm
+    - evaluate-parser-tagger-md
+    - evaluate-parser-tagger-lg
+    - evaluate-ner-sm
+    - evaluate-ner-md
+    - evaluate-ner-lg
     - evaluate-specialized-ner
 
 commands:
@@ -179,7 +179,7 @@ commands:
       - "project_data/genia_test.spacy"
       - "project_data/train"
     outputs:
-      - "output/en_core_sci_sm_parser_tagger"
+      - "output/en_core_sci_sm_parser_tagger/model-best"
 
   - name: parser-tagger-train-md
     help: "Train the base models"
@@ -193,7 +193,7 @@ commands:
       - "project_data/train"
       - "output/en_core_sci_md_vectors"
     outputs:
-      - "output/en_core_sci_md_parser_tagger"
+      - "output/en_core_sci_md_parser_tagger/model-best"
 
   - name: parser-tagger-train-lg
     help: "Train the base models"
@@ -207,7 +207,7 @@ commands:
       - "project_data/train"
       - "output/en_core_sci_lg_vectors"
     outputs:
-      - "output/en_core_sci_lg_parser_tagger"
+      - "output/en_core_sci_lg_parser_tagger/model-best"
   
   - name: ner-train-sm
     help: "Train the main ner"
@@ -218,7 +218,7 @@ commands:
       - "output/en_core_sci_sm_parser_tagger/model-best"
       - "assets/corpus_pubtator.txt"
     outputs:
-      - "output/en_core_sci_sm_ner"
+      - "output/en_core_sci_sm_ner/model-best"
 
   - name: ner-train-md
     help: "Train the main ner"
@@ -230,7 +230,7 @@ commands:
       - "assets/corpus_pubtator.txt"
       - "output/en_core_sci_md_vectors"
     outputs:
-      - "output/en_core_sci_md_ner"
+      - "output/en_core_sci_md_ner/model-best"
 
   - name: ner-train-lg
     help: "Train the main ner"
@@ -242,7 +242,7 @@ commands:
       - "assets/corpus_pubtator.txt"
       - "output/en_core_sci_lg_vectors"
     outputs:
-      - "output/en_core_sci_lg_ner"
+      - "output/en_core_sci_lg_ner/model-best"
 
   - name: ner-train-specialized
     help: "Train the specialized NER models"
@@ -267,75 +267,75 @@ commands:
       - "assets/BioNLP13CG-IOB/test.tsv"
       - "output/en_core_sci_md_parser_tagger/model-best"
     outputs:
-      - "output/en_ner_bc5cdr_md"
-      - "output/en_ner_bionlp13cg_md"
-      - "output/en_ner_craft_md"
-      - "output/en_ner_jnlpba_md"
+      - "output/en_ner_bc5cdr_md/model-best"
+      - "output/en_ner_bionlp13cg_md/model-best"
+      - "output/en_ner_craft_md/model-best"
+      - "output/en_ner_jnlpba_md/model-best"
   
   - name: evaluate-parser-tagger-sm
     help: "Evaluate the parser and tagger"
     script:
-      - "spacy evaluate output/en_core_sci_sm_parser_tagger/model-best project_data/genia_test.spacy --output output/en_core_sci_sm_parser_tagger/model-best/results.json --code scispacy/base_project_code.py"
+      - "spacy evaluate output/en_core_sci_sm_parser_tagger/model-best project_data/genia_test.spacy --output output/en_core_sci_sm_parser_tagger/model_best_results.json --code scispacy/base_project_code.py"
     deps:
       - "output/en_core_sci_sm_parser_tagger/model-best"
     outputs:
-      - "output/en_core_sci_sm_parser_tagger/model-best/results.json"
+      - "output/en_core_sci_sm_parser_tagger/model_best_results.json"
 
   - name: evaluate-parser-tagger-md
     help: "Evaluate the parser and tagger"
     script:
-      - "spacy evaluate output/en_core_sci_md_parser_tagger/model-best project_data/genia_test.spacy --output output/en_core_sci_md_parser_tagger/model-best/results.json --code scispacy/base_project_code.py"
+      - "spacy evaluate output/en_core_sci_md_parser_tagger/model-best project_data/genia_test.spacy --output output/en_core_sci_md_parser_tagger/model_best_results.json --code scispacy/base_project_code.py"
     deps:
       - "output/en_core_sci_md_parser_tagger/model-best"
     outputs:
-      - "output/en_core_sci_md_parser_tagger/model-best/results.json"
+      - "output/en_core_sci_md_parser_tagger/model_best_results.json"
 
   - name: evaluate-parser-tagger-lg
     help: "Evaluate the parser and tagger"
     script:
-      - "spacy evaluate output/en_core_sci_lg_parser_tagger/model-best project_data/genia_test.spacy --output output/en_core_sci_lg_parser_tagger/model-best/results.json --code scispacy/base_project_code.py"
+      - "spacy evaluate output/en_core_sci_lg_parser_tagger/model-best project_data/genia_test.spacy --output output/en_core_sci_lg_parser_tagger/model_best_results.json --code scispacy/base_project_code.py"
     deps:
       - "output/en_core_sci_lg_parser_tagger/model-best"
     outputs:
-      - "output/en_core_sci_lg_parser_tagger/model-best/results.json"
+      - "output/en_core_sci_lg_parser_tagger/model_best_results.json"
   
   - name: evaluate-ner-sm
     help: "Evaluate NER"
     script:
-      - "python scripts/evaluate_ner.py --model_path output/en_core_sci_sm_ner/model-best --dataset medmentions-test --output output/en_core_sci_sm_ner/model-best/reuslts.json --code scispacy/base_project_code.py"
+      - "python scripts/evaluate_ner.py --model_path output/en_core_sci_sm_ner/model-best --dataset medmentions-test --output output/en_core_sci_sm_ner/model_best_results.json --code scispacy/base_project_code.py"
     deps:
       - "output/en_core_sci_sm_ner"
       - "assets/corpus_pubtator.txt"
     outputs:
-      - "output/en_core_sci_sm_ner/model-best/results.json"
+      - "output/en_core_sci_sm_ner/model_best_results.json"
 
   - name: evaluate-ner-md
     help: "Evaluate NER"
     script:
-      - "python scripts/evaluate_ner.py --model_path output/en_core_sci_md_ner/model-best --dataset medmentions-test --output output/en_core_sci_md_ner/model-best/reuslts.json --code scispacy/base_project_code.py"
+      - "python scripts/evaluate_ner.py --model_path output/en_core_sci_md_ner/model-best --dataset medmentions-test --output output/en_core_sci_md_ner/model_best_results.json --code scispacy/base_project_code.py"
     deps:
       - "output/en_core_sci_md_ner"
       - "assets/corpus_pubtator.txt"
     outputs:
-      - "output/en_core_sci_md_ner/model-best/results.json"
+      - "output/en_core_sci_md_ner/model_best_results.json"
 
   - name: evaluate-ner-lg
     help: "Evaluate NER"
     script:
-      - "python scripts/evaluate_ner.py --model_path output/en_core_sci_lg_ner/model-best --dataset medmentions-test --output output/en_core_sci_lg_ner/model-best/reuslts.json --code scispacy/base_project_code.py"
+      - "python scripts/evaluate_ner.py --model_path output/en_core_sci_lg_ner/model-best --dataset medmentions-test --output output/en_core_sci_lg_ner/model_best_results.json --code scispacy/base_project_code.py"
     deps:
       - "output/en_core_sci_lg_ner"
       - "assets/corpus_pubtator.txt"
     outputs:
-      - "output/en_core_sci_lg_ner/model-best/results.json"
+      - "output/en_core_sci_lg_ner/model_best_results.json"
   
   - name: evaluate-specialized-ner
     help: "Evaluate specialize NER"
     script:
-      - "python scripts/evaluate_ner.py --model_path output/en_ner_bc5cdr_md/model-best --dataset assets/BC5CDR-IOB/test.tsv --output output/en_ner_bc5cdr_md/model-best/results.json --code scispacy/base_project_code.py"
-      - "python scripts/evaluate_ner.py --model_path output/en_ner_bionlp13cg_md/model-best --dataset assets/JNLPBA-IOB/test.tsv --output output/en_ner_bionlp13cg_md/model-best/results.json --code scispacy/base_project_code.py"
-      - "python scripts/evaluate_ner.py --model_path output/en_ner_craft_md/model-best --dataset assets/CRAFT-IOB/test.tsv --output output/en_ner_craft_md/model-best/results.json --code scispacy/base_project_code.py"
-      - "python scripts/evaluate_ner.py --model_path output/en_ner_jnlpba_md/model-best --dataset assets/BioNLP13CG-IOB/test.tsv --output output/en_ner_jnlpba_md/model-best/results.json --code scispacy/base_project_code.py"
+      - "python scripts/evaluate_ner.py --model_path output/en_ner_bc5cdr_md/model-best --dataset assets/BC5CDR-IOB/test.tsv --output output/en_ner_bc5cdr_md/model_best_results.json --code scispacy/base_project_code.py"
+      - "python scripts/evaluate_ner.py --model_path output/en_ner_bionlp13cg_md/model-best --dataset assets/JNLPBA-IOB/test.tsv --output output/en_ner_bionlp13cg_md/model_best_results.json --code scispacy/base_project_code.py"
+      - "python scripts/evaluate_ner.py --model_path output/en_ner_craft_md/model-best --dataset assets/CRAFT-IOB/test.tsv --output output/en_ner_craft_md/model_best_results.json --code scispacy/base_project_code.py"
+      - "python scripts/evaluate_ner.py --model_path output/en_ner_jnlpba_md/model-best --dataset assets/BioNLP13CG-IOB/test.tsv --output output/en_ner_jnlpba_md/model_best_results.json --code scispacy/base_project_code.py"
     deps:
       - "output/en_ner_bc5cdr_md/model-best"
       - "output/en_ner_bionlp13cg_md/model-best"
@@ -346,9 +346,9 @@ commands:
       - "assets/CRAFT-IOB/test.tsv"
       - "assets/BioNLP13CG-IOB/test.tsv"
     outputs:
-      - "output/en_ner_bc5cdr_md/model-best/results.json"
-      - "output/en_ner_bionlp13cg_md/model-best/results.json"
-      - "output/en_ner_craft_md/model-best/results.json"
-      - "output/en_ner_jnlpba_md/model-best/results.json"
+      - "output/en_ner_bc5cdr_md/model_best_results.json"
+      - "output/en_ner_bionlp13cg_md/model_best_results.json"
+      - "output/en_ner_craft_md/model_best_results.json"
+      - "output/en_ner_jnlpba_md/model_best_results.json"
 
-  # TODOs: evaluate everything, package command, another evaluate of the package, twiddle params
+  # TODOs: evaluate everything, package command, another evaluate of the package, twiddle params, maybe add a command for uploading models and releasing?
