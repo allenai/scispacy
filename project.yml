@@ -276,28 +276,40 @@ commands:
     help: "Evaluate the parser and tagger"
     script:
       - "spacy evaluate output/en_core_sci_sm_parser_tagger/model-best project_data/genia_test.spacy --output output/en_core_sci_sm_parser_tagger/model_best_results.json --code scispacy/base_project_code.py"
+      - "spacy evaluate output/en_core_sci_sm_parser_tagger/model-best project_data/test --output output/en_core_sci_sm_parser_tagger/model_best_results_onto.json --code scispacy/base_project_code.py"
     deps:
       - "output/en_core_sci_sm_parser_tagger/model-best"
+      - "project_data/genia_test.spacy"
+      - "project_data/test"
     outputs:
       - "output/en_core_sci_sm_parser_tagger/model_best_results.json"
+      - "output/en_core_sci_sm_parser_tagger/model_best_results_onto.json"
 
   - name: evaluate-parser-tagger-md
     help: "Evaluate the parser and tagger"
     script:
       - "spacy evaluate output/en_core_sci_md_parser_tagger/model-best project_data/genia_test.spacy --output output/en_core_sci_md_parser_tagger/model_best_results.json --code scispacy/base_project_code.py"
+      - "spacy evaluate output/en_core_sci_md_parser_tagger/model-best project_data/test --output output/en_core_sci_md_parser_tagger/model_best_results_onto.json --code scispacy/base_project_code.py"
     deps:
       - "output/en_core_sci_md_parser_tagger/model-best"
+      - "project_data/genia_test.spacy"
+      - "project_data/test"
     outputs:
       - "output/en_core_sci_md_parser_tagger/model_best_results.json"
+      - "output/en_core_sci_md_parser_tagger/model_best_results_onto.json"
 
   - name: evaluate-parser-tagger-lg
     help: "Evaluate the parser and tagger"
     script:
       - "spacy evaluate output/en_core_sci_lg_parser_tagger/model-best project_data/genia_test.spacy --output output/en_core_sci_lg_parser_tagger/model_best_results.json --code scispacy/base_project_code.py"
+      - "spacy evaluate output/en_core_sci_lg_parser_tagger/model-best project_data/test --output output/en_core_sci_lg_parser_tagger/model_best_results_onto.json --code scispacy/base_project_code.py"
     deps:
       - "output/en_core_sci_lg_parser_tagger/model-best"
+      - "project_data/genia_test.spacy"
+      - "project_data/test"
     outputs:
       - "output/en_core_sci_lg_parser_tagger/model_best_results.json"
+      - "output/en_core_sci_lg_parser_tagger/model_best_results_onto.json"
   
   - name: evaluate-ner-sm
     help: "Evaluate NER"
