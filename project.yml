@@ -171,9 +171,9 @@ commands:
   - name: parser-tagger-train-sm
     help: "Train the base models"
     script:
-      - "spacy train configs/base_sm.cfg --output output/en_core_sci_sm_parser_tagger --code scispacy/base_project_code.py"
+      - "spacy train configs/base_parser_tagger.cfg --output output/en_core_sci_sm_parser_tagger --code scispacy/base_project_code.py"
     deps:
-      - "configs/base_sm.cfg"
+      - "configs/base_parser_tagger.cfg"
       - "project_data/genia_train.spacy"
       - "project_data/genia_dev.spacy"
       - "project_data/genia_test.spacy"
@@ -184,9 +184,9 @@ commands:
   - name: parser-tagger-train-md
     help: "Train the base models"
     script:
-      - "spacy train configs/base_md.cfg --output output/en_core_sci_md_parser_tagger --code scispacy/base_project_code.py"
+      - "spacy train configs/base_parser_tagger.cfg --output output/en_core_sci_md_parser_tagger --code scispacy/base_project_code.py --paths.vectors output/en_core_sci_md_vectors"
     deps:
-      - "configs/base_md.cfg"
+      - "configs/base_parser_tagger.cfg"
       - "project_data/genia_train.spacy"
       - "project_data/genia_dev.spacy"
       - "project_data/genia_test.spacy"
@@ -198,9 +198,9 @@ commands:
   - name: parser-tagger-train-lg
     help: "Train the base models"
     script:
-      - "spacy train configs/base_lg.cfg --output output/en_core_sci_lg_parser_tagger --code scispacy/base_project_code.py"
+      - "spacy train configs/base_parser_tagger.cfg --output output/en_core_sci_lg_parser_tagger --code scispacy/base_project_code.py --paths.vectors output/en_core_sci_lg_vectors"
     deps:
-      - "configs/base_lg.cfg"
+      - "configs/base_parser_tagger.cfg"
       - "project_data/genia_train.spacy"
       - "project_data/genia_dev.spacy"
       - "project_data/genia_test.spacy"
@@ -212,9 +212,9 @@ commands:
   - name: ner-train-sm
     help: "Train the main ner"
     script:
-      - "spacy train configs/ner_sm.cfg --output output/en_core_sci_sm_ner --code scispacy/base_project_code.py"
+      - "spacy train configs/base_ner.cfg --output output/en_core_sci_sm_ner --code scispacy/base_project_code.py --paths.parser_tagger_path output/en_core_sci_sm_parser_tagger/model-best"
     deps:
-      - "configs/ner_sm.cfg"
+      - "configs/base_ner.cfg"
       - "output/en_core_sci_sm_parser_tagger/model-best"
       - "assets/corpus_pubtator.txt"
     outputs:
@@ -223,9 +223,9 @@ commands:
   - name: ner-train-md
     help: "Train the main ner"
     script:
-      - "spacy train configs/ner_md.cfg --output output/en_core_sci_md_ner --code scispacy/base_project_code.py"
+      - "spacy train configs/base_ner.cfg --output output/en_core_sci_md_ner --code scispacy/base_project_code.py --paths.vectors output/en_core_sci_md_vectors --paths.parser_tagger_path output/en_core_sci_md_parser_tagger/model-best"
     deps:
-      - "configs/ner_md.cfg"
+      - "configs/base_ner.cfg"
       - "output/en_core_sci_md_parser_tagger/model-best"
       - "assets/corpus_pubtator.txt"
       - "output/en_core_sci_md_vectors"
@@ -235,9 +235,9 @@ commands:
   - name: ner-train-lg
     help: "Train the main ner"
     script:
-      - "spacy train configs/ner_lg.cfg --output output/en_core_sci_lg_ner --code scispacy/base_project_code.py"
+      - "spacy train configs/base_ner.cfg --output output/en_core_sci_lg_ner --code scispacy/base_project_code.py --paths.vectors output/en_core_sci_lg_vectors --paths.parser_tagger_path output/en_core_sci_lg_parser_tagger/model-best"
     deps:
-      - "configs/ner_lg.cfg"
+      - "configs/base_ner.cfg"
       - "output/en_core_sci_lg_parser_tagger/model-best"
       - "assets/corpus_pubtator.txt"
       - "output/en_core_sci_lg_vectors"
@@ -247,10 +247,10 @@ commands:
   - name: ner-train-specialized
     help: "Train the specialized NER models"
     script:
-      - "spacy train configs/ner_bc5cdr.cfg --output output/en_ner_bc5cdr_md --code scispacy/base_project_code.py"
-      - "spacy train configs/ner_bionlp13cg.cfg --output output/en_ner_bionlp13cg_md --code scispacy/base_project_code.py"
-      - "spacy train configs/ner_craft.cfg --output output/en_ner_craft_md --code scispacy/base_project_code.py"
-      - "spacy train configs/ner_jnlpba.cfg --output output/en_ner_jnlpba_md --code scispacy/base_project_code.py"
+      - "spacy train configs/base_specialized_ner.cfg --output output/en_ner_bc5cdr_md --code scispacy/base_project_code.py --paths.vectors output/en_core_sci_md_vectors --paths.parser_tagger_path output/en_core_sci_md_parser_tagger/model-best --paths.train_path assets/BC5CDR-IOB/train.tsv --paths.dev_path assets/BC5CDR-IOB/devel.tsv"
+      - "spacy train configs/base_specialized_ner.cfg --output output/en_ner_bionlp13cg_md --code scispacy/base_project_code.py --paths.vectors output/en_core_sci_md_vectors --paths.parser_tagger_path output/en_core_sci_md_parser_tagger/model-best --paths.train_path assets/BioNLP13CG-IOB/train.tsv --paths.dev_path assets/BioNLP13CG-IOB/devel.tsv"
+      - "spacy train configs/base_specialized_ner.cfg --output output/en_ner_craft_md --code scispacy/base_project_code.py --paths.vectors output/en_core_sci_md_vectors --paths.parser_tagger_path output/en_core_sci_md_parser_tagger/model-best --paths.train_path assets/CRAFT-IOB/train.tsv --paths.dev_path assets/CRAFT-IOB/devel.tsv"
+      - "spacy train configs/base_specialized_ner.cfg --output output/en_ner_jnlpba_md --code scispacy/base_project_code.py --paths.vectors output/en_core_sci_md_vectors --paths.parser_tagger_path output/en_core_sci_md_parser_tagger/model-best --paths.train_path assets/JNLPBA-IOB/train.tsv --paths.dev_path assets/JNLPBA-IOB/devel.tsv"
     deps:
       - "assets/corpus_pubtator.txt"
       - "assets/BC5CDR-IOB/train.tsv"
@@ -266,6 +266,7 @@ commands:
       - "assets/BioNLP13CG-IOB/devel.tsv"
       - "assets/BioNLP13CG-IOB/test.tsv"
       - "output/en_core_sci_md_parser_tagger/model-best"
+      - "configs/base_specialized_ner.cfg"
     outputs:
       - "output/en_ner_bc5cdr_md/model-best"
       - "output/en_ner_bionlp13cg_md/model-best"
