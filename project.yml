@@ -10,7 +10,7 @@ vars:
 directories: ["assets", "project_data", "output"]
 
 workflows:
-  all-sm:
+  small:
     - download
     - convert-shared
     - convert-sm
@@ -18,7 +18,7 @@ workflows:
     - evaluate-parser-tagger-sm
     - ner-train-sm
     - evaluate-ner-sm
-  all-md:
+  medium:
     - download
     - convert-shared
     - convert-md
@@ -27,7 +27,7 @@ workflows:
     - evaluate-parser-tagger-md
     - ner-train-md
     - evaluate-ner-md
-  all-lg:
+  large:
     - download
     - convert-shared
     - convert-lg
@@ -36,7 +36,7 @@ workflows:
     - evaluate-parser-tagger-lg
     - ner-train-lg
     - evaluate-ner-lg
-  all-specialized-ner:
+  specialized-ner:
     - ner-train-specialized
     - evaluate-specialized-ner
   all:
@@ -122,7 +122,7 @@ commands:
       - "project_data/test"
 
   - name: convert-sm
-    help: "Convert the data to spaCy's format"
+    help: "Convert a file of word/document frequency statistics to spacy's vocabulary format"
     script:
       - "python scripts/convert_freqs.py --input_path assets/gorc_subset.freqs --output_path project_data/vocab_sm.jsonl --min_word_frequency 1000"
     deps:
@@ -131,7 +131,7 @@ commands:
       - "project_data/vocab_sm.jsonl"
 
   - name: convert-md
-    help: "Convert the data to spaCy's format"
+    help: "Convert a file of word/document frequency statistics to spacy's vocabulary format"
     script:
       - "python scripts/convert_freqs.py --input_path assets/gorc_subset.freqs --output_path project_data/vocab_md.jsonl --min_word_frequency 150"
     deps:
@@ -140,7 +140,7 @@ commands:
       - "project_data/vocab_md.jsonl"
 
   - name: convert-lg
-    help: "Convert the data to spaCy's format"
+    help: "Convert a file of word/document frequency statistics to spacy's vocabulary format"
     script:
       - "python scripts/convert_freqs.py --input_path assets/gorc_subset.freqs --output_path project_data/vocab_lg.jsonl --min_word_frequency 50"
     deps:
@@ -363,4 +363,4 @@ commands:
       - "output/en_ner_craft_md/model_best_results.json"
       - "output/en_ner_jnlpba_md/model_best_results.json"
 
-  # TODOs: evaluate everything, package command, another evaluate of the package, twiddle params, maybe add a command for uploading models and releasing?
+  # TODOs: evaluate everything, package command, another evaluate of the package, twiddle params, maybe add a command for uploading models and releasing?, probably should pull a bunch of stuff into variables in this file

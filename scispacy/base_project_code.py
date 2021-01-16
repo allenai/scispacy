@@ -1,4 +1,4 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, Iterable, Iterator
 from pathlib import Path
 
 import random
@@ -6,12 +6,13 @@ import itertools
 import spacy
 import warnings
 from spacy.training import Corpus, Example
+from spacy.language import Language
 
 from scispacy.custom_tokenizer import combined_rule_tokenizer
 from scispacy.data_util import read_full_med_mentions, read_ner_from_tsv
 
 
-def iter_sample(iterable, sample_percent):
+def iter_sample(iterable: Iterable, sample_percent: float) -> Iterator:
     for item in iterable:
         if len(item.reference) == 0:
             continue
@@ -21,8 +22,8 @@ def iter_sample(iterable, sample_percent):
 
 
 @spacy.registry.callbacks("replace_tokenizer")
-def replace_tokenizer_callback():
-    def replace_tokenizer(nlp):
+def replace_tokenizer_callback() -> Callable[Language, Language]:
+    def replace_tokenizer(nlp: Language) -> Language:
         nlp.tokenizer = combined_rule_tokenizer(nlp)
         return nlp
 
@@ -39,7 +40,7 @@ def parser_tagger_data(
     limit: int = 0,
     augmenter: Optional[Callable] = None,
     seed: int = 0,
-):
+) -> Callable[Language, Iterator[Example]]:
     random.seed(seed)
     main_corpus = Corpus(
         path,
@@ -57,7 +58,7 @@ def parser_tagger_data(
             augmenter=augmenter,
         )
 
-    def mixed_corpus(nlp):
+    def mixed_corpus(nlp: Language) -> Iterator[Example]:
         if mixin_data_path is not None:
             main_examples = main_corpus(nlp)
             mixin_examples = iter_sample(mixin_corpus(nlp), mixin_data_percent)
@@ -69,12 +70,10 @@ def parser_tagger_data(
 
 
 @spacy.registry.readers("med_mentions_reader")
-def med_mentions_reader(directory_path, split):
-    train, dev, test = read_full_med_mentions(
-        directory_path, label_mapping=None, span_only=True, spacy_format=True
-    )
+def med_mentions_reader(directory_path: str, split: str) -> Callable[Language, Iterator[Example]]:
+    train, dev, test = read_full_med_mentions(directory_path, label_mapping=None, span_only=True, spacy_format=True)
 
-    def corpus(nlp):
+    def corpus(nlp: Language) -> Iterator[Example]:
         if split == "train":
             original_examples = train
         elif split == "dev":
@@ -95,10 +94,10 @@ def med_mentions_reader(directory_path, split):
 
 
 @spacy.registry.readers("specialized_ner_reader")
-def specialized_ner_reader(file_path):
+def specialized_ner_reader(file_path: str):
     original_examples = read_ner_from_tsv(file_path)
 
-    def corpus(nlp):
+    def corpus(nlp: Language):
         for original_example in original_examples:
             doc = nlp.make_doc(original_example[0])
             with warnings.catch_warnings():
