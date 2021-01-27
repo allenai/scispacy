@@ -17,6 +17,6 @@ jobs:
         docker build --tag scispacy .
         docker run --rm scispacy pytest tests/
         docker run --rm scispacy flake8 scispacy
-        docker run --rm scispacy black scispacy --check --line-length 115
+        docker run --rm scispacy black scispacy --check --line-length 80
         docker run --rm scispacy bash scripts/mypy.sh
         docker run --rm scispacy pytest tests/ --cov scispacy --cov-fail-under=20
