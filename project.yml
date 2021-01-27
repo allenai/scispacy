@@ -40,7 +40,7 @@ vars:
   bc5cdr_md_loc: "output/en_ner_bc5cdr_md"
   jnlpba_md_loc: "output/en_ner_jnlpba_md"
   craft_md_loc: "output/en_ner_craft_md"
-  bionlp13cg_md_loc: "output/en_ner_bionlp13cg_md_loc"
+  bionlp13cg_md_loc: "output/en_ner_bionlp13cg_md"
   parser_tagger_config_loc: "configs/base_parser_tagger.cfg"
   ner_config_loc: "configs/base_ner.cfg"
   specialized_ner_config_loc: "configs/base_specialized_ner.cfg"
@@ -235,7 +235,7 @@ commands:
   - name: parser-tagger-train-sm
     help: "Train the base models"
     script:
-      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_sm_loc} --code ${vars.code_loc}"
+      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_sm_loc} --code ${vars.code_loc} --paths.vocab_path ${vars.vocab_sm_loc}"
     deps:
       - "${vars.parser_tagger_config_loc}"
       - "${vars.genia_train_spacy_loc}"
@@ -248,7 +248,7 @@ commands:
   - name: parser-tagger-train-md
     help: "Train the base models"
     script:
-      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc}"
+      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.vocab_path ${vars.vocab_md_loc}"
     deps:
       - "${vars.parser_tagger_config_loc}"
       - "${vars.genia_train_spacy_loc}"
@@ -262,7 +262,7 @@ commands:
   - name: parser-tagger-train-lg
     help: "Train the base models"
     script:
-      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_lg_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_lg_loc}"
+      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_lg_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_lg_loc} --paths.vocab_path ${vars.vocab_lg_loc}"
     deps:
       - "${vars.parser_tagger_config_loc}"
       - "${vars.genia_train_spacy_loc}"
@@ -276,7 +276,7 @@ commands:
   - name: ner-train-sm
     help: "Train the main ner"
     script:
-      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_sm_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_sm_loc}/model-best"
+      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_sm_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_sm_loc}/model-best --paths.vocab_path ${vars.vocab_sm_loc}"
     deps:
       - "${vars.ner_config_loc}"
       - "${vars.parser_tagger_sm_loc}/model-best"
@@ -287,7 +287,7 @@ commands:
   - name: ner-train-md
     help: "Train the main ner"
     script:
-      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best"
+      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.vocab_path ${vars.vocab_md_loc}"
     deps:
       - "${vars.ner_config_loc}"
       - "${vars.parser_tagger_md_loc}/model-best"
@@ -299,7 +299,7 @@ commands:
   - name: ner-train-lg
     help: "Train the main ner"
     script:
-      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_lg_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_lg_loc} --paths.parser_tagger_path ${vars.parser_tagger_lg_loc}/model-best"
+      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_lg_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_lg_loc} --paths.parser_tagger_path ${vars.parser_tagger_lg_loc}/model-best --paths.vocab_path ${vars.vocab_lg_loc}"
     deps:
       - "${vars.ner_config_loc}"
       - "${vars.parser_tagger_lg_loc}/model-best"
@@ -311,10 +311,10 @@ commands:
   - name: ner-train-specialized
     help: "Train the specialized NER models"
     script:
-      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.bc5cdr_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.bc5cdr_loc_local}/train.tsv --paths.dev_path ${vars.bc5cdr_loc_local}/devel.tsv"
-      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.bionlp13cg_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.bionlp13cg_loc_local}/train.tsv --paths.dev_path ${vars.bionlp13cg_loc_local}/devel.tsv"
-      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.craft_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.craft_loc_local}/train.tsv --paths.dev_path ${vars.craft_loc_local}/devel.tsv"
-      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.jnlpba_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.jnlpba_loc_local}/train.tsv --paths.dev_path ${vars.jnlpba_loc_local}/devel.tsv"
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.bc5cdr_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.bc5cdr_loc_local}/train.tsv --paths.dev_path ${vars.bc5cdr_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc}"
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.bionlp13cg_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.bionlp13cg_loc_local}/train.tsv --paths.dev_path ${vars.bionlp13cg_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc}"
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.craft_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.craft_loc_local}/train.tsv --paths.dev_path ${vars.craft_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc}"
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.jnlpba_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.jnlpba_loc_local}/train.tsv --paths.dev_path ${vars.jnlpba_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc}"
     deps:
       - "${vars.corpus_pubtator_loc_local}"
       - "${vars.bc5cdr_loc_local}/train.tsv"
