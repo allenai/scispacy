@@ -386,9 +386,9 @@ commands:
     help: "Evaluate specialize NER"
     script:
       - "python scripts/evaluate_ner.py --model_path ${vars.bc5cdr_md_loc}/model-best --dataset ${vars.bc5cdr_loc_local}/test.tsv --output ${vars.bc5cdr_md_loc}/model_best_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.bionlp13cg_md_loc}/model-best --dataset ${vars.jnlpba_loc_local}/test.tsv --output ${vars.bionlp13cg_md_loc}/model_best_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.bionlp13cg_md_loc}/model-best --dataset ${vars.bionlp13cg_loc_local}/test.tsv --output ${vars.bionlp13cg_md_loc}/model_best_results.json"
       - "python scripts/evaluate_ner.py --model_path ${vars.craft_md_loc}/model-best --dataset ${vars.craft_loc_local}/test.tsv --output ${vars.craft_md_loc}/model_best_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.jnlpba_md_loc}/model-best --dataset ${vars.bionlp13cg_loc_local}/test.tsv --output ${vars.jnlpba_md_loc}/model_best_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.jnlpba_md_loc}/model-best --dataset ${vars.jnlpba_loc_local}/test.tsv --output ${vars.jnlpba_md_loc}/model_best_results.json"
     deps:
       - "${vars.bc5cdr_md_loc}/model-best"
       - "${vars.bionlp13cg_md_loc}/model-best"
