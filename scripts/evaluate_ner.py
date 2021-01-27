@@ -1,5 +1,6 @@
 from typing import Optional
 
+import argparse
 import spacy
 import importlib
 
@@ -7,7 +8,7 @@ from scispacy.data_util import read_full_med_mentions, read_ner_from_tsv
 from scispacy.train_utils import evaluate_ner
 
 
-def main(model_path: str, dataset: str, output_path: str, code: Optional[str]):
+def main(model_path: str, dataset: str, output_path: str, code: Optional[str], med_mentions_folder_path: Optional[str]):
     if code is not None:
         # need to import code before loading a spacy model
         spec = importlib.util.spec_from_file_location(name, str(loc))
@@ -16,7 +17,7 @@ def main(model_path: str, dataset: str, output_path: str, code: Optional[str]):
 
     nlp = spacy.load(model_path)
     if dataset.startswith("medmentions"):
-        train_data, dev_data, test_data = read_full_med_mentions(data_path, None, False)
+        train_data, dev_data, test_data = read_full_med_mentions(med_mentions_folder_path, None, False)
         data_split = dataset.split("-")[1]
         if data_split == "train":
             data = train_data
@@ -38,6 +39,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, help="medmentions-<train/dev/test>, or a tsv file to evalute")
     parser.add_argument("--output_path", type=str, help="Path to write results to")
     parser.add_argument("--code", type=str, default=None, help="Path to code to import before loading spacy model")
+    parser.add_argument("--med_mentions_folder_path", type=str, default=None, help="Path to the med mentions folder")
 
     args = parser.parse_args()
-    main(args.model_path, args.dataset, args.output_path, args.code)
+    main(args.model_path, args.dataset, args.output_path, args.code, args.med_mentions_folder_path)

@@ -71,7 +71,9 @@ def parser_tagger_data(
 
 @spacy.registry.readers("med_mentions_reader")
 def med_mentions_reader(directory_path: str, split: str) -> Callable[[Language], Iterator[Example]]:
-    train, dev, test = read_full_med_mentions(directory_path, label_mapping=None, span_only=True, spacy_format=True)
+    train, dev, test = read_full_med_mentions(
+        directory_path, label_mapping=None, span_only=True, spacy_format=True
+    )
 
     def corpus(nlp: Language) -> Iterator[Example]:
         if split == "train":
