@@ -22,7 +22,7 @@ def iter_sample(iterable: Iterable, sample_percent: float) -> Iterator:
 
 
 @spacy.registry.callbacks("replace_tokenizer")
-def replace_tokenizer_callback() -> Callable[Language, Language]:
+def replace_tokenizer_callback() -> Callable[[Language], Language]:
     def replace_tokenizer(nlp: Language) -> Language:
         nlp.tokenizer = combined_rule_tokenizer(nlp)
         return nlp
@@ -40,7 +40,7 @@ def parser_tagger_data(
     limit: int = 0,
     augmenter: Optional[Callable] = None,
     seed: int = 0,
-) -> Callable[Language, Iterator[Example]]:
+) -> Callable[[Language], Iterator[Example]]:
     random.seed(seed)
     main_corpus = Corpus(
         path,
@@ -70,7 +70,7 @@ def parser_tagger_data(
 
 
 @spacy.registry.readers("med_mentions_reader")
-def med_mentions_reader(directory_path: str, split: str) -> Callable[Language, Iterator[Example]]:
+def med_mentions_reader(directory_path: str, split: str) -> Callable[[Language], Iterator[Example]]:
     train, dev, test = read_full_med_mentions(directory_path, label_mapping=None, span_only=True, spacy_format=True)
 
     def corpus(nlp: Language) -> Iterator[Example]:
