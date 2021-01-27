@@ -355,7 +355,7 @@ commands:
   - name: evaluate-ner-sm
     help: "Evaluate NER"
     script:
-      - "python scripts/evaluate_ner.py --model_path ${vars.ner_sm_loc}/model-best --dataset medmentions-test --output ${vars.ner_sm_loc}/model_best_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.ner_sm_loc}/model-best --dataset medmentions-test --output ${vars.ner_sm_loc}/model_best_results.json --med_mentions_folder_path assets/"
     deps:
       - "${vars.ner_sm_loc}"
       - "${vars.corpus_pubtator_loc_local}"
@@ -365,7 +365,7 @@ commands:
   - name: evaluate-ner-md
     help: "Evaluate NER"
     script:
-      - "python scripts/evaluate_ner.py --model_path ${vars.ner_md_loc}/model-best --dataset medmentions-test --output ${vars.ner_md_loc}/model_best_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.ner_md_loc}/model-best --dataset medmentions-test --output ${vars.ner_md_loc}/model_best_results.json --med_mentions_folder_path assets/"
     deps:
       - "${vars.ner_md_loc}"
       - "${vars.corpus_pubtator_loc_local}"
@@ -375,7 +375,7 @@ commands:
   - name: evaluate-ner-lg
     help: "Evaluate NER"
     script:
-      - "python scripts/evaluate_ner.py --model_path ${vars.ner_lg_loc}/model-best --dataset medmentions-test --output ${vars.ner_lg_loc}/model_best_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.ner_lg_loc}/model-best --dataset medmentions-test --output ${vars.ner_lg_loc}/model_best_results.json --med_mentions_folder_path assets/"
     deps:
       - "${vars.ner_lg_loc}"
       - "${vars.corpus_pubtator_loc_local}"
@@ -404,4 +404,4 @@ commands:
       - "${vars.craft_md_loc}/model_best_results.json"
       - "${vars.jnlpba_md_loc}/model_best_results.json"
 
-  # TODOs: evaluate everything, package command, another evaluate of the package, twiddle params, maybe add a command for uploading models and releasing?, probably should pull a bunch of stuff into variables in this file
+  # TODOs: evaluate everything, package command, another evaluate of the package, twiddle params, maybe add a command for uploading models and releasing?
