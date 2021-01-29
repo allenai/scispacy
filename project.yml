@@ -498,12 +498,12 @@ commands:
     help: "Package the models"
     script:
       - "spacy package ${vars.bc5cdr_md_loc}/model-best packages/ --meta-path ${vars.meta_bc5cdr_loc} --version ${vars.version_string}"
-      - "spacy package ${vars.bionlp13cg_md_loc}_loc/model-best packages/ --meta-path ${vars.meta_bionlp13cg_loc} --version ${vars.version_string}"
+      - "spacy package ${vars.bionlp13cg_md_loc}/model-best packages/ --meta-path ${vars.meta_bionlp13cg_loc} --version ${vars.version_string}"
       - "spacy package ${vars.craft_md_loc}/model-best packages/ --meta-path ${vars.meta_craft_loc} --version ${vars.version_string}"
       - "spacy package ${vars.jnlpba_md_loc}/model-best packages/ --meta-path ${vars.meta_jnlpba_loc} --version ${vars.version_string}"
     deps:
       - "${vars.bc5cdr_md_loc}/model-best"
-      - "${vars.bionlp13cg_md_loc}_loc/model-best"
+      - "${vars.bionlp13cg_md_loc}/model-best"
       - "${vars.craft_md_loc}/model-best"
       - "${vars.jnlpba_md_loc}/model-best"
     outputs:
