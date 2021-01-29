@@ -63,7 +63,7 @@ vars:
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "project_data", "output"]
+directories: ["assets", "project_data", "output", "packages"]
 
 workflows:
   small:
