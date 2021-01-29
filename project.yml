@@ -14,7 +14,7 @@ vars:
   genia_train_spacy_loc: "project_data/genia_train.spacy"
   genia_dev_spacy_loc: "project_data/genia_dev.spacy"
   genia_test_spacy_loc: "project_data/genia_test.spacy"
-  ontonotes_loc_s3: "s3://ai2-s2-scispacy/data/en-core-web.tgz"
+  ontonotes_loc_s3: "s3://ai2-s2-scispacy/data/ud_ontonotes.tar.gz"
   ontonotes_train_spacy_loc: "project_data/train"
   ontonotes_dev_spacy_loc: "project_data/dev"
   ontonotes_test_spacy_loc: "project_data/test"
