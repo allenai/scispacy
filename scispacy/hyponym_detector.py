@@ -1,12 +1,12 @@
 from spacy.matcher import Matcher
 from spacy.tokens import Token, Doc
+from spacy.language import Language
 
 from scispacy.hearst_patterns import BASE_PATTERNS, EXTENDED_PATTERNS
 
 
+@Language.factory("hyponym_detector")
 class HyponymDetector:
-    name = "HyponymDetector"
-
     """
     A spaCy pipe for detecting hyponyms using Hearst patterns.
     This class sets the following attributes:
@@ -22,11 +22,15 @@ class HyponymDetector:
 
     The pipe can be used with an instantiated spacy model like so:
     ```
-    hyponym_pipe = HyponymDetector(extended=True)
-    nlp.add_pipe(hyponym_pipe, last=True)
+    # you first need to add the lemmatizer from the base model
+    nlp_sm = spacy.load('en_core_web_sm')
+    nlp.add_pipe('attribute_ruler', source=nlp_sm, after='tagger')
+    nlp.add_pipe('lemmatizer', source=nlp_sm, after='attribute_ruler')
+    # then you can add the hyponym detector
+    nlp.add_pipe('hyponym_detector', config={'extended': True}, last=True)
     """
 
-    def __init__(self, nlp, extended=False):
+    def __init__(self, nlp: Language, name: str = "", extended: bool = False):
 
         self.nlp = nlp
 
@@ -44,7 +48,7 @@ class HyponymDetector:
 
         # add patterns to matcher
         for pattern in self.patterns:
-            self.matcher.add(pattern["label"], None, pattern["pattern"])
+            self.matcher.add(pattern["label"], [pattern["pattern"]])
 
             # gather list of predicates where the hypernym appears first
             if pattern["position"] == "first":
@@ -118,16 +122,12 @@ class HyponymDetector:
             hypernym_extended = self.expand_to_noun_compound(hypernym, doc)
             hyponym_extended = self.expand_to_noun_compound(hyponym, doc)
 
-            doc._.hearst_patterns.append(
-                (predicate, hypernym_extended, hyponym_extended)
-            )
+            doc._.hearst_patterns.append((predicate, hypernym_extended, hyponym_extended))
 
             for token in hyponym.conjuncts:
 
                 token_extended = self.expand_to_noun_compound(token, doc)
                 if token != hypernym and token is not None:
-                    doc._.hearst_patterns.append(
-                        (predicate, hypernym_extended, token_extended)
-                    )
+                    doc._.hearst_patterns.append((predicate, hypernym_extended, token_extended))
 
         return doc
