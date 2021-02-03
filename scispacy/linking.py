@@ -79,7 +79,9 @@ class EntityLinker:
         Span.set_extension("umls_ents", default=[], force=True)
         Span.set_extension("kb_ents", default=[], force=True)
 
-        self.candidate_generator = candidate_generator or CandidateGenerator(name=linker_name)
+        self.candidate_generator = candidate_generator or CandidateGenerator(
+            name=linker_name
+        )
         self.resolve_abbreviations = resolve_abbreviations
         self.k = k
         self.threshold = threshold

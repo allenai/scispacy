@@ -122,12 +122,16 @@ class HyponymDetector:
             hypernym_extended = self.expand_to_noun_compound(hypernym, doc)
             hyponym_extended = self.expand_to_noun_compound(hyponym, doc)
 
-            doc._.hearst_patterns.append((predicate, hypernym_extended, hyponym_extended))
+            doc._.hearst_patterns.append(
+                (predicate, hypernym_extended, hyponym_extended)
+            )
 
             for token in hyponym.conjuncts:
 
                 token_extended = self.expand_to_noun_compound(token, doc)
                 if token != hypernym and token is not None:
-                    doc._.hearst_patterns.append((predicate, hypernym_extended, token_extended))
+                    doc._.hearst_patterns.append(
+                        (predicate, hypernym_extended, token_extended)
+                    )
 
         return doc

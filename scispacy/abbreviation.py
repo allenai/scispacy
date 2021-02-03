@@ -5,7 +5,9 @@ from spacy.matcher import Matcher
 from spacy.language import Language
 
 
-def find_abbreviation(long_form_candidate: Span, short_form_candidate: Span) -> Tuple[Span, Optional[Span]]:
+def find_abbreviation(
+    long_form_candidate: Span, short_form_candidate: Span
+) -> Tuple[Span, Optional[Span]]:
     """
     Implements the abbreviation detection algorithm in "A simple algorithm
     for identifying abbreviation definitions in biomedical text.", (Schwartz & Hearst, 2003).
@@ -46,7 +48,11 @@ def find_abbreviation(long_form_candidate: Span, short_form_candidate: Span) -> 
             or
             # .... or if we are checking the first character of the abbreviation, we enforce
             # to be the _starting_ character of a span.
-            (short_index == 0 and long_index > 0 and long_form[long_index - 1].isalnum())
+            (
+                short_index == 0
+                and long_index > 0
+                and long_form[long_index - 1].isalnum()
+            )
         ):
             long_index -= 1
 
@@ -76,7 +82,9 @@ def find_abbreviation(long_form_candidate: Span, short_form_candidate: Span) -> 
     return short_form_candidate, long_form_candidate[starting_index:]
 
 
-def filter_matches(matcher_output: List[Tuple[int, int, int]], doc: Doc) -> List[Tuple[Span, Span]]:
+def filter_matches(
+    matcher_output: List[Tuple[int, int, int]], doc: Doc
+) -> List[Tuple[Span, Span]]:
     # Filter into two cases:
     # 1. <Short Form> ( <Long Form> )
     # 2. <Long Form> (<Short Form>) [this case is most common].
@@ -174,7 +182,9 @@ class AbbreviationDetector:
                 doc._.abbreviations.append(short)
         return doc
 
-    def find_matches_for(self, filtered: List[Tuple[Span, Span]], doc: Doc) -> List[Tuple[Span, Set[Span]]]:
+    def find_matches_for(
+        self, filtered: List[Tuple[Span, Span]], doc: Doc
+    ) -> List[Tuple[Span, Set[Span]]]:
         rules = {}
         all_occurences: Dict[Span, Set[Span]] = defaultdict(set)
         already_seen_long: Set[str] = set()
