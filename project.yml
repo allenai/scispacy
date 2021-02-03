@@ -74,6 +74,8 @@ workflows:
     - evaluate-parser-tagger-sm
     - ner-train-sm
     - evaluate-ner-sm
+    - package-sm
+    - evaluate-package-sm
   medium:
     - download
     - convert-shared
@@ -83,6 +85,8 @@ workflows:
     - evaluate-parser-tagger-md
     - ner-train-md
     - evaluate-ner-md
+    - package-md
+    - evaluate-package-md
   large:
     - download
     - convert-shared
@@ -92,9 +96,13 @@ workflows:
     - evaluate-parser-tagger-lg
     - ner-train-lg
     - evaluate-ner-lg
+    - package-lg
+    - evaluate-package-lg
   specialized-ner:
     - ner-train-specialized
     - evaluate-specialized-ner
+    - package-ner
+    - evaluate-package-ner
   all:
     - download
     - convert-shared
