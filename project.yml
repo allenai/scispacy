@@ -353,7 +353,7 @@ commands:
       - "${vars.parser_tagger_roberta_loc}/model-best"
       - "${vars.corpus_pubtator_loc_local}"
     outputs:
-      - "${vars.ner_roberta_loc}/model-best
+      - "${vars.ner_roberta_loc}/model-best"
 
   - name: ner-train-specialized
     help: "Train the specialized NER models"
@@ -538,7 +538,7 @@ commands:
     outputs:
       - "${vars.package_lg_loc}"
 
-   - name: package-roberta
+  - name: package-roberta
     help: "Package the roberta model"
     script:
       - "spacy package ${vars.ner_roberta_loc}/model-best packages/ --meta-path ${vars.meta_roberta_loc} --version ${vars.version_string}"
@@ -573,7 +573,7 @@ commands:
       - "packages/lg_onto_results.json"
       - "packages/lg_mm_results.json"
 
-   - name: evaluate-package-roberta
+  - name: evaluate-package-roberta
     help: "Evaluate the packaged roberta model"
     script:
       - "spacy evaluate ${vars.package_roberta_loc} ${vars.genia_test_spacy_loc} --output packages/roberta_genia_results.json"
