@@ -34,20 +34,25 @@ vars:
   parser_tagger_sm_loc: "output/en_core_sci_sm_parser_tagger"
   parser_tagger_md_loc: "output/en_core_sci_md_parser_tagger"
   parser_tagger_lg_loc: "output/en_core_sci_lg_parser_tagger"
+  parser_tagger_roberta_loc: "output/en_core_sci_roberta_parser_tagger"
   ner_sm_loc: "output/en_core_sci_sm_ner"
   ner_md_loc: "output/en_core_sci_md_ner"
   ner_lg_loc: "output/en_core_sci_lg_ner"
+  ner_roberta_loc: "output/en_core_sci_roberta_ner"
   bc5cdr_md_loc: "output/en_ner_bc5cdr_md"
   jnlpba_md_loc: "output/en_ner_jnlpba_md"
   craft_md_loc: "output/en_ner_craft_md"
   bionlp13cg_md_loc: "output/en_ner_bionlp13cg_md"
   parser_tagger_config_loc: "configs/base_parser_tagger.cfg"
+  parser_tagger_roberta_config_loc: "configs/base_parser_tagger.cfg"
   ner_config_loc: "configs/base_ner.cfg"
+  ner_roberta_config_loc: "configs/base_ner.cfg"
   specialized_ner_config_loc: "configs/base_specialized_ner.cfg"
   code_loc: "scispacy/base_project_code.py"
   meta_sm_loc: "data/meta_small.json"
   meta_md_loc: "data/meta_medium.json"
   meta_lg_loc: "data/meta_large.json"
+  meta_roberta_loc: "data/meta_roberta.json"
   meta_bc5cdr_loc: "data/bc5cdr_ner.json"
   meta_bionlp13cg_loc: "data/bionlp13cg_ner.json"
   meta_craft_loc: "data/craft_ner.json"
@@ -55,6 +60,7 @@ vars:
   package_sm_loc: "packages/en_core_sci_sm-${vars.version_string}/en_core_sci_sm/en_core_sci_sm-${vars.version_string}"
   package_md_loc: "packages/en_core_sci_md-${vars.version_string}/en_core_sci_md/en_core_sci_md-${vars.version_string}"
   package_lg_loc: "packages/en_core_sci_lg-${vars.version_string}/en_core_sci_lg/en_core_sci_lg-${vars.version_string}"
+  package_roberta_loc: "packages/en_core_sci_roberta-${vars.version_string}/en_core_sci_roberta/en_core_sci_roberta-${vars.version_string}"
   package_bc5cdr_loc: "packages/en_ner_bc5cdr_md-${vars.version_string}/en_ner_bc5cdr_md/en_ner_bc5cdr_md-${vars.version_string}"
   package_bionlp13cg_loc: "packages/en_ner_bionlp13cg_md-${vars.version_string}/en_ner_bionlp13cg_md/en_ner_bionlp13cg_md-${vars.version_string}"
   package_craft_loc: "packages/en_ner_craft_md-${vars.version_string}/en_ner_craft_md/en_ner_craft_md-${vars.version_string}"
@@ -98,6 +104,15 @@ workflows:
     - evaluate-ner-lg
     - package-lg
     - evaluate-package-lg
+  roberta:
+    - download
+    - convert-shared
+    - parser-tagger-train-roberta
+    - evaluate-parser-tagger-roberta
+    - ner-train-roberta
+    - evaluate-ner-roberta
+    - package-roberta
+    - evaluate-package-roberta
   specialized-ner:
     - ner-train-specialized
     - evaluate-specialized-ner
@@ -280,6 +295,19 @@ commands:
       - "${vars.vectors_lg_loc}"
     outputs:
       - "${vars.parser_tagger_lg_loc}/model-best"
+
+  - name: parser-tagger-train-roberta
+    help: "Train the roberta transformer model"
+    script:
+      - "spacy train ${vars.parser_tagger_roberta_config_loc} --output ${vars.parser_tagger_roberta_loc} --code ${vars.code_loc}"
+    deps:
+      - "${vars.parser_tagger_config_loc}"
+      - "${vars.genia_train_spacy_loc}"
+      - "${vars.genia_dev_spacy_loc}"
+      - "${vars.genia_test_spacy_loc}"
+      - "${vars.ontonotes_train_spacy_loc}"
+    outputs:
+      - "${vars.parser_tagger_roberta_loc}/model-best"
   
   - name: ner-train-sm
     help: "Train the main ner"
@@ -315,6 +343,17 @@ commands:
       - "${vars.vectors_lg_loc}"
     outputs:
       - "${vars.ner_lg_loc}/model-best"
+
+  - name: ner-train-roberta
+    help: "Train the roberta ner model."
+    script:
+      - "spacy train ${vars.ner_roberta_config_loc} --output ${vars.ner_roberta_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_roberta_loc}/model-best"
+    deps:
+      - "${vars.ner_config_loc}"
+      - "${vars.parser_tagger_roberta_loc}/model-best"
+      - "${vars.corpus_pubtator_loc_local}"
+    outputs:
+      - "${vars.ner_roberta_loc}/model-best
 
   - name: ner-train-specialized
     help: "Train the specialized NER models"
@@ -384,6 +423,19 @@ commands:
       - "${vars.parser_tagger_lg_loc}/model_best_results.json"
       - "${vars.parser_tagger_lg_loc}/model_best_results_onto.json"
   
+  - name: evaluate-parser-tagger-roberta
+    help: "Evaluate the parser and tagger roberta model"
+    script:
+      - "spacy evaluate ${vars.parser_tagger_roberta_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_roberta_loc}/model_best_results.json"
+      - "spacy evaluate ${vars.parser_tagger_roberta_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_roberta_loc}/model_best_results_onto.json"
+    deps:
+      - "${vars.parser_tagger_roberta_loc}/model-best"
+      - "${vars.genia_test_spacy_loc}"
+      - "${vars.ontonotes_test_spacy_loc}"
+    outputs:
+      - "${vars.parser_tagger_roberta_loc}/model_best_results.json"
+      - "${vars.parser_tagger_roberta_loc}/model_best_results_onto.json"
+  
   - name: evaluate-ner-sm
     help: "Evaluate NER"
     script:
@@ -413,6 +465,16 @@ commands:
       - "${vars.corpus_pubtator_loc_local}"
     outputs:
       - "${vars.ner_lg_loc}/model_best_results.json"
+
+  - name: evaluate-ner-roberta
+    help: "Evaluate NER roberta"
+    script:
+      - "python scripts/evaluate_ner.py --model_path ${vars.ner_roberta_loc}/model-best --dataset medmentions-test --output ${vars.ner_roberta_loc}/model_best_results.json --med_mentions_folder_path assets/"
+    deps:
+      - "${vars.ner_roberta_loc}"
+      - "${vars.corpus_pubtator_loc_local}"
+    outputs:
+      - "${vars.ner_roberta_loc}/model_best_results.json"
   
   - name: evaluate-specialized-ner
     help: "Evaluate specialize NER"
@@ -475,7 +537,16 @@ commands:
       - "${vars.ner_lg_loc}/model-best"
     outputs:
       - "${vars.package_lg_loc}"
-  
+
+   - name: package-roberta
+    help: "Package the roberta model"
+    script:
+      - "spacy package ${vars.ner_roberta_loc}/model-best packages/ --meta-path ${vars.meta_roberta_loc} --version ${vars.version_string}"
+    deps:
+      - "${vars.ner_roberta_loc}/model-best"
+    outputs:
+      - "${vars.package_roberta_loc}"
+   
   - name: evaluate-package-md
     help: "Evaluate the packaged models"
     script:
@@ -501,7 +572,22 @@ commands:
       - "packages/lg_genia_results.json"
       - "packages/lg_onto_results.json"
       - "packages/lg_mm_results.json"
-  
+
+   - name: evaluate-package-roberta
+    help: "Evaluate the packaged roberta model"
+    script:
+      - "spacy evaluate ${vars.package_roberta_loc} ${vars.genia_test_spacy_loc} --output packages/roberta_genia_results.json"
+      - "spacy evaluate ${vars.package_lg_loc} ${vars.ontonotes_test_spacy_loc} --output packages/roberta_onto_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_roberta_loc} --dataset medmentions-test --output packages/roberta_mm_results.json --med_mentions_folder_path assets/"
+    deps:
+      - "${vars.package_roberta_loc}"
+    outputs:
+      - "packages/roberta_genia_results.json"
+      - "packages/roberta_onto_results.json"
+      - "packages/roberta_mm_results.json"
+ 
+      
+
   - name: package-ner
     help: "Package the models"
     script:
