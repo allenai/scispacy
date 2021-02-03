@@ -212,8 +212,9 @@ print("Name: ", entity)
 
 # Each entity is linked to UMLS with a score
 # (currently just char-3gram matching).
+linker = nlp.get_pipe("scispacy_linker")
 for umls_ent in entity._.kb_ents:
-	print(nlp.get_pipe("scispacy_linker").kb.cui_to_entity[umls_ent[0]])
+	print(linker.kb.cui_to_entity[umls_ent[0]])
 
 
 >>> CUI: C1839259, Name: Bulbo-Spinal Atrophy, X-Linked

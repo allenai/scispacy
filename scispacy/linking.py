@@ -37,6 +37,8 @@ class EntityLinker:
     Parameters
     ----------
 
+    nlp: `Language`, a required argument for spacy to use this as a factory
+    name: `str`, a required argument for spacy to use this as a factory
     candidate_generator : `CandidateGenerator`, optional, (default = None)
         A CandidateGenerator to generate entity candidates for mentions.
         If no candidate generator is passed, the default pretrained one is used.
@@ -58,14 +60,14 @@ class EntityLinker:
     max_entities_per_mention : int, optional, default = 5
         The maximum number of entities which will be returned for a given mention, regardless of
         how many are nearest neighbours are found.
-    name: str, optional (default = None)
+    linker_name: str, optional (default = None)
         The name of the pretrained entity linker to load.
     """
 
     def __init__(
         self,
-        nlp: Language = None,  # required arg for spacy
-        name: str = "",  # required arg for spacy
+        nlp: Language = None,
+        name: str = "scispacy_linker",
         candidate_generator: CandidateGenerator = None,
         resolve_abbreviations: bool = True,
         k: int = 30,

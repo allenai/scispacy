@@ -145,9 +145,15 @@ class AbbreviationDetector:
     attribute set to the long form definition of the abbreviation.
 
     Note that this class does not replace the spans, or merge them.
+
+    Parameters
+    ----------
+
+    nlp: `Language`, a required argument for spacy to use this as a factory
+    name: `str`, a required argument for spacy to use this as a factory
     """
 
-    def __init__(self, nlp: Language, name: str = "") -> None:
+    def __init__(self, nlp: Language, name: str = "abbreviation_detector") -> None:
         Doc.set_extension("abbreviations", default=[], force=True)
         Span.set_extension("long_form", default=None, force=True)
 

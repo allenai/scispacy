@@ -28,9 +28,18 @@ class HyponymDetector:
     nlp.add_pipe('lemmatizer', source=nlp_sm, after='attribute_ruler')
     # then you can add the hyponym detector
     nlp.add_pipe('hyponym_detector', config={'extended': True}, last=True)
+
+    Parameters
+    ----------
+
+    nlp: `Language`, a required argument for spacy to use this as a factory
+    name: `str`, a required argument for spacy to use this as a factory
+    extended: `bool`, whether to use the extended Hearts patterns or not
     """
 
-    def __init__(self, nlp: Language, name: str = "", extended: bool = False):
+    def __init__(
+        self, nlp: Language, name: str = "hyponym_detector", extended: bool = False
+    ):
 
         self.nlp = nlp
 
