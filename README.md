@@ -107,8 +107,7 @@ from scispacy.abbreviation import AbbreviationDetector
 nlp = spacy.load("en_core_sci_sm")
 
 # Add the abbreviation pipe to the spacy pipeline.
-abbreviation_pipe = AbbreviationDetector(nlp)
-nlp.add_pipe(abbreviation_pipe)
+nlp.add_pipe("abbreviation_detector")
 
 doc = nlp("Spinal and bulbar muscular atrophy (SBMA) is an \
            inherited motor neuron disease caused by the expansion \
