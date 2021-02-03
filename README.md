@@ -99,6 +99,18 @@ another span in the document.
 
 #### Example Usage
 
+### Adding the lemmatizer (v0.4.0 and up)
+To add the lemmatizer from the core spacy models
+```python
+import spacy
+
+nlp_sci = spacy.load('en_core_sci_sm')
+nlp_en = spacy.load('en_core_web_sm')
+nlp_sm = spacy.load('en_core_web_sm')
+nlp_sci.add_pipe('attribute_ruler', source=nlp_en, after='tagger')
+nlp_sci.add_pipe('lemmatizer', source=nlp_en, after='attribute_ruler')
+```
+
 ```python
 import spacy
 
@@ -228,7 +240,7 @@ for umls_ent in entity._.kb_ents:
          AR protein, human, Androgen Receptor, Dihydrotestosterone Receptor, AR, DHTR, NR3C4, ...
 ```
 
-### Hearst Patterns (v3.0)
+### Hearst Patterns (v0.3.0 and up)
 
 This component implements [Automatic Aquisition of Hyponyms from Large Text Corpora](https://www.aclweb.org/anthology/C92-2082.pdf) using the SpaCy Matcher component.
 
