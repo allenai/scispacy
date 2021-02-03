@@ -63,11 +63,11 @@ class TestAbbreviationDetector(unittest.TestCase):
 
         assert len(filtered) == 2
         long, short = filtered[0]
-        assert long.string == "Spinal and bulbar muscular atrophy "
-        assert short.string == "SBMA"
+        assert long.text_with_ws == "Spinal and bulbar muscular atrophy "
+        assert short.text == "SBMA"
         long, short = filtered[1]
-        assert long.string == "within the androgen receptor "
-        assert short.string == "AR"
+        assert long.text_with_ws == "within the androgen receptor "
+        assert short.text == "AR"
 
     def test_abbreviation_detection(self):
         # Attribute should be registered.
@@ -94,9 +94,9 @@ class TestAbbreviationDetector(unittest.TestCase):
     def test_find(self):
         doc = self.nlp(self.text)
         long, shorts = self.detector.find(doc[6:7], doc)
-        assert long.string == "Spinal and bulbar muscular atrophy "
+        assert long.text_with_ws == "Spinal and bulbar muscular atrophy "
         assert len(shorts) == 2
-        assert {x.string for x in shorts} == {"SBMA", "SBMA "}
+        assert {x.text_with_ws for x in shorts} == {"SBMA", "SBMA "}
 
         long, shorts = self.detector.find(doc[7:13], doc)
         assert shorts == set()

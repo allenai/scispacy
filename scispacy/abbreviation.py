@@ -139,7 +139,7 @@ class AbbreviationDetector:
     Note that this class does not replace the spans, or merge them.
     """
 
-    def __init__(self, nlp, name) -> None:
+    def __init__(self, nlp: Language, name: str = "") -> None:
         Doc.set_extension("abbreviations", default=[], force=True)
         Span.set_extension("long_form", default=None, force=True)
 
