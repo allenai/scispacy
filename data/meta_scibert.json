@@ -1,6 +1,6 @@
 {
   "lang":"en",
-  "name":"core_sci_roberta",
+  "name":"core_sci_scibert",
   "sources": ["OntoNotes 5", "Common Crawl", "GENIA 1.0"],
   "description":"Spacy Models for Biomedical Text.",
   "author":"Allen Institute for Artificial Intelligence",

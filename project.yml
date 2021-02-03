@@ -538,7 +538,7 @@ commands:
     outputs:
       - "${vars.package_lg_loc}"
 
-   - name: package-scibert
+  - name: package-scibert
     help: "Package the scibert model"
     script:
       - "spacy package ${vars.ner_scibert_loc}/model-best packages/ --meta-path ${vars.meta_scibert_loc} --version ${vars.version_string}"
@@ -573,7 +573,7 @@ commands:
       - "packages/lg_onto_results.json"
       - "packages/lg_mm_results.json"
 
-   - name: evaluate-package-scibert
+  - name: evaluate-package-scibert
     help: "Evaluate the packaged scibert model"
     script:
       - "spacy evaluate ${vars.package_scibert_loc} ${vars.genia_test_spacy_loc} --output packages/scibert_genia_results.json"
