@@ -42,7 +42,6 @@ class HyponymDetector:
 
         Doc.set_extension("hearst_patterns", default=[], force=True)
 
-        self.predicates = []
         self.first = set()
         self.last = set()
 
