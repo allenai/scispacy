@@ -197,9 +197,7 @@ nlp = spacy.load("en_core_sci_sm")
 # the AbbreviationDetector pipe has already been added to the pipeline. Adding
 # the AbbreviationDetector pipe and setting resolve_abbreviations to True means
 # that linking will only be performed on the long form of abbreviations.
-linker = EntityLinker(resolve_abbreviations=True, name="umls")
-
-nlp.add_pipe(linker)
+nlp.add_pipe("scispacy_linker", config={"resolve_abbreviations": True, "name": "umls"})
 
 doc = nlp("Spinal and bulbar muscular atrophy (SBMA) is an \
            inherited motor neuron disease caused by the expansion \
@@ -215,7 +213,7 @@ print("Name: ", entity)
 # Each entity is linked to UMLS with a score
 # (currently just char-3gram matching).
 for umls_ent in entity._.kb_ents:
-	print(linker.kb.cui_to_entity[umls_ent[0]])
+	print(nlp.get_pipe("scispacy_linker").kb.cui_to_entity[umls_ent[0]])
 
 
 >>> CUI: C1839259, Name: Bulbo-Spinal Atrophy, X-Linked
