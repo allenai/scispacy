@@ -1,4 +1,4 @@
-FROM python:3.6.4-stretch
+FROM python:3.7-stretch
 
 # install base packages
 RUN apt-get clean \
