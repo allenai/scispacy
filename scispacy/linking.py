@@ -1,9 +1,11 @@
 from spacy.tokens import Doc
 from spacy.tokens import Span
+from spacy.language import Language
 
 from scispacy.candidate_generation import CandidateGenerator
 
 
+@Language.factory("scispacy_linker")
 class EntityLinker:
     """
     A spacy pipeline component which identifies entities in text which appear
@@ -62,6 +64,8 @@ class EntityLinker:
 
     def __init__(
         self,
+        nlp: Language = None,  # required arg for spacy
+        name: str = "",  # required arg for spacy
         candidate_generator: CandidateGenerator = None,
         resolve_abbreviations: bool = True,
         k: int = 30,
@@ -69,13 +73,13 @@ class EntityLinker:
         no_definition_threshold: float = 0.95,
         filter_for_definitions: bool = True,
         max_entities_per_mention: int = 5,
-        name: str = None,
+        linker_name: str = None,
     ):
         # TODO(Mark): Remove in scispacy v1.0.
         Span.set_extension("umls_ents", default=[], force=True)
         Span.set_extension("kb_ents", default=[], force=True)
 
-        self.candidate_generator = candidate_generator or CandidateGenerator(name=name)
+        self.candidate_generator = candidate_generator or CandidateGenerator(name=linker_name)
         self.resolve_abbreviations = resolve_abbreviations
         self.k = k
         self.threshold = threshold

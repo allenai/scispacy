@@ -19,12 +19,11 @@ class TestLinker(unittest.TestCase):
             umls_concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(dir_name, umls_fixture)
         candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, umls_concept_aliases, umls_fixture)
 
-        self.linker = EntityLinker(candidate_generator, filter_for_definitions=False)
+        self.linker = EntityLinker(candidate_generator=candidate_generator, filter_for_definitions=False)
 
     def test_naive_entity_linking(self):
         text = "There was a lot of Dipalmitoylphosphatidylcholine."
         doc = self.nlp(text)
-        doc.ents = (doc[5:6],)
 
         # Check that the linker returns nothing if we set the filter_for_definitions flag
         # and set the threshold very high for entities without definitions.
@@ -37,7 +36,7 @@ class TestLinker(unittest.TestCase):
         # set the threshold to something more reasonable.
         self.linker.no_definition_threshold = 0.95
         doc = self.linker(doc)
-        assert doc.ents[0]._.kb_ents == [('C0000039', 1.0)]
+        assert doc.ents[0]._.kb_ents == [("C0000039", 1.0)]
 
         self.linker.filter_for_definitions = False
         self.linker.threshold = 0.45
@@ -54,16 +53,15 @@ class TestLinker(unittest.TestCase):
 
     def test_linker_resolves_abbreviations(self):
 
-        detector = AbbreviationDetector(self.nlp)
-        self.nlp.add_pipe(detector)
-        text = "1-Methyl-4-phenylpyridinium (MPP+) is an abbreviation which doesn't exist in the baby index."
+        self.nlp.add_pipe("abbreviation_detector")
+        # replace abbreivation with "CNN" so spacy recognizes at as en entity
+        # and also prefix the term with "CNN" so that abbreviation detector passes
+        text = "CNN1-Methyl-4-phenylpyridinium (CNN) is an abbreviation which doesn't exist in the baby index."
         doc = self.nlp(text)
-        # Set abbreviated text (MPP+) to be the only entity, which is also not in the toy umls index.
-        doc.ents = (doc[2:3],)
         doc = self.linker(doc)
 
         id_with_score = doc.ents[0]._.kb_ents[0]
-        assert id_with_score == ("C0000098", 1.0)
+        assert id_with_score == ("C0000098", 0.9819725155830383)
         umls_entity = self.linker.kb.cui_to_entity[id_with_score[0]]
         assert umls_entity.concept_id == "C0000098"
 
