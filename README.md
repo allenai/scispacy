@@ -98,19 +98,6 @@ another span in the document.
 
 
 #### Example Usage
-
-### Adding the lemmatizer (v0.4.0 and up)
-To add the lemmatizer from the core spacy models
-```python
-import spacy
-
-nlp_sci = spacy.load('en_core_sci_sm')
-nlp_en = spacy.load('en_core_web_sm')
-nlp_sm = spacy.load('en_core_web_sm')
-nlp_sci.add_pipe('attribute_ruler', source=nlp_en, after='tagger')
-nlp_sci.add_pipe('lemmatizer', source=nlp_en, after='attribute_ruler')
-```
-
 ```python
 import spacy
 
@@ -259,8 +246,7 @@ import spacy
 from scispacy.hyponym_detector import HyponymDetector
 
 nlp = spacy.load("en_core_sci_sm")
-hyponym_pipe = HyponymDetector(nlp, extended=True)
-nlp.add_pipe(hyponym_pipe, last=True)
+nlp.add_pipe("hyponym_detector", last=True, config={"extended": False})
 
 doc = nlp("Keystone plant species such as fig trees are good for the soil.")
 
