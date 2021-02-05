@@ -74,6 +74,8 @@ Alternatively, you can install directly from the URL by right-clicking on the li
 pip install CMD-V(to paste the copied URL)
 ```
 
+[NOTE: These links currently point to the models for `v0.4.0` which we have not released yet. If you are using the latest version of scispacy, change the `v0.4.0` in the links to `v0.3.0`. `v0.4.0` will be released soon.]
+
 | Model          | Description       | Install URL
 |:---------------|:------------------|:----------|
 | en_core_sci_sm | A full spaCy pipeline for biomedical data with a ~100k vocabulary. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_sm-0.4.0.tar.gz)|
