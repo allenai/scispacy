@@ -19,7 +19,7 @@ pip install scispacy
 to install a model (see our full selection of available models below), run a command like the following:
 
 ```bash
-pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_core_sci_sm-0.3.0.tar.gz
+pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_sm-0.4.0.tar.gz
 ```
 
 Note: We strongly recommend that you use an isolated Python environment (such as virtualenv or conda) to install scispacy.
@@ -76,13 +76,13 @@ pip install CMD-V(to paste the copied URL)
 
 | Model          | Description       | Install URL
 |:---------------|:------------------|:----------|
-| en_core_sci_sm | A full spaCy pipeline for biomedical data with a ~100k vocabulary. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_core_sci_sm-0.3.0.tar.gz)|
-| en_core_sci_md |  A full spaCy pipeline for biomedical data with a ~360k vocabulary and 50k word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_core_sci_md-0.3.0.tar.gz)|
-| en_core_sci_lg |  A full spaCy pipeline for biomedical data with a ~785k vocabulary and 600k word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_core_sci_lg-0.3.0.tar.gz)|
-| en_ner_craft_md|  A spaCy NER model trained on the CRAFT corpus.|[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_ner_craft_md-0.3.0.tar.gz)|
-| en_ner_jnlpba_md | A spaCy NER model trained on the JNLPBA corpus.| [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_ner_jnlpba_md-0.3.0.tar.gz)|
-| en_ner_bc5cdr_md |  A spaCy NER model trained on the BC5CDR corpus. | [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_ner_bc5cdr_md-0.3.0.tar.gz)|
-| en_ner_bionlp13cg_md |  A spaCy NER model trained on the BIONLP13CG corpus. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_ner_bionlp13cg_md-0.3.0.tar.gz)|
+| en_core_sci_sm | A full spaCy pipeline for biomedical data with a ~100k vocabulary. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_sm-0.4.0.tar.gz)|
+| en_core_sci_md |  A full spaCy pipeline for biomedical data with a ~360k vocabulary and 50k word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_md-0.4.0.tar.gz)|
+| en_core_sci_lg |  A full spaCy pipeline for biomedical data with a ~785k vocabulary and 600k word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz)|
+| en_ner_craft_md|  A spaCy NER model trained on the CRAFT corpus.|[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_ner_craft_md-0.4.0.tar.gz)|
+| en_ner_jnlpba_md | A spaCy NER model trained on the JNLPBA corpus.| [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_ner_jnlpba_md-0.4.0.tar.gz)|
+| en_ner_bc5cdr_md |  A spaCy NER model trained on the BC5CDR corpus. | [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_ner_bc5cdr_md-0.4.0.tar.gz)|
+| en_ner_bionlp13cg_md |  A spaCy NER model trained on the BIONLP13CG corpus. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_ner_bionlp13cg_md-0.4.0.tar.gz)|
 
 
 ## Additional Pipeline Components
@@ -98,7 +98,6 @@ another span in the document.
 
 
 #### Example Usage
-
 ```python
 import spacy
 
@@ -107,8 +106,7 @@ from scispacy.abbreviation import AbbreviationDetector
 nlp = spacy.load("en_core_sci_sm")
 
 # Add the abbreviation pipe to the spacy pipeline.
-abbreviation_pipe = AbbreviationDetector(nlp)
-nlp.add_pipe(abbreviation_pipe)
+nlp.add_pipe("abbreviation_detector")
 
 doc = nlp("Spinal and bulbar muscular atrophy (SBMA) is an \
            inherited motor neuron disease caused by the expansion \
@@ -186,9 +184,7 @@ nlp = spacy.load("en_core_sci_sm")
 # the AbbreviationDetector pipe has already been added to the pipeline. Adding
 # the AbbreviationDetector pipe and setting resolve_abbreviations to True means
 # that linking will only be performed on the long form of abbreviations.
-linker = EntityLinker(resolve_abbreviations=True, name="umls")
-
-nlp.add_pipe(linker)
+nlp.add_pipe("scispacy_linker", config={"resolve_abbreviations": True, "name": "umls"})
 
 doc = nlp("Spinal and bulbar muscular atrophy (SBMA) is an \
            inherited motor neuron disease caused by the expansion \
@@ -203,6 +199,7 @@ print("Name: ", entity)
 
 # Each entity is linked to UMLS with a score
 # (currently just char-3gram matching).
+linker = nlp.get_pipe("scispacy_linker")
 for umls_ent in entity._.kb_ents:
 	print(linker.kb.cui_to_entity[umls_ent[0]])
 
@@ -229,7 +226,7 @@ for umls_ent in entity._.kb_ents:
          AR protein, human, Androgen Receptor, Dihydrotestosterone Receptor, AR, DHTR, NR3C4, ...
 ```
 
-### Hearst Patterns (v3.0)
+### Hearst Patterns (v0.3.0 and up)
 
 This component implements [Automatic Aquisition of Hyponyms from Large Text Corpora](https://www.aclweb.org/anthology/C92-2082.pdf) using the SpaCy Matcher component.
 
@@ -249,8 +246,7 @@ import spacy
 from scispacy.hyponym_detector import HyponymDetector
 
 nlp = spacy.load("en_core_sci_sm")
-hyponym_pipe = HyponymDetector(nlp, extended=True)
-nlp.add_pipe(hyponym_pipe, last=True)
+nlp.add_pipe("hyponym_detector", last=True, config={"extended": False})
 
 doc = nlp("Keystone plant species such as fig trees are good for the soil.")
 

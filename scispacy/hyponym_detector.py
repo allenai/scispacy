@@ -1,12 +1,12 @@
 from spacy.matcher import Matcher
 from spacy.tokens import Token, Doc
+from spacy.language import Language
 
 from scispacy.hearst_patterns import BASE_PATTERNS, EXTENDED_PATTERNS
 
 
+@Language.factory("hyponym_detector")
 class HyponymDetector:
-    name = "HyponymDetector"
-
     """
     A spaCy pipe for detecting hyponyms using Hearst patterns.
     This class sets the following attributes:
@@ -22,11 +22,20 @@ class HyponymDetector:
 
     The pipe can be used with an instantiated spacy model like so:
     ```
-    hyponym_pipe = HyponymDetector(extended=True)
-    nlp.add_pipe(hyponym_pipe, last=True)
+    # add the hyponym detector
+    nlp.add_pipe('hyponym_detector', config={'extended': True}, last=True)
+
+    Parameters
+    ----------
+
+    nlp: `Language`, a required argument for spacy to use this as a factory
+    name: `str`, a required argument for spacy to use this as a factory
+    extended: `bool`, whether to use the extended Hearts patterns or not
     """
 
-    def __init__(self, nlp, extended=False):
+    def __init__(
+        self, nlp: Language, name: str = "hyponym_detector", extended: bool = False
+    ):
 
         self.nlp = nlp
 
@@ -38,13 +47,12 @@ class HyponymDetector:
 
         Doc.set_extension("hearst_patterns", default=[], force=True)
 
-        self.predicates = []
         self.first = set()
         self.last = set()
 
         # add patterns to matcher
         for pattern in self.patterns:
-            self.matcher.add(pattern["label"], None, pattern["pattern"])
+            self.matcher.add(pattern["label"], [pattern["pattern"]])
 
             # gather list of predicates where the hypernym appears first
             if pattern["position"] == "first":

@@ -2,6 +2,7 @@ from typing import Tuple, List, Optional, Set, Dict
 from collections import defaultdict
 from spacy.tokens import Span, Doc
 from spacy.matcher import Matcher
+from spacy.language import Language
 
 
 def find_abbreviation(
@@ -132,6 +133,7 @@ def short_form_filter(span: Span) -> bool:
     return True
 
 
+@Language.factory("abbreviation_detector")
 class AbbreviationDetector:
     """
     Detects abbreviations using the algorithm in "A simple algorithm for identifying
@@ -143,16 +145,20 @@ class AbbreviationDetector:
     attribute set to the long form definition of the abbreviation.
 
     Note that this class does not replace the spans, or merge them.
+
+    Parameters
+    ----------
+
+    nlp: `Language`, a required argument for spacy to use this as a factory
+    name: `str`, a required argument for spacy to use this as a factory
     """
 
-    def __init__(self, nlp) -> None:
+    def __init__(self, nlp: Language, name: str = "abbreviation_detector") -> None:
         Doc.set_extension("abbreviations", default=[], force=True)
         Span.set_extension("long_form", default=None, force=True)
 
         self.matcher = Matcher(nlp.vocab)
-        self.matcher.add(
-            "parenthesis", None, [{"ORTH": "("}, {"OP": "+"}, {"ORTH": ")"}]
-        )
+        self.matcher.add("parenthesis", [[{"ORTH": "("}, {"OP": "+"}, {"ORTH": ")"}]])
         self.global_matcher = Matcher(nlp.vocab)
 
     def find(self, span: Span, doc: Doc) -> Tuple[Span, Set[Span]]:
@@ -197,17 +203,15 @@ class AbbreviationDetector:
             # defined twice in a document. There's not much we can do about this,
             # but at least the case which is discarded will be picked up below by
             # the global matcher. So it's likely that things will work out ok most of the time.
-            new_long = long.string not in already_seen_long if long else False
-            new_short = short.string not in already_seen_short
+            new_long = long.text not in already_seen_long if long else False
+            new_short = short.text not in already_seen_short
             if long is not None and new_long and new_short:
-                already_seen_long.add(long.string)
-                already_seen_short.add(short.string)
+                already_seen_long.add(long.text)
+                already_seen_short.add(short.text)
                 all_occurences[long].add(short)
-                rules[long.string] = long
+                rules[long.text] = long
                 # Add a rule to a matcher to find exactly this substring.
-                self.global_matcher.add(
-                    long.string, None, [{"ORTH": x.text} for x in short]
-                )
+                self.global_matcher.add(long.text, [[{"ORTH": x.text} for x in short]])
         to_remove = set()
         global_matches = self.global_matcher(doc)
         for match, start, end in global_matches:

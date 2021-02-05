@@ -3,11 +3,13 @@ from typing import List
 import pysbd
 
 from spacy.tokens import Doc
+from spacy.language import Language
 from pysbd.utils import TextSpan
 
 from scispacy.consts import ABBREVIATIONS
 
 
+@Language.component("pysbd_sentencizer")
 def pysbd_sentencizer(doc: Doc) -> Doc:
     """Adds sentence boundaries to a Doc.
     Intended to be used as a pipe in a spaCy pipeline.

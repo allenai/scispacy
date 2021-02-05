@@ -1,0 +1,543 @@
+title: "scispaCy pipeline"
+description: "All the steps needed in the scispaCy pipeline"
+
+vars:
+  version_string: "0.4.0"
+  freqs_loc_s3: "s3://ai2-s2-scispacy/data/gorc_subset.freqs"
+  freqs_loc_local: "assets/gorc_subset.freqs"
+  vectors_loc_s3: "s3://ai2-s2-scispacy/data/pubmed_with_header.txt.gz"
+  vectors_loc_local: "assets/pubmed_with_header.txt.gz"
+  genia_loc_s3: "s3://ai2-s2-scispacy/data/genia"
+  genia_train_loc_local: "assets/genia_train.json"
+  genia_dev_loc_local: "assets/genia_dev.json"
+  genia_test_loc_local: "assets/genia_test.json"
+  genia_train_spacy_loc: "project_data/genia_train.spacy"
+  genia_dev_spacy_loc: "project_data/genia_dev.spacy"
+  genia_test_spacy_loc: "project_data/genia_test.spacy"
+  ontonotes_loc_s3: "s3://ai2-s2-scispacy/data/ud_ontonotes.tar.gz"
+  ontonotes_train_spacy_loc: "project_data/train"
+  ontonotes_dev_spacy_loc: "project_data/dev"
+  ontonotes_test_spacy_loc: "project_data/test"
+  ontonotes_loc_local: "assets/ud_ontonotes"
+  med_mentions_loc_s3: "s3://ai2-s2-scispacy/data/med_mentions.tar.gz"
+  corpus_pubtator_loc_local: "assets/corpus_pubtator.txt"
+  ner_loc_s3: "s3://ai2-s2-scispacy/data/ner/"
+  bc5cdr_loc_local: "assets/BC5CDR-IOB"
+  jnlpba_loc_local: "assets/JNLPBA-IOB"
+  craft_loc_local: "assets/CRAFT-IOB"
+  bionlp13cg_loc_local: "assets/BioNLP13CG-IOB"
+  vocab_sm_loc: "project_data/vocab_sm.jsonl"
+  vocab_md_loc: "project_data/vocab_md.jsonl"
+  vocab_lg_loc: "project_data/vocab_lg.jsonl"
+  vectors_md_loc: "output/en_core_sci_md_vectors"
+  vectors_lg_loc: "output/en_core_sci_lg_vectors"
+  parser_tagger_sm_loc: "output/en_core_sci_sm_parser_tagger"
+  parser_tagger_md_loc: "output/en_core_sci_md_parser_tagger"
+  parser_tagger_lg_loc: "output/en_core_sci_lg_parser_tagger"
+  ner_sm_loc: "output/en_core_sci_sm_ner"
+  ner_md_loc: "output/en_core_sci_md_ner"
+  ner_lg_loc: "output/en_core_sci_lg_ner"
+  bc5cdr_md_loc: "output/en_ner_bc5cdr_md"
+  jnlpba_md_loc: "output/en_ner_jnlpba_md"
+  craft_md_loc: "output/en_ner_craft_md"
+  bionlp13cg_md_loc: "output/en_ner_bionlp13cg_md"
+  parser_tagger_config_loc: "configs/base_parser_tagger.cfg"
+  ner_config_loc: "configs/base_ner.cfg"
+  specialized_ner_config_loc: "configs/base_specialized_ner.cfg"
+  code_loc: "scispacy/base_project_code.py"
+  meta_sm_loc: "data/meta_small.json"
+  meta_md_loc: "data/meta_medium.json"
+  meta_lg_loc: "data/meta_large.json"
+  meta_bc5cdr_loc: "data/bc5cdr_ner.json"
+  meta_bionlp13cg_loc: "data/bionlp13cg_ner.json"
+  meta_craft_loc: "data/craft_ner.json"
+  meta_jnlpba_loc: "data/jnlpba_ner.json"
+  package_sm_loc: "packages/en_core_sci_sm-${vars.version_string}/en_core_sci_sm/en_core_sci_sm-${vars.version_string}"
+  package_md_loc: "packages/en_core_sci_md-${vars.version_string}/en_core_sci_md/en_core_sci_md-${vars.version_string}"
+  package_lg_loc: "packages/en_core_sci_lg-${vars.version_string}/en_core_sci_lg/en_core_sci_lg-${vars.version_string}"
+  package_bc5cdr_loc: "packages/en_ner_bc5cdr_md-${vars.version_string}/en_ner_bc5cdr_md/en_ner_bc5cdr_md-${vars.version_string}"
+  package_bionlp13cg_loc: "packages/en_ner_bionlp13cg_md-${vars.version_string}/en_ner_bionlp13cg_md/en_ner_bionlp13cg_md-${vars.version_string}"
+  package_craft_loc: "packages/en_ner_craft_md-${vars.version_string}/en_ner_craft_md/en_ner_craft_md-${vars.version_string}"
+  package_jnlpba_loc: "packages/en_ner_jnlpba_md-${vars.version_string}/en_ner_jnlpba_md/en_ner_jnlpba_md-${vars.version_string}"
+
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "project_data", "output", "packages"]
+
+workflows:
+  small:
+    - download
+    - convert-shared
+    - convert-sm
+    - parser-tagger-train-sm
+    - evaluate-parser-tagger-sm
+    - ner-train-sm
+    - evaluate-ner-sm
+    - package-sm
+    - evaluate-package-sm
+  medium:
+    - download
+    - convert-shared
+    - convert-md
+    - vectors-init-md
+    - parser-tagger-train-md
+    - evaluate-parser-tagger-md
+    - ner-train-md
+    - evaluate-ner-md
+    - package-md
+    - evaluate-package-md
+  large:
+    - download
+    - convert-shared
+    - convert-lg
+    - vectors-init-lg
+    - parser-tagger-train-lg
+    - evaluate-parser-tagger-lg
+    - ner-train-lg
+    - evaluate-ner-lg
+    - package-lg
+    - evaluate-package-lg
+  specialized-ner:
+    - ner-train-specialized
+    - evaluate-specialized-ner
+    - package-ner
+    - evaluate-package-ner
+  all:
+    - download
+    - convert-shared
+    - convert-sm
+    - convert-md
+    - convert-lg
+    - vectors-init-md
+    - vectors-init-lg
+    - parser-tagger-train-sm
+    - parser-tagger-train-md
+    - parser-tagger-train-lg
+    - ner-train-sm
+    - ner-train-md
+    - ner-train-lg
+    - ner-train-specialized
+    - evaluate-parser-tagger-sm
+    - evaluate-parser-tagger-md
+    - evaluate-parser-tagger-lg
+    - evaluate-ner-sm
+    - evaluate-ner-md
+    - evaluate-ner-lg
+    - evaluate-specialized-ner
+    - package-sm
+    - package-md
+    - package-lg
+    - package-ner
+    - evaluate-package-sm
+    - evaluate-package-md
+    - evaluate-package-lg
+    - evaluate-package-ner
+
+commands:
+  - name: download
+    help: "Download the necessary files"
+    script:
+      - "aws s3 cp ${vars.freqs_loc_s3} ${vars.freqs_loc_local} --no-sign-request"
+      - "aws s3 cp ${vars.vectors_loc_s3} ${vars.vectors_loc_local} --no-sign-request"
+      - "aws s3 cp ${vars.genia_loc_s3}/train.json ${vars.genia_train_loc_local} --no-sign-request"
+      - "aws s3 cp ${vars.genia_loc_s3}/dev.json ${vars.genia_dev_loc_local} --no-sign-request"
+      - "aws s3 cp ${vars.genia_loc_s3}/test.json ${vars.genia_test_loc_local} --no-sign-request"
+      - "aws s3 cp ${vars.ontonotes_loc_s3} ${vars.ontonotes_loc_local}.tar.gz"
+      - "tar -xzvf ${vars.ontonotes_loc_local}.tar.gz -C assets/"
+      - "rm ${vars.ontonotes_loc_local}.tar.gz"
+      - "aws s3 cp ${vars.med_mentions_loc_s3} assets/med_mentions.tar.gz"
+      - "tar -xzvf assets/med_mentions.tar.gz -C assets/"
+      - "rm assets/med_mentions.tar.gz"
+      - "aws s3 cp ${vars.ner_loc_s3} assets --recursive --exclude '*' --include '*.tsv'"
+    outputs:
+      - "${vars.freqs_loc_local}"
+      - "${vars.vectors_loc_local}"
+      - "${vars.genia_train_loc_local}"
+      - "${vars.genia_dev_loc_local}"
+      - "${vars.genia_test_loc_local}"
+      - "${vars.ontonotes_loc_local}/train"
+      - "${vars.ontonotes_loc_local}/dev"
+      - "${vars.ontonotes_loc_local}/test"
+      - "${vars.corpus_pubtator_loc_local}"
+      - "${vars.bc5cdr_loc_local}/train.tsv"
+      - "${vars.bc5cdr_loc_local}/devel.tsv"
+      - "${vars.bc5cdr_loc_local}/test.tsv"
+      - "${vars.jnlpba_loc_local}/train.tsv"
+      - "${vars.jnlpba_loc_local}/devel.tsv"
+      - "${vars.jnlpba_loc_local}/test.tsv"
+      - "${vars.craft_loc_local}/train.tsv"
+      - "${vars.craft_loc_local}/devel.tsv"
+      - "${vars.craft_loc_local}/test.tsv"
+      - "${vars.bionlp13cg_loc_local}/train.tsv"
+      - "${vars.bionlp13cg_loc_local}/devel.tsv"
+      - "${vars.bionlp13cg_loc_local}/test.tsv"
+
+  - name: convert-shared
+    help: "Convert the data to spaCy's format"
+    script:
+      - "spacy convert ${vars.genia_train_loc_local} project_data --converter json --file-type spacy"
+      - "spacy convert ${vars.genia_dev_loc_local} project_data --converter json --file-type spacy"
+      - "spacy convert ${vars.genia_test_loc_local} project_data --converter json --file-type spacy"
+      - "spacy convert ${vars.ontonotes_loc_local} project_data --converter json --file-type spacy"
+    deps:
+      - "${vars.genia_train_loc_local}"
+      - "${vars.genia_dev_loc_local}"
+      - "${vars.genia_test_loc_local}"
+      - "${vars.ontonotes_loc_local}"
+    outputs:
+      - "${vars.genia_train_spacy_loc}"
+      - "${vars.genia_dev_spacy_loc}"
+      - "${vars.genia_test_spacy_loc}"
+      - "${vars.ontonotes_train_spacy_loc}"
+      - "${vars.ontonotes_dev_spacy_loc}"
+      - "${vars.ontonotes_test_spacy_loc}"
+
+  - name: convert-sm
+    help: "Convert a file of word/document frequency statistics to spacy's vocabulary format"
+    script:
+      - "python scripts/convert_freqs.py --input_path ${vars.freqs_loc_local} --output_path ${vars.vocab_sm_loc} --min_word_frequency 1000"
+    deps:
+      - "${vars.freqs_loc_local}"
+    outputs:
+      - "${vars.vocab_sm_loc}"
+
+  - name: convert-md
+    help: "Convert a file of word/document frequency statistics to spacy's vocabulary format"
+    script:
+      - "python scripts/convert_freqs.py --input_path ${vars.freqs_loc_local} --output_path ${vars.vocab_md_loc} --min_word_frequency 150"
+    deps:
+      - "${vars.freqs_loc_local}"
+    outputs:
+      - "${vars.vocab_md_loc}"
+
+  - name: convert-lg
+    help: "Convert a file of word/document frequency statistics to spacy's vocabulary format"
+    script:
+      - "python scripts/convert_freqs.py --input_path ${vars.freqs_loc_local} --output_path ${vars.vocab_lg_loc} --min_word_frequency 50"
+    deps:
+      - "${vars.freqs_loc_local}"
+    outputs:
+      - "${vars.vocab_lg_loc}"
+
+  - name: vectors-init-md
+    help: "Initialize the vectors"
+    script:
+      - "spacy init vectors en ${vars.vectors_loc_local} ${vars.vectors_md_loc} --prune 50000 --name en_core_sci_md.vectors --lexemes-jsonl ${vars.vocab_md_loc}"
+    deps:
+      - "${vars.vocab_md_loc}"
+      - "${vars.vectors_loc_local}"
+    outputs:
+      - "${vars.vectors_md_loc}"
+
+  - name: vectors-init-lg
+    help: "Initialize the vectors"
+    script:
+      - "spacy init vectors en ${vars.vectors_loc_local} ${vars.vectors_lg_loc} --prune 600000 --name en_core_sci_lg.vectors --lexemes-jsonl ${vars.vocab_lg_loc}"
+    deps:
+      - "${vars.vocab_lg_loc}"
+      - "${vars.vectors_loc_local}"
+    outputs:
+      - "${vars.vectors_lg_loc}"
+
+  - name: parser-tagger-train-sm
+    help: "Train the base models"
+    script:
+      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_sm_loc} --code ${vars.code_loc} --paths.vocab_path ${vars.vocab_sm_loc}"
+    deps:
+      - "${vars.parser_tagger_config_loc}"
+      - "${vars.genia_train_spacy_loc}"
+      - "${vars.genia_dev_spacy_loc}"
+      - "${vars.genia_test_spacy_loc}"
+      - "${vars.ontonotes_train_spacy_loc}"
+    outputs:
+      - "${vars.parser_tagger_sm_loc}/model-best"
+
+  - name: parser-tagger-train-md
+    help: "Train the base models"
+    script:
+      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.vocab_path ${vars.vocab_md_loc}"
+    deps:
+      - "${vars.parser_tagger_config_loc}"
+      - "${vars.genia_train_spacy_loc}"
+      - "${vars.genia_dev_spacy_loc}"
+      - "${vars.genia_test_spacy_loc}"
+      - "${vars.ontonotes_train_spacy_loc}"
+      - "${vars.vectors_md_loc}"
+    outputs:
+      - "${vars.parser_tagger_md_loc}/model-best"
+
+  - name: parser-tagger-train-lg
+    help: "Train the base models"
+    script:
+      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_lg_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_lg_loc} --paths.vocab_path ${vars.vocab_lg_loc}"
+    deps:
+      - "${vars.parser_tagger_config_loc}"
+      - "${vars.genia_train_spacy_loc}"
+      - "${vars.genia_dev_spacy_loc}"
+      - "${vars.genia_test_spacy_loc}"
+      - "${vars.ontonotes_train_spacy_loc}"
+      - "${vars.vectors_lg_loc}"
+    outputs:
+      - "${vars.parser_tagger_lg_loc}/model-best"
+  
+  - name: ner-train-sm
+    help: "Train the main ner"
+    script:
+      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_sm_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_sm_loc}/model-best --paths.vocab_path ${vars.vocab_sm_loc}"
+    deps:
+      - "${vars.ner_config_loc}"
+      - "${vars.parser_tagger_sm_loc}/model-best"
+      - "${vars.corpus_pubtator_loc_local}"
+    outputs:
+      - "${vars.ner_sm_loc}/model-best"
+
+  - name: ner-train-md
+    help: "Train the main ner"
+    script:
+      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.vocab_path ${vars.vocab_md_loc}"
+    deps:
+      - "${vars.ner_config_loc}"
+      - "${vars.parser_tagger_md_loc}/model-best"
+      - "${vars.corpus_pubtator_loc_local}"
+      - "${vars.vectors_md_loc}"
+    outputs:
+      - "${vars.ner_md_loc}/model-best"
+
+  - name: ner-train-lg
+    help: "Train the main ner"
+    script:
+      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_lg_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_lg_loc} --paths.parser_tagger_path ${vars.parser_tagger_lg_loc}/model-best --paths.vocab_path ${vars.vocab_lg_loc}"
+    deps:
+      - "${vars.ner_config_loc}"
+      - "${vars.parser_tagger_lg_loc}/model-best"
+      - "${vars.corpus_pubtator_loc_local}"
+      - "${vars.vectors_lg_loc}"
+    outputs:
+      - "${vars.ner_lg_loc}/model-best"
+
+  - name: ner-train-specialized
+    help: "Train the specialized NER models"
+    script:
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.bc5cdr_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.bc5cdr_loc_local}/train.tsv --paths.dev_path ${vars.bc5cdr_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc}"
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.bionlp13cg_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.bionlp13cg_loc_local}/train.tsv --paths.dev_path ${vars.bionlp13cg_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc}"
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.craft_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.craft_loc_local}/train.tsv --paths.dev_path ${vars.craft_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc}"
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.jnlpba_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.jnlpba_loc_local}/train.tsv --paths.dev_path ${vars.jnlpba_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc}"
+    deps:
+      - "${vars.corpus_pubtator_loc_local}"
+      - "${vars.bc5cdr_loc_local}/train.tsv"
+      - "${vars.bc5cdr_loc_local}/devel.tsv"
+      - "${vars.bc5cdr_loc_local}/test.tsv"
+      - "${vars.jnlpba_loc_local}/train.tsv"
+      - "${vars.jnlpba_loc_local}/devel.tsv"
+      - "${vars.jnlpba_loc_local}/test.tsv"
+      - "${vars.craft_loc_local}/train.tsv"
+      - "${vars.craft_loc_local}/devel.tsv"
+      - "${vars.craft_loc_local}/test.tsv"
+      - "${vars.bionlp13cg_loc_local}/train.tsv"
+      - "${vars.bionlp13cg_loc_local}/devel.tsv"
+      - "${vars.bionlp13cg_loc_local}/test.tsv"
+      - "${vars.parser_tagger_md_loc}/model-best"
+      - "${vars.specialized_ner_config_loc}"
+    outputs:
+      - "${vars.bc5cdr_md_loc}/model-best"
+      - "${vars.bionlp13cg_md_loc}/model-best"
+      - "${vars.craft_md_loc}/model-best"
+      - "${vars.jnlpba_md_loc}/model-best"
+  
+  - name: evaluate-parser-tagger-sm
+    help: "Evaluate the parser and tagger"
+    script:
+      - "spacy evaluate ${vars.parser_tagger_sm_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_sm_loc}/model_best_results.json"
+      - "spacy evaluate ${vars.parser_tagger_sm_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_sm_loc}/model_best_results_onto.json"
+    deps:
+      - "${vars.parser_tagger_sm_loc}/model-best"
+      - "${vars.genia_test_spacy_loc}"
+      - "${vars.ontonotes_test_spacy_loc}"
+    outputs:
+      - "${vars.parser_tagger_sm_loc}/model_best_results.json"
+      - "${vars.parser_tagger_sm_loc}/model_best_results_onto.json"
+
+  - name: evaluate-parser-tagger-md
+    help: "Evaluate the parser and tagger"
+    script:
+      - "spacy evaluate ${vars.parser_tagger_md_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_md_loc}/model_best_results.json"
+      - "spacy evaluate ${vars.parser_tagger_md_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_md_loc}/model_best_results_onto.json"
+    deps:
+      - "${vars.parser_tagger_md_loc}/model-best"
+      - "${vars.genia_test_spacy_loc}"
+      - "${vars.ontonotes_test_spacy_loc}"
+    outputs:
+      - "${vars.parser_tagger_md_loc}/model_best_results.json"
+      - "${vars.parser_tagger_md_loc}/model_best_results_onto.json"
+
+  - name: evaluate-parser-tagger-lg
+    help: "Evaluate the parser and tagger"
+    script:
+      - "spacy evaluate ${vars.parser_tagger_lg_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_lg_loc}/model_best_results.json"
+      - "spacy evaluate ${vars.parser_tagger_lg_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_lg_loc}/model_best_results_onto.json"
+    deps:
+      - "${vars.parser_tagger_lg_loc}/model-best"
+      - "${vars.genia_test_spacy_loc}"
+      - "${vars.ontonotes_test_spacy_loc}"
+    outputs:
+      - "${vars.parser_tagger_lg_loc}/model_best_results.json"
+      - "${vars.parser_tagger_lg_loc}/model_best_results_onto.json"
+  
+  - name: evaluate-ner-sm
+    help: "Evaluate NER"
+    script:
+      - "python scripts/evaluate_ner.py --model_path ${vars.ner_sm_loc}/model-best --dataset medmentions-test --output ${vars.ner_sm_loc}/model_best_results.json --med_mentions_folder_path assets/"
+    deps:
+      - "${vars.ner_sm_loc}"
+      - "${vars.corpus_pubtator_loc_local}"
+    outputs:
+      - "${vars.ner_sm_loc}/model_best_results.json"
+
+  - name: evaluate-ner-md
+    help: "Evaluate NER"
+    script:
+      - "python scripts/evaluate_ner.py --model_path ${vars.ner_md_loc}/model-best --dataset medmentions-test --output ${vars.ner_md_loc}/model_best_results.json --med_mentions_folder_path assets/"
+    deps:
+      - "${vars.ner_md_loc}"
+      - "${vars.corpus_pubtator_loc_local}"
+    outputs:
+      - "${vars.ner_md_loc}/model_best_results.json"
+
+  - name: evaluate-ner-lg
+    help: "Evaluate NER"
+    script:
+      - "python scripts/evaluate_ner.py --model_path ${vars.ner_lg_loc}/model-best --dataset medmentions-test --output ${vars.ner_lg_loc}/model_best_results.json --med_mentions_folder_path assets/"
+    deps:
+      - "${vars.ner_lg_loc}"
+      - "${vars.corpus_pubtator_loc_local}"
+    outputs:
+      - "${vars.ner_lg_loc}/model_best_results.json"
+  
+  - name: evaluate-specialized-ner
+    help: "Evaluate specialize NER"
+    script:
+      - "python scripts/evaluate_ner.py --model_path ${vars.bc5cdr_md_loc}/model-best --dataset ${vars.bc5cdr_loc_local}/test.tsv --output ${vars.bc5cdr_md_loc}/model_best_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.bionlp13cg_md_loc}/model-best --dataset ${vars.bionlp13cg_loc_local}/test.tsv --output ${vars.bionlp13cg_md_loc}/model_best_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.craft_md_loc}/model-best --dataset ${vars.craft_loc_local}/test.tsv --output ${vars.craft_md_loc}/model_best_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.jnlpba_md_loc}/model-best --dataset ${vars.jnlpba_loc_local}/test.tsv --output ${vars.jnlpba_md_loc}/model_best_results.json"
+    deps:
+      - "${vars.bc5cdr_md_loc}/model-best"
+      - "${vars.bionlp13cg_md_loc}/model-best"
+      - "${vars.craft_md_loc}/model-best"
+      - "${vars.jnlpba_md_loc}/model-best"
+      - "${vars.bc5cdr_loc_local}/test.tsv"
+      - "${vars.jnlpba_loc_local}/test.tsv"
+      - "${vars.craft_loc_local}/test.tsv"
+      - "${vars.bionlp13cg_loc_local}/test.tsv"
+    outputs:
+      - "${vars.bc5cdr_md_loc}/model_best_results.json"
+      - "${vars.bionlp13cg_md_loc}/model_best_results.json"
+      - "${vars.craft_md_loc}/model_best_results.json"
+      - "${vars.jnlpba_md_loc}/model_best_results.json"
+
+  - name: package-sm
+    help: "Package the models"
+    script:
+      - "spacy package ${vars.ner_sm_loc}/model-best packages/ --meta-path ${vars.meta_sm_loc} --version ${vars.version_string}"
+    deps:
+      - "${vars.ner_sm_loc}/model-best"
+    outputs:
+      - "${vars.package_sm_loc}"
+  
+  - name: evaluate-package-sm
+    help: "Evaluate the packaged models"
+    script:
+      - "spacy evaluate ${vars.package_sm_loc} ${vars.genia_test_spacy_loc} --output packages/sm_genia_results.json"
+      - "spacy evaluate ${vars.package_sm_loc} ${vars.ontonotes_test_spacy_loc} --output packages/sm_onto_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_sm_loc} --dataset medmentions-test --output packages/sm_mm_results.json --med_mentions_folder_path assets/"
+    deps:
+      - "${vars.package_sm_loc}"
+    outputs:
+      - "packages/sm_genia_results.json"
+      - "packages/sm_onto_results.json"
+      - "packages/sm_mm_results.json"
+  
+  - name: package-md
+    help: "Package the models"
+    script:
+      - "spacy package ${vars.ner_md_loc}/model-best packages/ --meta-path ${vars.meta_md_loc} --version ${vars.version_string}"
+    deps:
+      - "${vars.ner_md_loc}/model-best"
+    outputs:
+      - "${vars.package_md_loc}"
+  
+  - name: package-lg
+    help: "Package the models"
+    script:
+      - "spacy package ${vars.ner_lg_loc}/model-best packages/ --meta-path ${vars.meta_lg_loc} --version ${vars.version_string}"
+    deps:
+      - "${vars.ner_lg_loc}/model-best"
+    outputs:
+      - "${vars.package_lg_loc}"
+  
+  - name: evaluate-package-md
+    help: "Evaluate the packaged models"
+    script:
+      - "spacy evaluate ${vars.package_md_loc} ${vars.genia_test_spacy_loc} --output packages/md_genia_results.json"
+      - "spacy evaluate ${vars.package_md_loc} ${vars.ontonotes_test_spacy_loc} --output packages/md_onto_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_md_loc} --dataset medmentions-test --output packages/md_mm_results.json --med_mentions_folder_path assets/"
+    deps:
+      - "${vars.package_md_loc}"
+    outputs:
+      - "packages/md_genia_results.json"
+      - "packages/md_onto_results.json"
+      - "packages/md_mm_results.json"
+  
+  - name: evaluate-package-lg
+    help: "Evaluate the packaged models"
+    script:
+      - "spacy evaluate ${vars.package_lg_loc} ${vars.genia_test_spacy_loc} --output packages/lg_genia_results.json"
+      - "spacy evaluate ${vars.package_lg_loc} ${vars.ontonotes_test_spacy_loc} --output packages/lg_onto_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_lg_loc} --dataset medmentions-test --output packages/lg_mm_results.json --med_mentions_folder_path assets/"
+    deps:
+      - "${vars.package_lg_loc}"
+    outputs:
+      - "packages/lg_genia_results.json"
+      - "packages/lg_onto_results.json"
+      - "packages/lg_mm_results.json"
+  
+  - name: package-ner
+    help: "Package the models"
+    script:
+      - "spacy package ${vars.bc5cdr_md_loc}/model-best packages/ --meta-path ${vars.meta_bc5cdr_loc} --version ${vars.version_string}"
+      - "spacy package ${vars.bionlp13cg_md_loc}/model-best packages/ --meta-path ${vars.meta_bionlp13cg_loc} --version ${vars.version_string}"
+      - "spacy package ${vars.craft_md_loc}/model-best packages/ --meta-path ${vars.meta_craft_loc} --version ${vars.version_string}"
+      - "spacy package ${vars.jnlpba_md_loc}/model-best packages/ --meta-path ${vars.meta_jnlpba_loc} --version ${vars.version_string}"
+    deps:
+      - "${vars.bc5cdr_md_loc}/model-best"
+      - "${vars.bionlp13cg_md_loc}/model-best"
+      - "${vars.craft_md_loc}/model-best"
+      - "${vars.jnlpba_md_loc}/model-best"
+    outputs:
+      - "${vars.package_bc5cdr_loc}"
+      - "${vars.package_bionlp13cg_loc}"
+      - "${vars.package_craft_loc}"
+      - "${vars.package_jnlpba_loc}"
+
+  - name: evaluate-package-ner
+    help: "Evaluate the packaged models"
+    script:
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_bc5cdr_loc} --dataset ${vars.bc5cdr_loc_local}/test.tsv --output packages/bc5cdr_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_bionlp13cg_loc} --dataset ${vars.bionlp13cg_loc_local}/test.tsv --output packages/bionlp13cg_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_craft_loc} --dataset ${vars.craft_loc_local}/test.tsv --output packages/craft_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_jnlpba_loc} --dataset ${vars.jnlpba_loc_local}/test.tsv --output packages/jnlpba_results.json"
+    deps:
+      - "${vars.package_bc5cdr_loc}"
+      - "${vars.package_bionlp13cg_loc}"
+      - "${vars.package_craft_loc}"
+      - "${vars.package_jnlpba_loc}"
+    outputs:
+      - "packages/bc5cdr_results.json"
+      - "packages/bionlp13cg_results.json"
+      - "packages/craft_results.json"
+      - "packages/jnlpba_results.json"
+
+
+
+  # TODOs: evaluate everything, package command, another evaluate of the package, twiddle params, maybe add a command for uploading models and releasing?
