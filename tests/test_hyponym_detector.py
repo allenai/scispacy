@@ -10,10 +10,6 @@ class TestHyponymDetector(unittest.TestCase):
         super().setUp()
         self.nlp = spacy.load("en_core_sci_sm")
         self.detector = HyponymDetector(self.nlp, extended=True)
-
-        nlp_sm = spacy.load("en_core_web_sm")
-        self.nlp.add_pipe("attribute_ruler", source=nlp_sm, after="tagger")
-        self.nlp.add_pipe("lemmatizer", source=nlp_sm, after="attribute_ruler")
         self.nlp.add_pipe("hyponym_detector", config={"extended": True}, last=True)
 
     def test_sentences(self):
@@ -30,7 +26,10 @@ class TestHyponymDetector(unittest.TestCase):
         doc = self.nlp("SARS, or other coronaviruses, are bad.")
         assert doc._.hearst_patterns == [("other", doc[4:5], doc[0:1])]
         doc = self.nlp("Coronaviruses, including SARS and MERS, are bad.")
-        assert doc._.hearst_patterns == [("include", doc[0:1], doc[3:4]), ("include", doc[0:1], doc[5:6])]
+        assert doc._.hearst_patterns == [
+            ("include", doc[0:1], doc[3:4]),
+            ("include", doc[0:1], doc[5:6]),
+        ]
 
     def test_find_noun_compound_head(self):
 
