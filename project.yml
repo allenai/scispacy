@@ -44,9 +44,9 @@ vars:
   craft_md_loc: "output/en_ner_craft_md"
   bionlp13cg_md_loc: "output/en_ner_bionlp13cg_md"
   parser_tagger_config_loc: "configs/base_parser_tagger.cfg"
-  parser_tagger_scibert_config_loc: "configs/base_parser_tagger.cfg"
+  parser_tagger_scibert_config_loc: "configs/base_parser_tagger_scibert.cfg"
   ner_config_loc: "configs/base_ner.cfg"
-  ner_scibert_config_loc: "configs/base_ner.cfg"
+  ner_scibert_config_loc: "configs/base_ner_scibert.cfg"
   specialized_ner_config_loc: "configs/base_specialized_ner.cfg"
   code_loc: "scispacy/base_project_code.py"
   meta_sm_loc: "data/meta_small.json"
@@ -299,7 +299,7 @@ commands:
   - name: parser-tagger-train-scibert
     help: "Train the scibert transformer model"
     script:
-      - "spacy train ${vars.parser_tagger_scibert_config_loc} --output ${vars.parser_tagger_scibert_loc} --code ${vars.code_loc}"
+      - "spacy train ${vars.parser_tagger_scibert_config_loc} --output ${vars.parser_tagger_scibert_loc} --code ${vars.code_loc} --gpu-id 0"
     deps:
       - "${vars.parser_tagger_config_loc}"
       - "${vars.genia_train_spacy_loc}"
@@ -347,7 +347,7 @@ commands:
   - name: ner-train-scibert
     help: "Train the scibert ner model."
     script:
-      - "spacy train ${vars.ner_scibert_config_loc} --output ${vars.ner_scibert_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_scibert_loc}/model-best"
+      - "spacy train ${vars.ner_scibert_config_loc} --output ${vars.ner_scibert_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_scibert_loc}/model-best --gpu-id 0"
     deps:
       - "${vars.ner_config_loc}"
       - "${vars.parser_tagger_scibert_loc}/model-best"
@@ -577,7 +577,7 @@ commands:
     help: "Evaluate the packaged scibert model"
     script:
       - "spacy evaluate ${vars.package_scibert_loc} ${vars.genia_test_spacy_loc} --output packages/scibert_genia_results.json"
-      - "spacy evaluate ${vars.package_lg_loc} ${vars.ontonotes_test_spacy_loc} --output packages/scibert_onto_results.json"
+      - "spacy evaluate ${vars.package_scibert_loc} ${vars.ontonotes_test_spacy_loc} --output packages/scibert_onto_results.json"
       - "python scripts/evaluate_ner.py --model_path ${vars.package_scibert_loc} --dataset medmentions-test --output packages/scibert_mm_results.json --med_mentions_folder_path assets/"
     deps:
       - "${vars.package_scibert_loc}"
