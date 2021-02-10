@@ -34,17 +34,17 @@ Our models achieve performance within 3% of published state of the art dependenc
 
 | model          | UAS | LAS   | POS   | Mentions (F1) | Web UAS | 
 |:---------------|:----|:------|:------|:---|:---|
-| en_core_sci_sm | 89.85| 87.94  |  98.44  |  67.53  |  88.31  |
-| en_core_sci_md | 90.33| 88.46 |  98.45 |  68.95  |  88.46  |
-| en_core_sci_lg | 90.32| 88.52  |  98.65  |  69.10  |  88.68  |
+| en_core_sci_sm | 89.54| 87.62  |  98.32  |  68.15  |  87.62  |
+| en_core_sci_md | 89.61| 87.77 |  98.56 |  69.64 |  88.05  |
+| en_core_sci_lg | 89.63| 87.81  |  98.56  |  69.61  |  88.08  |
 
 
 | model          | F1 |   Entity Types|
 |:---------------|:-----|:--------|
-| en_ner_craft_md | 78.28|GGP, SO, TAXON, CHEBI, GO, CL|
-| en_ner_jnlpba_md | 72.57| DNA, CELL_TYPE, CELL_LINE, RNA, PROTEIN |
-| en_ner_bc5cdr_md | 84.06| DISEASE, CHEMICAL|
-| en_ner_bionlp13cg_md | 78.45| AMINO_ACID, ANATOMICAL_SYSTEM, CANCER, CELL, CELLULAR_COMPONENT, DEVELOPING_ANATOMICAL_STRUCTURE, GENE_OR_GENE_PRODUCT, IMMATERIAL_ANATOMICAL_ENTITY, MULTI-TISSUE_STRUCTURE, ORGAN, ORGANISM, ORGANISM_SUBDIVISION, ORGANISM_SUBSTANCE, PATHOLOGICAL_FORMATION, SIMPLE_CHEMICAL, TISSUE |
+| en_ner_craft_md | 76.11|GGP, SO, TAXON, CHEBI, GO, CL|
+| en_ner_jnlpba_md | 71.62| DNA, CELL_TYPE, CELL_LINE, RNA, PROTEIN |
+| en_ner_bc5cdr_md | 84.49| DISEASE, CHEMICAL|
+| en_ner_bionlp13cg_md | 77.75| AMINO_ACID, ANATOMICAL_SYSTEM, CANCER, CELL, CELLULAR_COMPONENT, DEVELOPING_ANATOMICAL_STRUCTURE, GENE_OR_GENE_PRODUCT, IMMATERIAL_ANATOMICAL_ENTITY, MULTI-TISSUE_STRUCTURE, ORGAN, ORGANISM, ORGANISM_SUBDIVISION, ORGANISM_SUBSTANCE, PATHOLOGICAL_FORMATION, SIMPLE_CHEMICAL, TISSUE |
 
 
 ### Example Usage
