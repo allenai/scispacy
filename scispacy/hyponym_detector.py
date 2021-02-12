@@ -22,11 +22,7 @@ class HyponymDetector:
 
     The pipe can be used with an instantiated spacy model like so:
     ```
-    # you first need to add the lemmatizer from the base model
-    nlp_sm = spacy.load('en_core_web_sm')
-    nlp.add_pipe('attribute_ruler', source=nlp_sm, after='tagger')
-    nlp.add_pipe('lemmatizer', source=nlp_sm, after='attribute_ruler')
-    # then you can add the hyponym detector
+    # add the hyponym detector
     nlp.add_pipe('hyponym_detector', config={'extended': True}, last=True)
 
     Parameters

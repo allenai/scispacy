@@ -74,6 +74,8 @@ Alternatively, you can install directly from the URL by right-clicking on the li
 pip install CMD-V(to paste the copied URL)
 ```
 
+[NOTE: These links currently point to the models for `v0.4.0` which we have not released yet. If you are using the latest version of scispacy, change the `v0.4.0` in the links to `v0.3.0`. You will also need to downgrade spacy to 2.x. `v0.4.0` will be released soon.]
+
 | Model          | Description       | Install URL
 |:---------------|:------------------|:----------|
 | en_core_sci_sm | A full spaCy pipeline for biomedical data with a ~100k vocabulary. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_sm-0.4.0.tar.gz)|
@@ -99,19 +101,6 @@ another span in the document.
 
 
 #### Example Usage
-
-### Adding the lemmatizer (v0.4.0 and up)
-To add the lemmatizer from the core spacy models
-```python
-import spacy
-
-nlp_sci = spacy.load('en_core_sci_sm')
-nlp_en = spacy.load('en_core_web_sm')
-nlp_sm = spacy.load('en_core_web_sm')
-nlp_sci.add_pipe('attribute_ruler', source=nlp_en, after='tagger')
-nlp_sci.add_pipe('lemmatizer', source=nlp_en, after='attribute_ruler')
-```
-
 ```python
 import spacy
 
@@ -260,8 +249,7 @@ import spacy
 from scispacy.hyponym_detector import HyponymDetector
 
 nlp = spacy.load("en_core_sci_sm")
-hyponym_pipe = HyponymDetector(nlp, extended=True)
-nlp.add_pipe(hyponym_pipe, last=True)
+nlp.add_pipe("hyponym_detector", last=True, config={"extended": False})
 
 doc = nlp("Keystone plant species such as fig trees are good for the soil.")
 
