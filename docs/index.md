@@ -35,7 +35,6 @@ Our models achieve performance within 3% of published state of the art dependenc
 
 | model          | UAS | LAS   | POS   | Mentions (F1) | Web UAS | 
 |:---------------|:----|:------|:------|:---|:---|
-
 | en_core_sci_sm | 89.54| 87.62  |  98.32  |  68.15  |  87.62  |
 | en_core_sci_md | 89.61| 87.77 |  98.56 |  69.64 |  88.05  |
 | en_core_sci_lg | 89.63| 87.81  |  98.56  |  69.61  |  88.08  |
