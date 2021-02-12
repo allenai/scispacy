@@ -19,6 +19,7 @@ pip install <Model URL>
 |:---------------|:------------------|:----------|
 | en_core_sci_sm | A full spaCy pipeline for biomedical data. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_core_sci_sm-0.3.0.tar.gz)|
 | en_core_sci_md |  A full spaCy pipeline for biomedical data with a larger vocabulary and 50k word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_core_sci_md-0.3.0.tar.gz)|
+| en_core_sci_scibert |  A full spaCy pipeline for biomedical data with a ~785k vocabulary and `allenai/scibert-base` as the transformer model. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_scibert-0.4.0.tar.gz)|
 | en_core_sci_lg |  A full spaCy pipeline for biomedical data with a larger vocabulary and 600k word vectors. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_core_sci_lg-0.3.0.tar.gz)|
 | en_ner_craft_md|  A spaCy NER model trained on the CRAFT corpus.|[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_ner_craft_md-0.3.0.tar.gz)|
 | en_ner_jnlpba_md | A spaCy NER model trained on the JNLPBA corpus.| [Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.3.0/en_ner_jnlpba_md-0.3.0.tar.gz)|
@@ -37,6 +38,7 @@ Our models achieve performance within 3% of published state of the art dependenc
 | en_core_sci_sm | 89.75| 87.80  |  98.41  |  67.92  |  88.18  |
 | en_core_sci_md | 90.36| 88.53 |  98.49 |  68.58  |  88.27  |
 | en_core_sci_lg | 90.30| 88.48  |  98.53  |  69.21  |  88.67  |
+| en_core_sci_lg | 92.03| 90.25  |  98.91  |  67.91  |  92.21  |
 
 
 | model          | F1 |   Entity Types|
