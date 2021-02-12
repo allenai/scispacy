@@ -624,7 +624,3 @@ commands:
       - "packages/bionlp13cg_results.json"
       - "packages/craft_results.json"
       - "packages/jnlpba_results.json"
-
-
-
-  # TODOs: evaluate everything, package command, another evaluate of the package, twiddle params, maybe add a command for uploading models and releasing?

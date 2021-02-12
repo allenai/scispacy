@@ -38,7 +38,7 @@ Our models achieve performance within 3% of published state of the art dependenc
 | en_core_sci_sm | 89.75| 87.80  |  98.41  |  67.92  |  88.18  |
 | en_core_sci_md | 90.36| 88.53 |  98.49 |  68.58  |  88.27  |
 | en_core_sci_lg | 90.30| 88.48  |  98.53  |  69.21  |  88.67  |
-| en_core_sci_lg | 92.03| 90.25  |  98.91  |  67.91  |  92.21  |
+| en_core_sci_scibert | 92.03| 90.25  |  98.91  |  67.91  |  92.21  |
 
 
 | model          | F1 |   Entity Types|
