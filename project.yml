@@ -107,6 +107,7 @@ workflows:
   scibert:
     - download
     - convert-shared
+    - convert-lg # use the large vocab, but not the vectors
     - parser-tagger-train-scibert
     - evaluate-parser-tagger-scibert
     - ner-train-scibert
@@ -299,7 +300,7 @@ commands:
   - name: parser-tagger-train-scibert
     help: "Train the scibert transformer model"
     script:
-      - "spacy train ${vars.parser_tagger_scibert_config_loc} --output ${vars.parser_tagger_scibert_loc} --code ${vars.code_loc} --gpu-id 0"
+      - "spacy train ${vars.parser_tagger_scibert_config_loc} --output ${vars.parser_tagger_scibert_loc} --code ${vars.code_loc} --paths.vocab_path ${vars.vocab_lg_loc} --gpu-id 0"
     deps:
       - "${vars.parser_tagger_config_loc}"
       - "${vars.genia_train_spacy_loc}"
