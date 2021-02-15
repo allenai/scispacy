@@ -1,10 +1,17 @@
 {
-  "lang":"en",
-  "name":"core_sci_scibert",
-  "sources": ["OntoNotes 5", "Common Crawl", "GENIA 1.0"],
-  "description":"Spacy Models for Biomedical Text.",
-  "author":"Allen Institute for Artificial Intelligence",
+  "lang": "en",
+  "name": "core_sci_scibert",
+  "sources": [
+    "OntoNotes 5",
+    "Common Crawl",
+    "GENIA 1.0"
+  ],
+  "description": "Spacy Models for Biomedical Text.",
+  "author": "Allen Institute for Artificial Intelligence",
   "email": "ai2-info@allenai.org",
-  "url":"https://allenai.github.io/SciSpaCy/",
-  "license":"CC BY-SA 3.0"
+  "url": "https://allenai.github.io/SciSpaCy/",
+  "license": "CC BY-SA 3.0",
+  "requirements": [
+    "spacy-transformers"
+  ]
 }
