@@ -544,6 +544,7 @@ commands:
     script:
       - "spacy package ${vars.ner_scibert_loc}/model-best packages/ --meta-path ${vars.meta_scibert_loc} --version ${vars.version_string}"
     deps:
+      - "${vars.meta_scibert_loc}"
       - "${vars.ner_scibert_loc}/model-best"
     outputs:
       - "${vars.package_scibert_loc}"
