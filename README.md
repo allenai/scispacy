@@ -185,7 +185,7 @@ nlp = spacy.load("en_core_sci_sm")
 # the AbbreviationDetector pipe has already been added to the pipeline. Adding
 # the AbbreviationDetector pipe and setting resolve_abbreviations to True means
 # that linking will only be performed on the long form of abbreviations.
-nlp.add_pipe("scispacy_linker", config={"resolve_abbreviations": True, "name": "umls"})
+nlp.add_pipe("scispacy_linker", config={"resolve_abbreviations": True, "linker_name": "umls"})
 
 doc = nlp("Spinal and bulbar muscular atrophy (SBMA) is an \
            inherited motor neuron disease caused by the expansion \
