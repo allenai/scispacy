@@ -83,8 +83,6 @@ class HyponymDetector:
             if end >= len(doc):
                 break
             next_token = doc[end]
-            if next_token.i > len(doc):
-                break
             if next_token.pos_ in {"PROPN", "NOUN", "PRON"}:
                 end += 1
             else:
