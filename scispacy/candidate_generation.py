@@ -386,7 +386,7 @@ def create_tfidf_ann_index(
     # set to the maximum recommended value. Improves recall at the expense of longer indexing time.
     # We use the HNSW (Hierarchical Navigable Small World Graph) representation which is constructed
     # by consecutive insertion of elements in a random order by connecting them to M closest neighbours
-    # from the previously inserted elements. These later become bridges between the network hubs that 
+    # from the previously inserted elements. These later become bridges between the network hubs that
     # improve overall graph connectivity. (bigger M -> higher recall, slower creation)
     # For more details see:  https://arxiv.org/pdf/1603.09320.pdf?
     m_parameter = 100
