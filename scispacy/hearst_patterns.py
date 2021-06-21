@@ -224,19 +224,19 @@ EXTENDED_PATTERNS = [
     # '(NP_\\w+ (, )?like (NP_\\w+ ? (, )?(and |or )?)+)', 'first'
     {
         "label": "like",
-        "pattern": [hypernym, punct, {"LEMMA": "like"}, det, hyponym,],
+        "pattern": [hypernym, punct, {"LEMMA": "like"}, det, hyponym, ],
         "position": "first",
     },
     # 'such (NP_\\w+ (, )?as (NP_\\w+ ? (, )?(and |or )?)+)', 'first'
     {
         "label": "such_NOUN_as",
-        "pattern": [{"LEMMA": "such"}, hypernym, punct, {"LEMMA": "as"}, det, hyponym,],
+        "pattern": [{"LEMMA": "such"}, hypernym, punct, {"LEMMA": "as"}, det, hyponym, ],
         "position": "first",
     },
     # '(NP_\\w+ (, )?whether (NP_\\w+ ? (, )?(and |or )?)+)', 'first'
     {
         "label": "whether",
-        "pattern": [hypernym, punct, {"LEMMA": "whether"}, det, hyponym,],
+        "pattern": [hypernym, punct, {"LEMMA": "whether"}, det, hyponym, ],
         "position": "first",
     },
     # '(NP_\\w+ (, )?compare to (NP_\\w+ ? (, )?(and |or )?)+)', 'first'
@@ -310,7 +310,7 @@ EXTENDED_PATTERNS = [
     # '((NP_\\w+ ?(, )?)+(and |or )?be a NP_\\w+)', 'last'
     {
         "label": "be_a",
-        "pattern": [det, hyponym, punct, {"LEMMA": "be"}, {"LEMMA": "a"}, hypernym,],
+        "pattern": [det, hyponym, punct, {"LEMMA": "be"}, {"LEMMA": "a"}, hypernym, ],
         "position": "last",
     },
     {
