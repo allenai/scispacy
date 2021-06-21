@@ -16,6 +16,7 @@ pytest-cov
 flake8
 black
 mypy
+types-requests
 
 # Required for releases.
 twine

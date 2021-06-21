@@ -131,6 +131,6 @@ def combined_rule_tokenizer(nlp: Language) -> Tokenizer:
         prefix_search=prefix_re.search,
         suffix_search=suffix_re.search,
         infix_finditer=infix_re.finditer,
-        token_match=nlp.tokenizer.token_match,
+        token_match=nlp.tokenizer.token_match,  # type: ignore
     )
     return tokenizer
