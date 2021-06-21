@@ -36,6 +36,6 @@ def test_custom_segmentation(combined_all_model_fixture):
     ]
     actual_tokens = [t.text for t in doc]
     assert expected_tokens == actual_tokens
-    assert doc.is_parsed
+    assert doc.has_annotation("DEP")
     assert doc[0].dep_ == "ROOT"
     assert doc[0].tag_ == "NN"
