@@ -153,7 +153,12 @@ class AbbreviationDetector:
     name: `str`, a required argument for spacy to use this as a factory
     """
 
-    def __init__(self, nlp: Language, name: str = "abbreviation_detector", make_serializable: bool = False) -> None:
+    def __init__(
+        self,
+        nlp: Language,
+        name: str = "abbreviation_detector",
+        make_serializable: bool = False,
+    ) -> None:
         Doc.set_extension("abbreviations", default=[], force=True)
         Span.set_extension("long_form", default=None, force=True)
 
@@ -189,7 +194,10 @@ class AbbreviationDetector:
                 doc._.abbreviations.append(short)
         if self.make_serializable:
             abbreviations = doc._.abbreviations
-            doc._.abbreviations = [self.make_short_form_serializable(abbreviation) for abbreviation in abbreviations]
+            doc._.abbreviations = [
+                self.make_short_form_serializable(abbreviation)
+                for abbreviation in abbreviations
+            ]
         return doc
 
     def find_matches_for(
@@ -238,9 +246,15 @@ class AbbreviationDetector:
             Short for abbreviation
         long_form : Span
             Long form of the abbreviation
-        """        
+        """
         long_form = abbreviation._.long_form
         abbreviation._.long_form = None
-        serializable_abbr = {"short_text": abbreviation.text, "short_start": abbreviation.start, "short_end": abbreviation.end,
-                             "long_text": long_form.text, "long_start": long_form.start, "long_end": long_form.end}
+        serializable_abbr = {
+            "short_text": abbreviation.text,
+            "short_start": abbreviation.start,
+            "short_end": abbreviation.end,
+            "long_text": long_form.text,
+            "long_start": long_form.start,
+            "long_end": long_form.end,
+        }
         return serializable_abbr

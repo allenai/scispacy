@@ -114,8 +114,7 @@ class MentionCandidate(NamedTuple):
 
 
 def load_approximate_nearest_neighbours_index(
-    linker_paths: LinkerPaths,
-    ef_search: int = 200,
+    linker_paths: LinkerPaths, ef_search: int = 200,
 ) -> FloatIndex:
     """
     Load an approximate nearest neighbours index from disk.

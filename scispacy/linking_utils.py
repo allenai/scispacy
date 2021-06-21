@@ -53,8 +53,7 @@ class KnowledgeBase:
     """
 
     def __init__(
-        self,
-        file_path: str = None,
+        self, file_path: str = None,
     ):
         if file_path is None:
             raise ValueError(
