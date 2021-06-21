@@ -388,7 +388,7 @@ def create_tfidf_ann_index(
     # by consecutive insertion of elements in a random order by connecting them to M closest neighbours
     # from the previously inserted elements. These later become bridges between the network hubs that 
     # improve overall graph connectivity. (bigger M -> higher recall, slower creation)
-    # For more details see: https://arxiv.org/ftp/arxiv/papers/1603/1603.09320.pdf
+    # For more details see:  https://arxiv.org/pdf/1603.09320.pdf?
     m_parameter = 100
     # `C` for Construction. Set to the maximum recommended value
     # Improves recall at the expense of longer indexing time
