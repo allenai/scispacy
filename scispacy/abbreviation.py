@@ -248,7 +248,7 @@ class AbbreviationDetector:
             Long form of the abbreviation
         """
         long_form = abbreviation._.long_form
-        abbreviation._.long_form = None
+        abbreviation._.long_form = long_form.text
         serializable_abbr = {
             "short_text": abbreviation.text,
             "short_start": abbreviation.start,

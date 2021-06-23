@@ -96,20 +96,26 @@ class EntityLinker:
         self.umls = self.kb
 
     def __call__(self, doc: Doc) -> Doc:
-        mentions = []
+        mention_strings = []
         if self.resolve_abbreviations and Doc.has_extension("abbreviations"):
-
+            # This used to create a mentions list of spans, just to create a list of mention strings later on
             for ent in doc.ents:
-                # TODO: This is possibly sub-optimal - we might
-                # prefer to look up both the long and short forms.
-                if ent._.long_form is not None:
-                    mentions.append(ent._.long_form)
+                if isinstance(ent._.long_form, Span):
+                    # Long form
+                    mention_strings.append(ent._.long_form.text)
+                    # Short form
+                    mention_strings.append(ent.text)
+                elif isinstance(ent._.long_form, str):
+                    # Long form
+                    mention_strings.append(ent._.long_form)
+                    # Short form
+                    mention_strings.append(ent.text)
                 else:
-                    mentions.append(ent)
+                    # Short form
+                    mention_strings.append(ent.text)
         else:
-            mentions = doc.ents
+            mention_strings = [x.text for x in doc.ents]
 
-        mention_strings = [x.text for x in mentions]
         batch_candidates = self.candidate_generator(mention_strings, self.k)
 
         for mention, candidates in zip(doc.ents, batch_candidates):
