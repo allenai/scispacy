@@ -104,6 +104,10 @@ def combined_all_model_fixture():
     nlp = get_spacy_model("en_core_sci_sm", True, True, True, with_custom_tokenizer=True, with_sentence_segmenter=False, with_serializable_abbreviation_detector=True)
     return nlp
 
+@pytest.fixture()
+def combined_all_model_fixture_old_abbrev():
+    nlp = get_spacy_model("en_core_sci_sm", True, True, True, with_custom_tokenizer=True, with_sentence_segmenter=False, with_serializable_abbreviation_detector=False)
+    return nlp
 
 @pytest.fixture()
 def combined_rule_prefixes_fixture():

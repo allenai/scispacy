@@ -98,18 +98,13 @@ class EntityLinker:
     def __call__(self, doc: Doc) -> Doc:
         mention_strings = []
         if self.resolve_abbreviations and Doc.has_extension("abbreviations"):
-            # This used to create a mentions list of spans, just to create a list of mention strings later on
             for ent in doc.ents:
                 if isinstance(ent._.long_form, Span):
                     # Long form
                     mention_strings.append(ent._.long_form.text)
-                    # Short form
-                    mention_strings.append(ent.text)
                 elif isinstance(ent._.long_form, str):
                     # Long form
                     mention_strings.append(ent._.long_form)
-                    # Short form
-                    mention_strings.append(ent.text)
                 else:
                     # Short form
                     mention_strings.append(ent.text)
