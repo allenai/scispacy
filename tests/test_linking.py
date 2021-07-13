@@ -19,15 +19,14 @@ class TestLinker(unittest.TestCase):
             umls_concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(dir_name, umls_fixture)
         candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, umls_concept_aliases, umls_fixture)
 
-        self.linker = EntityLinker(candidate_generator=candidate_generator, filter_for_definitions=False)
+        self.linker = EntityLinker(candidate_generator=candidate_generator, no_definition_threshold=None)
 
     def test_naive_entity_linking(self):
         text = "There was a lot of Dipalmitoylphosphatidylcholine."
         doc = self.nlp(text)
 
-        # Check that the linker returns nothing if we set the filter_for_definitions flag
-        # and set the threshold very high for entities without definitions.
-        self.linker.filter_for_definitions = True
+        # Check that the linker returns nothing if we set the threshold very
+        # high for entities without definitions.
         self.linker.no_definition_threshold = 3.0
         doc = self.linker(doc)
         assert doc.ents[0]._.kb_ents == []
@@ -38,10 +37,10 @@ class TestLinker(unittest.TestCase):
         doc = self.linker(doc)
         assert doc.ents[0]._.kb_ents == [("C0000039", 1.0)]
 
-        self.linker.filter_for_definitions = False
+        self.linker.no_definition_threshold = None
         self.linker.threshold = 0.45
         doc = self.linker(doc)
-        # Without the filter_for_definitions filter, we get 2 entities for
+        # Without the definitions filter, we get 2 entities for
         # the first mention.
         assert len(doc.ents[0]._.kb_ents) == 2
 
