@@ -54,9 +54,8 @@ class EntityLinker:
     no_definition_threshold : float, optional, (default = 0.95)
         The threshold that a entity candidate must reach to be added to the mention in the Doc
         as a mention candidate if the entity candidate does not have a definition.
-    filter_for_definitions: bool, default = True
-        Whether to filter entities that can be returned to only include those with definitions
-        in the knowledge base.
+        If None, then treat entities without definitions the same as entities with definitions 
+        (don't require a separate threshold)
     max_entities_per_mention : int, optional, default = 5
         The maximum number of entities which will be returned for a given mention, regardless of
         how many are nearest neighbours are found.
@@ -73,7 +72,6 @@ class EntityLinker:
         k: int = 30,
         threshold: float = 0.7,
         no_definition_threshold: float = 0.95,
-        filter_for_definitions: bool = True,
         max_entities_per_mention: int = 5,
         linker_name: str = None,
     ):
@@ -89,7 +87,6 @@ class EntityLinker:
         self.threshold = threshold
         self.no_definition_threshold = no_definition_threshold
         self.kb = self.candidate_generator.kb
-        self.filter_for_definitions = filter_for_definitions
         self.max_entities_per_mention = max_entities_per_mention
 
         # TODO(Mark): Remove in scispacy v1.0. This is for backward compatability only.
@@ -117,7 +114,7 @@ class EntityLinker:
             for cand in candidates:
                 score = max(cand.similarities)
                 if (
-                    self.filter_for_definitions
+                    self.no_definition_threshold is not None
                     and self.kb.cui_to_entity[cand.concept_id].definition is None
                     and score < self.no_definition_threshold
                 ):
