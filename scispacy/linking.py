@@ -106,7 +106,7 @@ class EntityLinker:
                     # Long form
                     mention_strings.append(ent._.long_form)
                 else:
-                    # Short form
+                    # no abbreviations case
                     mention_strings.append(ent.text)
         else:
             mention_strings = [x.text for x in doc.ents]
