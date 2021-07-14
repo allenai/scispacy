@@ -52,10 +52,16 @@ def test_full_pipe_serializable(combined_all_model_fixture):
     assert doc[abbrev["short_start"] : abbrev["short_end"]].text == abbrev["short_text"]
     assert doc[abbrev["long_start"] : abbrev["long_end"]].text == abbrev["long_text"]
 
-
-@pytest.mark.xfail
-def test_full_pipe_not_serializable(combined_all_model_fixture_old_abbrev):
+def test_full_pipe_not_serializable(combined_all_model_fixture_non_serializable_abbrev):
     text = "Induction of cytokine expression in leukocytes (CEIL) by binding of thrombin-stimulated platelets. BACKGROUND: Activated platelets tether and activate myeloid leukocytes."
-    # This line requires the pipeline to be serializable (because it uses 2 processes), so the test should fail here
-    doc = [doc for doc in combined_all_model_fixture_old_abbrev.pipe([text, text], n_process = 2)][0]
-    assert True
+    # This line requires the pipeline to be serializable, so the test should fail here
+    doc = combined_all_model_fixture_non_serializable_abbrev(text)
+    with pytest.raises(TypeError):
+        doc.to_bytes()
+
+# Below is the test version to be used once we move to spacy v3.1.0 or higher
+# def test_full_pipe_not_serializable(combined_all_model_fixture_non_serializable_abbrev):
+#     text = "Induction of cytokine expression in leukocytes (CEIL) by binding of thrombin-stimulated platelets. BACKGROUND: Activated platelets tether and activate myeloid leukocytes."
+#     # This line requires the pipeline to be serializable (because it uses 2 processes), so the test should fail here
+#     with pytest.raises(TypeError):
+#         list(combined_all_model_fixture_non_serializable_abbrev.pipe([text, text], n_process = 2))
