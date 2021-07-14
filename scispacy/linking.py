@@ -98,6 +98,8 @@ class EntityLinker:
     def __call__(self, doc: Doc) -> Doc:
         mention_strings = []
         if self.resolve_abbreviations and Doc.has_extension("abbreviations"):
+            # TODO: This is possibly sub-optimal - we might
+            # prefer to look up both the long and short forms.
             for ent in doc.ents:
                 if isinstance(ent._.long_form, Span):
                     # Long form

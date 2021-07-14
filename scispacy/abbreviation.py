@@ -151,6 +151,8 @@ class AbbreviationDetector:
 
     nlp: `Language`, a required argument for spacy to use this as a factory
     name: `str`, a required argument for spacy to use this as a factory
+    make_serializable: `bool`, a required argument for whether we want to use the serializable
+    or non serializable version.
     """
 
     def __init__(
@@ -236,16 +238,14 @@ class AbbreviationDetector:
 
         return list((k, v) for k, v in all_occurences.items())
 
-    def make_short_form_serializable(self, abbreviation):
+    def make_short_form_serializable(self, abbreviation: Span):
         """
         Converts the abbreviations into a short form that is serializable to enable multiprocessing
 
         Parameters
         ----------
-        short : Span
-            Short for abbreviation
-        long_form : Span
-            Long form of the abbreviation
+        abbreviation: Span
+            The abbreviation span identified by the detector
         """
         long_form = abbreviation._.long_form
         abbreviation._.long_form = long_form.text
