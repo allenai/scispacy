@@ -151,14 +151,22 @@ class AbbreviationDetector:
 
     nlp: `Language`, a required argument for spacy to use this as a factory
     name: `str`, a required argument for spacy to use this as a factory
+    make_serializable: `bool`, a required argument for whether we want to use the serializable
+    or non serializable version.
     """
 
-    def __init__(self, nlp: Language, name: str = "abbreviation_detector") -> None:
+    def __init__(
+        self,
+        nlp: Language,
+        name: str = "abbreviation_detector",
+        make_serializable: bool = False,
+    ) -> None:
         Doc.set_extension("abbreviations", default=[], force=True)
         Span.set_extension("long_form", default=None, force=True)
 
         self.matcher = Matcher(nlp.vocab)
         self.matcher.add("parenthesis", [[{"ORTH": "("}, {"OP": "+"}, {"ORTH": ")"}]])
+        self.make_serializable = make_serializable
         self.global_matcher = Matcher(nlp.vocab)
 
     def find(self, span: Span, doc: Doc) -> Tuple[Span, Set[Span]]:
@@ -186,6 +194,12 @@ class AbbreviationDetector:
             for short in short_forms:
                 short._.long_form = long_form
                 doc._.abbreviations.append(short)
+        if self.make_serializable:
+            abbreviations = doc._.abbreviations
+            doc._.abbreviations = [
+                self.make_short_form_serializable(abbreviation)
+                for abbreviation in abbreviations
+            ]
         return doc
 
     def find_matches_for(
@@ -223,3 +237,24 @@ class AbbreviationDetector:
             self.global_matcher.remove(key)
 
         return list((k, v) for k, v in all_occurences.items())
+
+    def make_short_form_serializable(self, abbreviation: Span):
+        """
+        Converts the abbreviations into a short form that is serializable to enable multiprocessing
+
+        Parameters
+        ----------
+        abbreviation: Span
+            The abbreviation span identified by the detector
+        """
+        long_form = abbreviation._.long_form
+        abbreviation._.long_form = long_form.text
+        serializable_abbr = {
+            "short_text": abbreviation.text,
+            "short_start": abbreviation.start,
+            "short_end": abbreviation.end,
+            "long_text": long_form.text,
+            "long_start": long_form.start,
+            "long_end": long_form.end,
+        }
+        return serializable_abbr
