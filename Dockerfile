@@ -2,8 +2,8 @@ FROM python:3.8-buster
 
 # install base packages
 RUN apt-get clean \
- && apt-get update --fix-missing \
- && apt-get install -y \
+    && apt-get update --fix-missing \
+    && apt-get install -y \
     git \
     curl \
     gcc \
