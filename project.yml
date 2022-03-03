@@ -162,10 +162,10 @@ commands:
       - "aws s3 cp ${vars.ontonotes_loc_s3} ${vars.ontonotes_loc_local}.tar.gz"
       - "tar -xzvf ${vars.ontonotes_loc_local}.tar.gz -C assets/"
       - "rm ${vars.ontonotes_loc_local}.tar.gz"
-      - "aws s3 cp ${vars.med_mentions_loc_s3} assets/med_mentions.tar.gz"
+      - "aws s3 cp ${vars.med_mentions_loc_s3} assets/med_mentions.tar.gz --no-sign-request"
       - "tar -xzvf assets/med_mentions.tar.gz -C assets/"
       - "rm assets/med_mentions.tar.gz"
-      - "aws s3 cp ${vars.ner_loc_s3} assets --recursive --exclude '*' --include '*.tsv'"
+      - "aws s3 cp ${vars.ner_loc_s3} assets --recursive --exclude '*' --include '*.tsv' --no-sign-request"
     outputs:
       - "${vars.freqs_loc_local}"
       - "${vars.vectors_loc_local}"
