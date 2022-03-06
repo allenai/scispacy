@@ -159,7 +159,7 @@ commands:
       - "aws s3 cp ${vars.genia_loc_s3}/train.json ${vars.genia_train_loc_local} --no-sign-request"
       - "aws s3 cp ${vars.genia_loc_s3}/dev.json ${vars.genia_dev_loc_local} --no-sign-request"
       - "aws s3 cp ${vars.genia_loc_s3}/test.json ${vars.genia_test_loc_local} --no-sign-request"
-      # - "aws s3 cp ${vars.ontonotes_loc_s3} ${vars.ontonotes_loc_local}.tar.gz"
+      - "aws s3 cp ${vars.ontonotes_loc_s3} ${vars.ontonotes_loc_local}.tar.gz"
       - "tar -xzvf ${vars.ontonotes_loc_local}.tar.gz -C assets/"
       - "rm ${vars.ontonotes_loc_local}.tar.gz"
       - "aws s3 cp ${vars.med_mentions_loc_s3} assets/med_mentions.tar.gz --no-sign-request"
