@@ -2,7 +2,7 @@ title: "scispaCy pipeline"
 description: "All the steps needed in the scispaCy pipeline"
 
 vars:
-  version_string: "0.4.0"
+  version_string: "0.5.0"
   freqs_loc_s3: "s3://ai2-s2-scispacy/data/gorc_subset.freqs"
   freqs_loc_local: "assets/gorc_subset.freqs"
   vectors_loc_s3: "s3://ai2-s2-scispacy/data/pubmed_with_header.txt.gz"
@@ -130,31 +130,25 @@ workflows:
     - parser-tagger-train-sm
     - parser-tagger-train-md
     - parser-tagger-train-lg
-    - parser-tagger-train-scibert
     - ner-train-sm
     - ner-train-md
     - ner-train-lg
     - ner-train-specialized
-    - ner-train-scibert
     - evaluate-parser-tagger-sm
     - evaluate-parser-tagger-md
     - evaluate-parser-tagger-lg
-    - evaluate-parser-tagger-scibert
     - evaluate-ner-sm
     - evaluate-ner-md
     - evaluate-ner-lg
     - evaluate-specialized-ner
-    - evaluate-ner-scibert
     - package-sm
     - package-md
     - package-lg
     - package-ner
-    - package-scibert
     - evaluate-package-sm
     - evaluate-package-md
     - evaluate-package-lg
     - evaluate-package-ner
-    - evaluate-package-scibert
 
 commands:
   - name: download
