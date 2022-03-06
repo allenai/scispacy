@@ -20,8 +20,10 @@ class TestHyponymDetector(unittest.TestCase):
         )
         doc = self.nlp(text)
         fig_trees = doc[21:23]
-        keystone_plant_species = doc[16:19]
-        assert doc._.hearst_patterns == [("such_as", keystone_plant_species, fig_trees)]
+        plant_species = doc[17:19]
+        print([t.pos_ for t in doc])
+        print([chunk.text for chunk in doc.noun_chunks])
+        assert doc._.hearst_patterns == [("such_as", plant_species, fig_trees)]
 
         doc = self.nlp("SARS, or other coronaviruses, are bad.")
         assert doc._.hearst_patterns == [("other", doc[4:5], doc[0:1])]
