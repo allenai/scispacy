@@ -579,9 +579,9 @@ commands:
   - name: evaluate-package-scibert
     help: "Evaluate the packaged scibert model"
     script:
-      - "spacy evaluate ${vars.package_scibert_loc} ${vars.genia_test_spacy_loc} --output packages/scibert_genia_results.json"
-      - "spacy evaluate ${vars.package_scibert_loc} ${vars.ontonotes_test_spacy_loc} --output packages/scibert_onto_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.package_scibert_loc} --dataset medmentions-test --output packages/scibert_mm_results.json --med_mentions_folder_path assets/"
+      - "spacy evaluate ${vars.package_scibert_loc} ${vars.genia_test_spacy_loc} --output packages/scibert_genia_results.json --gpu-id ${vars.gpu_id}"
+      - "spacy evaluate ${vars.package_scibert_loc} ${vars.ontonotes_test_spacy_loc} --output packages/scibert_onto_results.json --gpu-id ${var.gpu_id}"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_scibert_loc} --dataset medmentions-test --output packages/scibert_mm_results.json --med_mentions_folder_path assets/ --gpu_id ${vars.gpu_id}"
     deps:
       - "${vars.package_scibert_loc}"
     outputs:
