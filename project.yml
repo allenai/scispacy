@@ -3,6 +3,7 @@ description: "All the steps needed in the scispaCy pipeline"
 
 vars:
   version_string: "0.5.0"
+  gpu_id: "0"
   freqs_loc_s3: "s3://ai2-s2-scispacy/data/gorc_subset.freqs"
   freqs_loc_local: "assets/gorc_subset.freqs"
   vectors_loc_s3: "s3://ai2-s2-scispacy/data/pubmed_with_header.txt.gz"
@@ -300,7 +301,7 @@ commands:
   - name: parser-tagger-train-scibert
     help: "Train the scibert transformer model"
     script:
-      - "spacy train ${vars.parser_tagger_scibert_config_loc} --output ${vars.parser_tagger_scibert_loc} --code ${vars.code_loc} --paths.vocab_path ${vars.vocab_lg_loc} --gpu-id 0"
+      - "spacy train ${vars.parser_tagger_scibert_config_loc} --output ${vars.parser_tagger_scibert_loc} --code ${vars.code_loc} --paths.vocab_path ${vars.vocab_lg_loc} --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.parser_tagger_config_loc}"
       - "${vars.genia_train_spacy_loc}"
@@ -348,7 +349,7 @@ commands:
   - name: ner-train-scibert
     help: "Train the scibert ner model."
     script:
-      - "spacy train ${vars.ner_scibert_config_loc} --output ${vars.ner_scibert_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_scibert_loc}/model-best --gpu-id 0"
+      - "spacy train ${vars.ner_scibert_config_loc} --output ${vars.ner_scibert_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_scibert_loc}/model-best --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.ner_config_loc}"
       - "${vars.parser_tagger_scibert_loc}/model-best"
@@ -427,8 +428,8 @@ commands:
   - name: evaluate-parser-tagger-scibert
     help: "Evaluate the parser and tagger scibert model"
     script:
-      - "spacy evaluate ${vars.parser_tagger_scibert_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_scibert_loc}/model_best_results.json"
-      - "spacy evaluate ${vars.parser_tagger_scibert_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_scibert_loc}/model_best_results_onto.json"
+      - "spacy evaluate ${vars.parser_tagger_scibert_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_scibert_loc}/model_best_results.json --gpu-id ${vars.gpu_id}"
+      - "spacy evaluate ${vars.parser_tagger_scibert_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_scibert_loc}/model_best_results_onto.json --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.parser_tagger_scibert_loc}/model-best"
       - "${vars.genia_test_spacy_loc}"
@@ -470,7 +471,7 @@ commands:
   - name: evaluate-ner-scibert
     help: "Evaluate NER scibert"
     script:
-      - "python scripts/evaluate_ner.py --model_path ${vars.ner_scibert_loc}/model-best --dataset medmentions-test --output ${vars.ner_scibert_loc}/model_best_results.json --med_mentions_folder_path assets/"
+      - "python scripts/evaluate_ner.py --model_path ${vars.ner_scibert_loc}/model-best --dataset medmentions-test --output ${vars.ner_scibert_loc}/model_best_results.json --med_mentions_folder_path assets/ --gpu_id ${vars.gpu_id}"
     deps:
       - "${vars.ner_scibert_loc}"
       - "${vars.corpus_pubtator_loc_local}"
