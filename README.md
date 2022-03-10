@@ -72,9 +72,6 @@ pip install </path/to/download>
 Alternatively, you can install directly from the URL by right-clicking on the link, selecting "Copy Link Address" and running 
 ```python
 pip install CMD-V(to paste the copied URL)
-```
-
-NOTE: these links are currently for v0.5.0, which has not been released yet, due to some issues with pypi. You can install from master and use these links, or change the links to point to v0.4.0 (the latest released version) until this is resolved.
 
 | Model          | Description       | Install URL
 |:---------------|:------------------|:----------|
