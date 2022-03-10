@@ -72,6 +72,7 @@ pip install </path/to/download>
 Alternatively, you can install directly from the URL by right-clicking on the link, selecting "Copy Link Address" and running 
 ```python
 pip install CMD-V(to paste the copied URL)
+```
 
 | Model          | Description       | Install URL
 |:---------------|:------------------|:----------|
