@@ -229,7 +229,7 @@ class AbbreviationDetector:
         to_remove = set()
         global_matches = self.global_matcher(doc)
         for match, start, end in global_matches:
-            string_key = self.global_matcher.vocab.strings[match]
+            string_key = self.global_matcher.vocab.strings[match]  # type: ignore
             to_remove.add(string_key)
             all_occurences[rules[string_key]].add(doc[start:end])
         for key in to_remove:
