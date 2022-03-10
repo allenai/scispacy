@@ -74,6 +74,8 @@ Alternatively, you can install directly from the URL by right-clicking on the li
 pip install CMD-V(to paste the copied URL)
 ```
 
+NOTE: these links are currently for v0.5.0, which has not been released yet, due to some issues with pypi. You can install from master and use these links, or change the links to point to v0.4.0 (the latest released version) until this is resolved.
+
 | Model          | Description       | Install URL
 |:---------------|:------------------|:----------|
 | en_core_sci_sm | A full spaCy pipeline for biomedical data with a ~100k vocabulary. |[Download](https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.0/en_core_sci_sm-0.5.0.tar.gz)|
