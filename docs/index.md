@@ -28,7 +28,6 @@ pip install <Model URL>
 
 
 
-
 ### Performance
 
 Our models achieve performance within 3% of published state of the art dependency parsers and within 0.4% accuracy of state of the art biomedical POS taggers.
