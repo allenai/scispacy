@@ -1,3 +1,5 @@
+from typing import List, Dict, Any
+
 """
 BSD 3-Clause License
 
@@ -35,7 +37,7 @@ hyponym = {"POS": {"IN": ["NOUN", "PROPN", "PRON"]}}
 punct = {"IS_PUNCT": True, "OP": "?"}
 det = {"ORTH": "*", "OP": "*"}
 
-BASE_PATTERNS = [
+BASE_PATTERNS: List[Dict[str, Any]] = [
     # '(NP_\\w+ (, )?such as (NP_\\w+ ?(, )?(and |or )?)+)', 'first'
     {
         "label": "such_as",
