@@ -16,7 +16,7 @@ from scispacy.linking_utils import (
     UmlsKnowledgeBase,
     Mesh,
     GeneOntology,
-    RxNorm,
+    RxNorm, 
     HumanPhenotypeOntology,
 )
 
