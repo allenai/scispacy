@@ -16,7 +16,7 @@ from scispacy.linking_utils import (
     UmlsKnowledgeBase,
     Mesh,
     GeneOntology,
-    RxNorm, 
+    RxNorm,
     HumanPhenotypeOntology,
 )
 
@@ -281,8 +281,12 @@ class CandidateGenerator:
         neighbors.append([])
         distances.append([])
         # interleave `neighbors` and Nones in `extended_neighbors`
-        extended_neighbors[empty_vectors_boolean_flags] = numpy.array(neighbors, dtype='object')[:-1]
-        extended_distances[empty_vectors_boolean_flags] = numpy.array(distances, dtype='object')[:-1]
+        extended_neighbors[empty_vectors_boolean_flags] = numpy.array(
+            neighbors, dtype="object"
+        )[:-1]
+        extended_distances[empty_vectors_boolean_flags] = numpy.array(
+            distances, dtype="object"
+        )[:-1]
 
         return extended_neighbors, extended_distances
 
