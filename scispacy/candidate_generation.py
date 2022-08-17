@@ -281,8 +281,12 @@ class CandidateGenerator:
         neighbors.append([])
         distances.append([])
         # interleave `neighbors` and Nones in `extended_neighbors`
-        extended_neighbors[empty_vectors_boolean_flags] = numpy.array(neighbors)[:-1]
-        extended_distances[empty_vectors_boolean_flags] = numpy.array(distances)[:-1]
+        extended_neighbors[empty_vectors_boolean_flags] = numpy.array(
+            neighbors, dtype=object
+        )[:-1]
+        extended_distances[empty_vectors_boolean_flags] = numpy.array(
+            distances, dtype=object
+        )[:-1]
 
         return extended_neighbors, extended_distances
 
