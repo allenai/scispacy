@@ -131,25 +131,31 @@ workflows:
     - parser-tagger-train-sm
     - parser-tagger-train-md
     - parser-tagger-train-lg
+    - parser-tagger-train-scibert
     - ner-train-sm
     - ner-train-md
     - ner-train-lg
     - ner-train-specialized
+    - ner-train-scibert
     - evaluate-parser-tagger-sm
     - evaluate-parser-tagger-md
     - evaluate-parser-tagger-lg
+    - evaluate-parser-tagger-scibert
     - evaluate-ner-sm
     - evaluate-ner-md
     - evaluate-ner-lg
     - evaluate-specialized-ner
+    - evaluate-ner-scibert
     - package-sm
     - package-md
     - package-lg
     - package-ner
+    - package-scibert
     - evaluate-package-sm
     - evaluate-package-md
     - evaluate-package-lg
     - evaluate-package-ner
+    - evaluate-package-scibert
 
 commands:
   - name: download
