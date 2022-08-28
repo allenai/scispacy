@@ -309,7 +309,7 @@ commands:
     script:
       - "spacy train ${vars.parser_tagger_scibert_config_loc} --output ${vars.parser_tagger_scibert_loc} --code ${vars.code_loc} --paths.vocab_path ${vars.vocab_lg_loc} --gpu-id ${vars.gpu_id}"
     deps:
-      - "${vars.parser_tagger_config_loc}"
+      - "${vars.parser_tagger_scibert_config_loc}"
       - "${vars.genia_train_spacy_loc}"
       - "${vars.genia_dev_spacy_loc}"
       - "${vars.genia_test_spacy_loc}"
@@ -357,7 +357,7 @@ commands:
     script:
       - "spacy train ${vars.ner_scibert_config_loc} --output ${vars.ner_scibert_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_scibert_loc}/model-best --gpu-id ${vars.gpu_id}"
     deps:
-      - "${vars.ner_config_loc}"
+      - "${vars.ner_scibert_config_loc}"
       - "${vars.parser_tagger_scibert_loc}/model-best"
       - "${vars.corpus_pubtator_loc_local}"
     outputs:
