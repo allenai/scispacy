@@ -24,7 +24,7 @@ def read_umls_file_headers(meta_path: str, filename: str) -> List[str]:
         a list of column names
     """
     file_descriptors = f"{meta_path}/MRFILES.RRF"  # to get column names
-    with open(file_descriptors) as fin:
+    with open(file_descriptors, encoding="utf-8") as fin:
         for line in fin:
             splits = line.split("|")
             found_filename = splits[0]
@@ -59,7 +59,7 @@ def read_umls_concepts(meta_path: str, concept_details: Dict, source: str = None
     """
     concepts_filename = "MRCONSO.RRF"
     headers = read_umls_file_headers(meta_path, concepts_filename)
-    with open(f"{meta_path}/{concepts_filename}") as fin:
+    with open(f"{meta_path}/{concepts_filename}", encoding="utf-8") as fin:
         for line in fin:
             splits = line.strip().split("|")
             assert len(headers) == len(splits), (headers, splits)
@@ -114,7 +114,7 @@ def read_umls_types(meta_path: str, concept_details: Dict):
     """
     types_filename = "MRSTY.RRF"
     headers = read_umls_file_headers(meta_path, types_filename)
-    with open(f"{meta_path}/{types_filename}") as fin:
+    with open(f"{meta_path}/{types_filename}", encoding="utf-8") as fin:
         for line in fin:
             splits = line.strip().split("|")
             assert len(headers) == len(splits)
@@ -142,7 +142,7 @@ def read_umls_definitions(meta_path: str, concept_details: Dict):
     """
     definitions_filename = "MRDEF.RRF"
     headers = read_umls_file_headers(meta_path, definitions_filename)
-    with open(f"{meta_path}/{definitions_filename}") as fin:
+    with open(f"{meta_path}/{definitions_filename}", encoding="utf-8") as fin:
         headers = read_umls_file_headers(meta_path, definitions_filename)
         for line in fin:
             splits = line.strip().split("|")
