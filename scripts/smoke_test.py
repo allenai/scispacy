@@ -25,7 +25,7 @@ def main():
     ]
 
     text = (
-        "This first sentence mentions John. "
+        "DNA is a very important part of the cellular structure of the body. "
         "John uses IL gene and interleukin-2 to treat diabetes and "
         "aspirin as proteins for arms and legs on lemurs and humans."
     )
@@ -42,6 +42,7 @@ def main():
             print([t.ent_type_ for t in sentence])
             print()
         print()
+        input("Continue?")
 
     print("Testing abbreivation detector...")
     abbreviation_nlp = spacy.load("en_core_sci_sm")
@@ -57,6 +58,7 @@ def main():
             f"{abbrevation} \t ({abbrevation.start}, {abbrevation.end}) {abbrevation._.long_form}"
         )
     print()
+    input("Continue?")
 
     print("Testing entity linkers...")
     print()
@@ -70,7 +72,7 @@ def main():
             config={"resolve_abbreviations": False, "linker_name": ontology_name},
         )
 
-    linking_text = "Diabetes is a disease that affects humans."
+    linking_text = "Diabetes is a disease that affects humans and is treated with aspirin via a metabolic process."
     for ontology_name, ontology_model in zip(ontology_names, ontology_models):
         print(f"Testing {ontology_name} linker...")
         linker_pipe = ontology_model.get_pipe("scispacy_linker")
@@ -80,6 +82,7 @@ def main():
             for ontology_entity in entity._.kb_ents[:1]:
                 print(linker_pipe.kb.cui_to_entity[ontology_entity[0]])
         print()
+        input("Continue?")
 
 
 if __name__ == "__main__":
