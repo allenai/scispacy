@@ -34,18 +34,18 @@ Our models achieve performance within 3% of published state of the art dependenc
 
 | model          | UAS | LAS   | POS   | Mentions (F1) | Web UAS | 
 |:---------------|:----|:------|:------|:---|:---|
-| en_core_sci_sm | 89.27| 87.33  |  98.29  |  68.05  |  87.61  |
-| en_core_sci_md | 89.86| 87.92 |  98.43 |  69.32 |  88.05  |
-| en_core_sci_lg | 89.54| 87.66  |  98.29  |  69.52  |  87.68  |
-| en_core_sci_scibert | 92.28| 90.83  |  98.93  |  67.84  |  92.63  |
+| en_core_sci_sm | 89.03| 87.00  |  98.13  |  67.87  |  87.42  |
+| en_core_sci_md | 89.73| 87.85 |  98.40 |  69.53 |  87.79  |
+| en_core_sci_lg | 89.75| 87.79  |  98.49  |  69.69  |  87.74  |
+| en_core_sci_scibert | 92.21| 90.65  |  98.86  |  68.01  |  92.58  |
 
 
 | model          | F1 |   Entity Types|
 |:---------------|:-----|:--------|
-| en_ner_craft_md | 78.35|GGP, SO, TAXON, CHEBI, GO, CL|
-| en_ner_jnlpba_md | 70.89| DNA, CELL_TYPE, CELL_LINE, RNA, PROTEIN |
-| en_ner_bc5cdr_md | 84.70| DISEASE, CHEMICAL|
-| en_ner_bionlp13cg_md | 76.79| AMINO_ACID, ANATOMICAL_SYSTEM, CANCER, CELL, CELLULAR_COMPONENT, DEVELOPING_ANATOMICAL_STRUCTURE, GENE_OR_GENE_PRODUCT, IMMATERIAL_ANATOMICAL_ENTITY, MULTI-TISSUE_STRUCTURE, ORGAN, ORGANISM, ORGANISM_SUBDIVISION, ORGANISM_SUBSTANCE, PATHOLOGICAL_FORMATION, SIMPLE_CHEMICAL, TISSUE |
+| en_ner_craft_md | 76.75|GGP, SO, TAXON, CHEBI, GO, CL|
+| en_ner_jnlpba_md | 72.28| DNA, CELL_TYPE, CELL_LINE, RNA, PROTEIN |
+| en_ner_bc5cdr_md | 84.53| DISEASE, CHEMICAL|
+| en_ner_bionlp13cg_md | 76.57| AMINO_ACID, ANATOMICAL_SYSTEM, CANCER, CELL, CELLULAR_COMPONENT, DEVELOPING_ANATOMICAL_STRUCTURE, GENE_OR_GENE_PRODUCT, IMMATERIAL_ANATOMICAL_ENTITY, MULTI-TISSUE_STRUCTURE, ORGAN, ORGANISM, ORGANISM_SUBDIVISION, ORGANISM_SUBSTANCE, PATHOLOGICAL_FORMATION, SIMPLE_CHEMICAL, TISSUE |
 
 
 ### Example Usage
