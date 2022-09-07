@@ -2,8 +2,8 @@ title: "scispaCy pipeline"
 description: "All the steps needed in the scispaCy pipeline"
 
 vars:
-  version_string: "0.5.0"
-  gpu_id: "0"
+  version_string: "0.5.1"
+  gpu_id: 0
   freqs_loc_s3: "s3://ai2-s2-scispacy/data/gorc_subset.freqs"
   freqs_loc_local: "assets/gorc_subset.freqs"
   vectors_loc_s3: "s3://ai2-s2-scispacy/data/pubmed_with_header.txt.gz"
@@ -131,25 +131,31 @@ workflows:
     - parser-tagger-train-sm
     - parser-tagger-train-md
     - parser-tagger-train-lg
+    - parser-tagger-train-scibert
     - ner-train-sm
     - ner-train-md
     - ner-train-lg
     - ner-train-specialized
+    - ner-train-scibert
     - evaluate-parser-tagger-sm
     - evaluate-parser-tagger-md
     - evaluate-parser-tagger-lg
+    - evaluate-parser-tagger-scibert
     - evaluate-ner-sm
     - evaluate-ner-md
     - evaluate-ner-lg
     - evaluate-specialized-ner
+    - evaluate-ner-scibert
     - package-sm
     - package-md
     - package-lg
     - package-ner
+    - package-scibert
     - evaluate-package-sm
     - evaluate-package-md
     - evaluate-package-lg
     - evaluate-package-ner
+    - evaluate-package-scibert
 
 commands:
   - name: download
@@ -260,7 +266,7 @@ commands:
   - name: parser-tagger-train-sm
     help: "Train the base models"
     script:
-      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_sm_loc} --code ${vars.code_loc} --paths.vocab_path ${vars.vocab_sm_loc} --vars.include_static_vectors False"
+      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_sm_loc} --code ${vars.code_loc} --paths.vocab_path ${vars.vocab_sm_loc} --vars.include_static_vectors False --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.parser_tagger_config_loc}"
       - "${vars.genia_train_spacy_loc}"
@@ -273,7 +279,7 @@ commands:
   - name: parser-tagger-train-md
     help: "Train the base models"
     script:
-      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True"
+      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.parser_tagger_config_loc}"
       - "${vars.genia_train_spacy_loc}"
@@ -287,7 +293,7 @@ commands:
   - name: parser-tagger-train-lg
     help: "Train the base models"
     script:
-      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_lg_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_lg_loc} --paths.vocab_path ${vars.vocab_lg_loc} --vars.include_static_vectors True"
+      - "spacy train ${vars.parser_tagger_config_loc} --output ${vars.parser_tagger_lg_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_lg_loc} --paths.vocab_path ${vars.vocab_lg_loc} --vars.include_static_vectors True --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.parser_tagger_config_loc}"
       - "${vars.genia_train_spacy_loc}"
@@ -303,7 +309,7 @@ commands:
     script:
       - "spacy train ${vars.parser_tagger_scibert_config_loc} --output ${vars.parser_tagger_scibert_loc} --code ${vars.code_loc} --paths.vocab_path ${vars.vocab_lg_loc} --gpu-id ${vars.gpu_id}"
     deps:
-      - "${vars.parser_tagger_config_loc}"
+      - "${vars.parser_tagger_scibert_config_loc}"
       - "${vars.genia_train_spacy_loc}"
       - "${vars.genia_dev_spacy_loc}"
       - "${vars.genia_test_spacy_loc}"
@@ -314,7 +320,7 @@ commands:
   - name: ner-train-sm
     help: "Train the main ner"
     script:
-      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_sm_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_sm_loc}/model-best --paths.vocab_path ${vars.vocab_sm_loc} --vars.include_static_vectors False"
+      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_sm_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_sm_loc}/model-best --paths.vocab_path ${vars.vocab_sm_loc} --vars.include_static_vectors False --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.ner_config_loc}"
       - "${vars.parser_tagger_sm_loc}/model-best"
@@ -325,7 +331,7 @@ commands:
   - name: ner-train-md
     help: "Train the main ner"
     script:
-      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True"
+      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.ner_config_loc}"
       - "${vars.parser_tagger_md_loc}/model-best"
@@ -337,7 +343,7 @@ commands:
   - name: ner-train-lg
     help: "Train the main ner"
     script:
-      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_lg_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_lg_loc} --paths.parser_tagger_path ${vars.parser_tagger_lg_loc}/model-best --paths.vocab_path ${vars.vocab_lg_loc} --vars.include_static_vectors True"
+      - "spacy train ${vars.ner_config_loc} --output ${vars.ner_lg_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_lg_loc} --paths.parser_tagger_path ${vars.parser_tagger_lg_loc}/model-best --paths.vocab_path ${vars.vocab_lg_loc} --vars.include_static_vectors True --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.ner_config_loc}"
       - "${vars.parser_tagger_lg_loc}/model-best"
@@ -351,7 +357,7 @@ commands:
     script:
       - "spacy train ${vars.ner_scibert_config_loc} --output ${vars.ner_scibert_loc} --code ${vars.code_loc} --paths.parser_tagger_path ${vars.parser_tagger_scibert_loc}/model-best --gpu-id ${vars.gpu_id}"
     deps:
-      - "${vars.ner_config_loc}"
+      - "${vars.ner_scibert_config_loc}"
       - "${vars.parser_tagger_scibert_loc}/model-best"
       - "${vars.corpus_pubtator_loc_local}"
     outputs:
@@ -360,10 +366,10 @@ commands:
   - name: ner-train-specialized
     help: "Train the specialized NER models"
     script:
-      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.bc5cdr_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.bc5cdr_loc_local}/train.tsv --paths.dev_path ${vars.bc5cdr_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True"
-      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.bionlp13cg_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.bionlp13cg_loc_local}/train.tsv --paths.dev_path ${vars.bionlp13cg_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True"
-      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.craft_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.craft_loc_local}/train.tsv --paths.dev_path ${vars.craft_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True"
-      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.jnlpba_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.jnlpba_loc_local}/train.tsv --paths.dev_path ${vars.jnlpba_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True"
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.bc5cdr_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.bc5cdr_loc_local}/train.tsv --paths.dev_path ${vars.bc5cdr_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True --gpu-id ${vars.gpu_id}"
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.bionlp13cg_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.bionlp13cg_loc_local}/train.tsv --paths.dev_path ${vars.bionlp13cg_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True --gpu-id ${vars.gpu_id}"
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.craft_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.craft_loc_local}/train.tsv --paths.dev_path ${vars.craft_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True --gpu-id ${vars.gpu_id}"
+      - "spacy train ${vars.specialized_ner_config_loc} --output ${vars.jnlpba_md_loc} --code ${vars.code_loc} --paths.vectors ${vars.vectors_md_loc} --paths.parser_tagger_path ${vars.parser_tagger_md_loc}/model-best --paths.train_path ${vars.jnlpba_loc_local}/train.tsv --paths.dev_path ${vars.jnlpba_loc_local}/devel.tsv --paths.vocab_path ${vars.vocab_md_loc} --vars.include_static_vectors True --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.corpus_pubtator_loc_local}"
       - "${vars.bc5cdr_loc_local}/train.tsv"
@@ -389,8 +395,8 @@ commands:
   - name: evaluate-parser-tagger-sm
     help: "Evaluate the parser and tagger"
     script:
-      - "spacy evaluate ${vars.parser_tagger_sm_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_sm_loc}/model_best_results.json"
-      - "spacy evaluate ${vars.parser_tagger_sm_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_sm_loc}/model_best_results_onto.json"
+      - "spacy evaluate ${vars.parser_tagger_sm_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_sm_loc}/model_best_results.json --gpu-id ${vars.gpu_id}"
+      - "spacy evaluate ${vars.parser_tagger_sm_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_sm_loc}/model_best_results_onto.json --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.parser_tagger_sm_loc}/model-best"
       - "${vars.genia_test_spacy_loc}"
@@ -402,8 +408,8 @@ commands:
   - name: evaluate-parser-tagger-md
     help: "Evaluate the parser and tagger"
     script:
-      - "spacy evaluate ${vars.parser_tagger_md_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_md_loc}/model_best_results.json"
-      - "spacy evaluate ${vars.parser_tagger_md_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_md_loc}/model_best_results_onto.json"
+      - "spacy evaluate ${vars.parser_tagger_md_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_md_loc}/model_best_results.json --gpu-id ${vars.gpu_id}"
+      - "spacy evaluate ${vars.parser_tagger_md_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_md_loc}/model_best_results_onto.json --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.parser_tagger_md_loc}/model-best"
       - "${vars.genia_test_spacy_loc}"
@@ -415,8 +421,8 @@ commands:
   - name: evaluate-parser-tagger-lg
     help: "Evaluate the parser and tagger"
     script:
-      - "spacy evaluate ${vars.parser_tagger_lg_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_lg_loc}/model_best_results.json"
-      - "spacy evaluate ${vars.parser_tagger_lg_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_lg_loc}/model_best_results_onto.json"
+      - "spacy evaluate ${vars.parser_tagger_lg_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_lg_loc}/model_best_results.json --gpu-id ${vars.gpu_id}"
+      - "spacy evaluate ${vars.parser_tagger_lg_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_lg_loc}/model_best_results_onto.json --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.parser_tagger_lg_loc}/model-best"
       - "${vars.genia_test_spacy_loc}"
@@ -428,8 +434,8 @@ commands:
   - name: evaluate-parser-tagger-scibert
     help: "Evaluate the parser and tagger scibert model"
     script:
-      - "spacy evaluate ${vars.parser_tagger_scibert_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_scibert_loc}/model_best_results.json --gpu-id ${vars.gpu_id}"
-      - "spacy evaluate ${vars.parser_tagger_scibert_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_scibert_loc}/model_best_results_onto.json --gpu-id ${vars.gpu_id}"
+      - "spacy evaluate ${vars.parser_tagger_scibert_loc}/model-best ${vars.genia_test_spacy_loc} --output ${vars.parser_tagger_scibert_loc}/model_best_results.json --gpu-id ${vars.gpu_id} --gpu-id ${vars.gpu_id}"
+      - "spacy evaluate ${vars.parser_tagger_scibert_loc}/model-best ${vars.ontonotes_test_spacy_loc} --output ${vars.parser_tagger_scibert_loc}/model_best_results_onto.json --gpu-id ${vars.gpu_id} --gpu-id ${vars.gpu_id}"
     deps:
       - "${vars.parser_tagger_scibert_loc}/model-best"
       - "${vars.genia_test_spacy_loc}"
@@ -441,7 +447,7 @@ commands:
   - name: evaluate-ner-sm
     help: "Evaluate NER"
     script:
-      - "python scripts/evaluate_ner.py --model_path ${vars.ner_sm_loc}/model-best --dataset medmentions-test --output ${vars.ner_sm_loc}/model_best_results.json --med_mentions_folder_path assets/"
+      - "python scripts/evaluate_ner.py --model_path ${vars.ner_sm_loc}/model-best --dataset medmentions-test --output ${vars.ner_sm_loc}/model_best_results.json --med_mentions_folder_path assets/ --gpu_id ${vars.gpu_id}"
     deps:
       - "${vars.ner_sm_loc}"
       - "${vars.corpus_pubtator_loc_local}"
@@ -451,7 +457,7 @@ commands:
   - name: evaluate-ner-md
     help: "Evaluate NER"
     script:
-      - "python scripts/evaluate_ner.py --model_path ${vars.ner_md_loc}/model-best --dataset medmentions-test --output ${vars.ner_md_loc}/model_best_results.json --med_mentions_folder_path assets/"
+      - "python scripts/evaluate_ner.py --model_path ${vars.ner_md_loc}/model-best --dataset medmentions-test --output ${vars.ner_md_loc}/model_best_results.json --med_mentions_folder_path assets/ --gpu_id ${vars.gpu_id}"
     deps:
       - "${vars.ner_md_loc}"
       - "${vars.corpus_pubtator_loc_local}"
@@ -461,7 +467,7 @@ commands:
   - name: evaluate-ner-lg
     help: "Evaluate NER"
     script:
-      - "python scripts/evaluate_ner.py --model_path ${vars.ner_lg_loc}/model-best --dataset medmentions-test --output ${vars.ner_lg_loc}/model_best_results.json --med_mentions_folder_path assets/"
+      - "python scripts/evaluate_ner.py --model_path ${vars.ner_lg_loc}/model-best --dataset medmentions-test --output ${vars.ner_lg_loc}/model_best_results.json --med_mentions_folder_path assets/ --gpu_id ${vars.gpu_id}"
     deps:
       - "${vars.ner_lg_loc}"
       - "${vars.corpus_pubtator_loc_local}"
@@ -481,10 +487,10 @@ commands:
   - name: evaluate-specialized-ner
     help: "Evaluate specialize NER"
     script:
-      - "python scripts/evaluate_ner.py --model_path ${vars.bc5cdr_md_loc}/model-best --dataset ${vars.bc5cdr_loc_local}/test.tsv --output ${vars.bc5cdr_md_loc}/model_best_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.bionlp13cg_md_loc}/model-best --dataset ${vars.bionlp13cg_loc_local}/test.tsv --output ${vars.bionlp13cg_md_loc}/model_best_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.craft_md_loc}/model-best --dataset ${vars.craft_loc_local}/test.tsv --output ${vars.craft_md_loc}/model_best_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.jnlpba_md_loc}/model-best --dataset ${vars.jnlpba_loc_local}/test.tsv --output ${vars.jnlpba_md_loc}/model_best_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.bc5cdr_md_loc}/model-best --dataset ${vars.bc5cdr_loc_local}/test.tsv --output ${vars.bc5cdr_md_loc}/model_best_results.json --gpu_id ${vars.gpu_id}"
+      - "python scripts/evaluate_ner.py --model_path ${vars.bionlp13cg_md_loc}/model-best --dataset ${vars.bionlp13cg_loc_local}/test.tsv --output ${vars.bionlp13cg_md_loc}/model_best_results.json --gpu_id ${vars.gpu_id}"
+      - "python scripts/evaluate_ner.py --model_path ${vars.craft_md_loc}/model-best --dataset ${vars.craft_loc_local}/test.tsv --output ${vars.craft_md_loc}/model_best_results.json --gpu_id ${vars.gpu_id}"
+      - "python scripts/evaluate_ner.py --model_path ${vars.jnlpba_md_loc}/model-best --dataset ${vars.jnlpba_loc_local}/test.tsv --output ${vars.jnlpba_md_loc}/model_best_results.json --gpu_id ${vars.gpu_id}"
     deps:
       - "${vars.bc5cdr_md_loc}/model-best"
       - "${vars.bionlp13cg_md_loc}/model-best"
@@ -512,9 +518,9 @@ commands:
   - name: evaluate-package-sm
     help: "Evaluate the packaged models"
     script:
-      - "spacy evaluate ${vars.package_sm_loc} ${vars.genia_test_spacy_loc} --output packages/sm_genia_results.json"
-      - "spacy evaluate ${vars.package_sm_loc} ${vars.ontonotes_test_spacy_loc} --output packages/sm_onto_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.package_sm_loc} --dataset medmentions-test --output packages/sm_mm_results.json --med_mentions_folder_path assets/"
+      - "spacy evaluate ${vars.package_sm_loc} ${vars.genia_test_spacy_loc} --output packages/sm_genia_results.json --gpu-id ${vars.gpu_id}"
+      - "spacy evaluate ${vars.package_sm_loc} ${vars.ontonotes_test_spacy_loc} --output packages/sm_onto_results.json --gpu-id ${vars.gpu_id}"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_sm_loc} --dataset medmentions-test --output packages/sm_mm_results.json --med_mentions_folder_path assets/ --gpu_id ${vars.gpu_id}"
     deps:
       - "${vars.package_sm_loc}"
     outputs:
@@ -553,9 +559,9 @@ commands:
   - name: evaluate-package-md
     help: "Evaluate the packaged models"
     script:
-      - "spacy evaluate ${vars.package_md_loc} ${vars.genia_test_spacy_loc} --output packages/md_genia_results.json"
-      - "spacy evaluate ${vars.package_md_loc} ${vars.ontonotes_test_spacy_loc} --output packages/md_onto_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.package_md_loc} --dataset medmentions-test --output packages/md_mm_results.json --med_mentions_folder_path assets/"
+      - "spacy evaluate ${vars.package_md_loc} ${vars.genia_test_spacy_loc} --output packages/md_genia_results.json --gpu-id ${vars.gpu_id}"
+      - "spacy evaluate ${vars.package_md_loc} ${vars.ontonotes_test_spacy_loc} --output packages/md_onto_results.json --gpu-id ${vars.gpu_id}"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_md_loc} --dataset medmentions-test --output packages/md_mm_results.json --med_mentions_folder_path assets/ --gpu_id ${vars.gpu_id}"
     deps:
       - "${vars.package_md_loc}"
     outputs:
@@ -566,9 +572,9 @@ commands:
   - name: evaluate-package-lg
     help: "Evaluate the packaged models"
     script:
-      - "spacy evaluate ${vars.package_lg_loc} ${vars.genia_test_spacy_loc} --output packages/lg_genia_results.json"
-      - "spacy evaluate ${vars.package_lg_loc} ${vars.ontonotes_test_spacy_loc} --output packages/lg_onto_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.package_lg_loc} --dataset medmentions-test --output packages/lg_mm_results.json --med_mentions_folder_path assets/"
+      - "spacy evaluate ${vars.package_lg_loc} ${vars.genia_test_spacy_loc} --output packages/lg_genia_results.json --gpu-id ${vars.gpu_id}"
+      - "spacy evaluate ${vars.package_lg_loc} ${vars.ontonotes_test_spacy_loc} --output packages/lg_onto_results.json --gpu-id ${vars.gpu_id}"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_lg_loc} --dataset medmentions-test --output packages/lg_mm_results.json --med_mentions_folder_path assets/ --gpu_id ${vars.gpu_id}"
     deps:
       - "${vars.package_lg_loc}"
     outputs:
@@ -580,7 +586,7 @@ commands:
     help: "Evaluate the packaged scibert model"
     script:
       - "spacy evaluate ${vars.package_scibert_loc} ${vars.genia_test_spacy_loc} --output packages/scibert_genia_results.json --gpu-id ${vars.gpu_id}"
-      - "spacy evaluate ${vars.package_scibert_loc} ${vars.ontonotes_test_spacy_loc} --output packages/scibert_onto_results.json --gpu-id ${var.gpu_id}"
+      - "spacy evaluate ${vars.package_scibert_loc} ${vars.ontonotes_test_spacy_loc} --output packages/scibert_onto_results.json --gpu-id ${vars.gpu_id}"
       - "python scripts/evaluate_ner.py --model_path ${vars.package_scibert_loc} --dataset medmentions-test --output packages/scibert_mm_results.json --med_mentions_folder_path assets/ --gpu_id ${vars.gpu_id}"
     deps:
       - "${vars.package_scibert_loc}"
@@ -588,8 +594,6 @@ commands:
       - "packages/scibert_genia_results.json"
       - "packages/scibert_onto_results.json"
       - "packages/scibert_mm_results.json"
- 
-      
 
   - name: package-ner
     help: "Package the models"
@@ -612,10 +616,10 @@ commands:
   - name: evaluate-package-ner
     help: "Evaluate the packaged models"
     script:
-      - "python scripts/evaluate_ner.py --model_path ${vars.package_bc5cdr_loc} --dataset ${vars.bc5cdr_loc_local}/test.tsv --output packages/bc5cdr_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.package_bionlp13cg_loc} --dataset ${vars.bionlp13cg_loc_local}/test.tsv --output packages/bionlp13cg_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.package_craft_loc} --dataset ${vars.craft_loc_local}/test.tsv --output packages/craft_results.json"
-      - "python scripts/evaluate_ner.py --model_path ${vars.package_jnlpba_loc} --dataset ${vars.jnlpba_loc_local}/test.tsv --output packages/jnlpba_results.json"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_bc5cdr_loc} --dataset ${vars.bc5cdr_loc_local}/test.tsv --output packages/bc5cdr_results.json --gpu_id ${vars.gpu_id}"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_bionlp13cg_loc} --dataset ${vars.bionlp13cg_loc_local}/test.tsv --output packages/bionlp13cg_results.json --gpu_id ${vars.gpu_id}"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_craft_loc} --dataset ${vars.craft_loc_local}/test.tsv --output packages/craft_results.json --gpu_id ${vars.gpu_id}"
+      - "python scripts/evaluate_ner.py --model_path ${vars.package_jnlpba_loc} --dataset ${vars.jnlpba_loc_local}/test.tsv --output packages/jnlpba_results.json --gpu_id ${vars.gpu_id}"
     deps:
       - "${vars.package_bc5cdr_loc}"
       - "${vars.package_bionlp13cg_loc}"

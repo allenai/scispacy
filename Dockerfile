@@ -18,7 +18,7 @@ WORKDIR /work
 COPY requirements.in .
 
 RUN pip install -r requirements.in
-RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.0/en_core_sci_sm-0.5.0.tar.gz
+RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_sm-0.5.1.tar.gz
 RUN python -m spacy download en_core_web_sm
 RUN python -m spacy download en_core_web_md
 
