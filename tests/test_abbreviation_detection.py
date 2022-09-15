@@ -125,7 +125,6 @@ class TestAbbreviationDetector(unittest.TestCase):
     def test_issue_161(self):
         # test some troublesome cases in the abbreviation detector
         text = "H2)]+(14)s.t. (1), (4).Similarly"
-        print(f"Text: {text}")
         doc = self.nlp(text)
         doc2 = self.detector(doc)
         assert len(doc2._.abbreviations) == 0
@@ -184,6 +183,12 @@ class TestAbbreviationDetector(unittest.TestCase):
         doc2 = self.detector(doc)
         assert len(doc2._.abbreviations) == 1
         assert doc2._.abbreviations[0]._.long_form.text == "A     Lite BERT"
+
+    def test_issue_441(self):
+        text = "The thyroid hormone receptor (TR) inhibiting retinoic malate receptor (RMR) isoforms mediate ligand-independent repression."
+        doc = self.nlp(text)
+        doc2 = self.detector(doc)
+        assert len(doc2._.abbreviations) == 2
 
     @pytest.mark.xfail
     def test_difficult_cases(self):

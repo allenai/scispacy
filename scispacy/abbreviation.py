@@ -1,3 +1,4 @@
+from inspect import stack
 from typing import Tuple, List, Optional, Set, Dict
 from collections import defaultdict
 from spacy.tokens import Span, Doc
@@ -82,6 +83,20 @@ def find_abbreviation(
     return short_form_candidate, long_form_candidate[starting_index:]
 
 
+def span_contains_unbalanced_parentheses(span: Span) -> bool:
+    stack_counter = 0
+    for token in span:
+        if token.text == "(":
+            stack_counter += 1
+        elif token.text == ")":
+            if stack_counter > 0:
+                stack_counter -= 1
+            else:
+                return True
+
+    return stack_counter != 0
+
+
 def filter_matches(
     matcher_output: List[Tuple[int, int, int]], doc: Doc
 ) -> List[Tuple[Span, Span]]:
@@ -100,6 +115,10 @@ def filter_matches(
             # Take one word before.
             short_form_candidate = doc[start - 2 : start - 1]
             long_form_candidate = doc[start:end]
+
+            # make sure any parentheses inside long form are balanced
+            if span_contains_unbalanced_parentheses(long_form_candidate):
+                continue
         else:
             # Normal case.
             # Short form is inside the parens.
