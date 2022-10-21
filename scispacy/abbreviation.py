@@ -120,7 +120,7 @@ def filter_matches(
 
 def short_form_filter(span: Span) -> bool:
     # All words are between length 2 and 10
-    if not all([2 <= len(x) < 10 for x in span]):
+    if not all([2 <= len(x) <= 10 for x in span]):
         return False
 
     # At least 50% of the short form should be alpha
