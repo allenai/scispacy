@@ -31,15 +31,15 @@ Additionally, scispacy uses modern features of Python and as such is only availa
 #### Setting up a virtual environment
 
 [Conda](https://conda.io/) can be used set up a virtual environment with the
-version of Python required for scispaCy.  If you already have a Python 3.6 or 3.7
+version of Python required for scispaCy.  If you already have a Python
 environment you want to use, you can skip to the 'installing via pip' section.
 
 1.  [Follow the installation instructions for Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html?highlight=conda#regular-installation).
 
-2.  Create a Conda environment called "scispacy" with Python 3.6:
+2.  Create a Conda environment called "scispacy" with python 3.9 (any version >= 3.6 should work):
 
     ```bash
-    conda create -n scispacy python=3.6
+    conda create -n scispacy python=3.9
     ```
 
 3.  Activate the Conda environment. You will need to activate the Conda environment in each terminal in which you want to use scispaCy.
