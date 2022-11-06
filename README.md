@@ -36,7 +36,7 @@ environment you want to use, you can skip to the 'installing via pip' section.
 
 1.  [Follow the installation instructions for Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html?highlight=conda#regular-installation).
 
-2.  Create a Conda environment called "scispacy" with python 3.9 (any version >= 3.6 should work):
+2.  Create a Conda environment called "scispacy" with Python 3.9 (any version >= 3.6 should work):
 
     ```bash
     conda create -n scispacy python=3.9
