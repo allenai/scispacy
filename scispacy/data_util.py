@@ -164,7 +164,26 @@ def read_full_med_mentions(
             f"extracting dataset directory {resolved_directory_path} to temp dir {tempdir}"
         )
         with tarfile.open(resolved_directory_path, "r:gz") as archive:
-            archive.extractall(tempdir)
+            def is_within_directory(directory, target):
+                
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+            
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+                
+                return prefix == abs_directory
+            
+            def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+            
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+            
+                tar.extractall(path, members, numeric_owner=numeric_owner) 
+                
+            
+            safe_extract(archive, tempdir)
         # Postpone cleanup until exit in case the unarchived
         # contents are needed outside this function.
         atexit.register(_cleanup_dir, tempdir)
