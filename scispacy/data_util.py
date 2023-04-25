@@ -151,6 +151,7 @@ def read_full_med_mentions(
     label_mapping: Dict[str, str] = None,
     span_only: bool = False,
     spacy_format: bool = True,
+    use_umls_ids: bool = False,
 ):
     def _cleanup_dir(dir_path: str):
         if os.path.exists(dir_path):
@@ -209,7 +210,12 @@ def read_full_med_mentions(
 
     for example in examples:
         spacy_format_entities = [
-            (x.start, x.end, label_function(x.mention_type)) for x in example.entities
+            (
+                x.start,
+                x.end,
+                label_function(x.mention_type) if not use_umls_ids else x.umls_id,
+            )
+            for x in example.entities
         ]
         spacy_format_entities = remove_overlapping_entities(
             sorted(spacy_format_entities, key=lambda x: x[0])

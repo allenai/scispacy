@@ -36,7 +36,7 @@ class Entity(NamedTuple):
         return rep
 
 
-DEFAULT_UMLS_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/kbs/2020-10-09/umls_2020_aa_cat0129.jsonl"  # noqa
+DEFAULT_UMLS_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/kbs/2023-04-23/umls_2022_ab_cat0129.jsonl"  # noqa
 DEFAULT_UMLS_TYPES_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_semantic_type_tree.tsv"
 
 
@@ -96,7 +96,7 @@ class UmlsKnowledgeBase(KnowledgeBase):
 class Mesh(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2020-10-09/mesh_2020.jsonl",  # noqa
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2023-04-23/umls_mesh_2022.jsonl",  # noqa
     ):
         super().__init__(file_path)
 
@@ -104,7 +104,7 @@ class Mesh(KnowledgeBase):
 class GeneOntology(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2020-10-09/umls_2020_go.jsonl",  # noqa
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2023-04-23/umls_go_2022.jsonl",  # noqa
     ):
         super().__init__(file_path)
 
@@ -112,7 +112,7 @@ class GeneOntology(KnowledgeBase):
 class HumanPhenotypeOntology(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2020-10-09/umls_2020_hpo.jsonl",  # noqa
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2023-04-23/umls_hpo_2022.jsonl",  # noqa
     ):
         super().__init__(file_path)
 
@@ -120,6 +120,6 @@ class HumanPhenotypeOntology(KnowledgeBase):
 class RxNorm(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2020-10-09/umls_2020_rxnorm.jsonl",  # noqa
+        file_path: str = "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2023-04-23/umls_rxnorm_2022.jsonl",  # noqa
     ):
         super().__init__(file_path)
