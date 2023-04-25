@@ -1,4 +1,3 @@
-from inspect import stack
 from typing import Tuple, List, Optional, Set, Dict
 from collections import defaultdict
 from spacy.tokens import Span, Doc
