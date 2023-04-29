@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, NamedTuple, Type
+from typing import Optional, List, Dict, Tuple, NamedTuple, Type
 import json
 import datetime
 from collections import defaultdict
@@ -41,38 +41,38 @@ class LinkerPaths(NamedTuple):
 
 
 UmlsLinkerPaths = LinkerPaths(
-    ann_index="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2020-10-09/umls/nmslib_index.bin",  # noqa
-    tfidf_vectorizer="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2020-10-09/umls/tfidf_vectorizer.joblib",  # noqa
-    tfidf_vectors="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2020-10-09/umls/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2020-10-09/umls/concept_aliases.json",  # noqa
+    ann_index="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2023-04-23/umls/nmslib_index.bin",  # noqa
+    tfidf_vectorizer="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2023-04-23/umls/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2023-04-23/umls/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/linkers/2023-04-23/umls/concept_aliases.json",  # noqa
 )
 
 MeshLinkerPaths = LinkerPaths(
-    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/nmslib_index.bin",  # noqa
-    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/tfidf_vectorizer.joblib",  # noqa
-    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/mesh/concept_aliases.json",  # noqa
+    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/mesh/nmslib_index.bin",  # noqa
+    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/mesh/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/mesh/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/mesh/concept_aliases.json",  # noqa
 )
 
 GeneOntologyLinkerPaths = LinkerPaths(
-    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/go/nmslib_index.bin",  # noqa
-    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/go/tfidf_vectorizer.joblib",  # noqa
-    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/go/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/go/concept_aliases.json",  # noqa
+    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/go/nmslib_index.bin",  # noqa
+    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/go/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/go/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/go/concept_aliases.json",  # noqa
 )
 
 HumanPhenotypeOntologyLinkerPaths = LinkerPaths(
-    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/hpo/nmslib_index.bin",  # noqa
-    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/hpo/tfidf_vectorizer.joblib",  # noqa
-    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/hpo/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/hpo/concept_aliases.json",  # noqa
+    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/hpo/nmslib_index.bin",  # noqa
+    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/hpo/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/hpo/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/hpo/concept_aliases.json",  # noqa
 )
 
 RxNormLinkerPaths = LinkerPaths(
-    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/rxnorm/nmslib_index.bin",  # noqa
-    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/rxnorm/tfidf_vectorizer.joblib",  # noqa
-    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/rxnorm/tfidf_vectors_sparse.npz",  # noqa
-    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2020-10-09/rxnorm/concept_aliases.json",  # noqa
+    ann_index="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/rxnorm/nmslib_index.bin",  # noqa
+    tfidf_vectorizer="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/rxnorm/tfidf_vectorizer.joblib",  # noqa
+    tfidf_vectors="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/rxnorm/tfidf_vectors_sparse.npz",  # noqa
+    concept_aliases_list="https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/linkers/2023-04-23/rxnorm/concept_aliases.json",  # noqa
 )
 
 
@@ -196,15 +196,14 @@ class CandidateGenerator:
 
     def __init__(
         self,
-        ann_index: FloatIndex = None,
-        tfidf_vectorizer: TfidfVectorizer = None,
-        ann_concept_aliases_list: List[str] = None,
-        kb: KnowledgeBase = None,
+        ann_index: Optional[FloatIndex] = None,
+        tfidf_vectorizer: Optional[TfidfVectorizer] = None,
+        ann_concept_aliases_list: Optional[List[str]] = None,
+        kb: Optional[KnowledgeBase] = None,
         verbose: bool = False,
         ef_search: int = 200,
-        name: str = None,
+        name: Optional[str] = None,
     ) -> None:
-
         if name is not None and any(
             [ann_index, tfidf_vectorizer, ann_concept_aliases_list, kb]
         ):
@@ -363,7 +362,7 @@ class CandidateGenerator:
 
 
 def create_tfidf_ann_index(
-    out_path: str, kb: KnowledgeBase = None
+    out_path: str, kb: Optional[KnowledgeBase] = None
 ) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
     """
     Build tfidf vectorizer and ann index.

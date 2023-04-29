@@ -36,7 +36,6 @@ class HyponymDetector:
     def __init__(
         self, nlp: Language, name: str = "hyponym_detector", extended: bool = False
     ):
-
         self.nlp = nlp
 
         self.patterns = BASE_PATTERNS
@@ -91,7 +90,6 @@ class HyponymDetector:
         return doc[start:end]
 
     def find_noun_compound_head(self, token: Token):
-
         while token.head.pos_ in {"PROPN", "NOUN", "PRON"} and token.dep_ == "compound":
             token = token.head
         return token
@@ -135,7 +133,6 @@ class HyponymDetector:
             )
 
             for token in hyponym.conjuncts:
-
                 token_extended = self.expand_to_noun_compound(token, doc)
                 if token != hypernym and token is not None:
                     doc._.hearst_patterns.append(
