@@ -208,7 +208,7 @@ class AbbreviationDetector:
         filtered = filter_matches(matches_no_brackets, doc)
         occurences = self.find_matches_for(filtered, doc)
 
-        for (long_form, short_forms) in occurences:
+        for long_form, short_forms in occurences:
             for short in short_forms:
                 short._.long_form = long_form
                 doc._.abbreviations.append(short)
@@ -227,7 +227,7 @@ class AbbreviationDetector:
         all_occurences: Dict[Span, Set[Span]] = defaultdict(set)
         already_seen_long: Set[str] = set()
         already_seen_short: Set[str] = set()
-        for (long_candidate, short_candidate) in filtered:
+        for long_candidate, short_candidate in filtered:
             short, long = find_abbreviation(long_candidate, short_candidate)
             # We need the long and short form definitions to be unique, because we need
             # to store them so we can look them up later. This is a bit of a

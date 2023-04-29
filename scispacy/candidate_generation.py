@@ -204,7 +204,6 @@ class CandidateGenerator:
         ef_search: int = 200,
         name: str = None,
     ) -> None:
-
         if name is not None and any(
             [ann_index, tfidf_vectorizer, ann_concept_aliases_list, kb]
         ):

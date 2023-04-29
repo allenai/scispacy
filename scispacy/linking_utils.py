@@ -10,7 +10,6 @@ from scispacy.umls_semantic_type_tree import (
 
 
 class Entity(NamedTuple):
-
     concept_id: str
     canonical_name: str
     aliases: List[str]
@@ -18,7 +17,6 @@ class Entity(NamedTuple):
     definition: Optional[str] = None
 
     def __repr__(self):
-
         rep = ""
         num_aliases = len(self.aliases)
         rep = rep + f"CUI: {self.concept_id}, Name: {self.canonical_name}\n"
@@ -85,7 +83,6 @@ class UmlsKnowledgeBase(KnowledgeBase):
         file_path: str = DEFAULT_UMLS_PATH,
         types_file_path: str = DEFAULT_UMLS_TYPES_PATH,
     ):
-
         super().__init__(file_path)
 
         self.semantic_type_tree: UmlsSemanticTypeTree = construct_umls_tree_from_tsv(
