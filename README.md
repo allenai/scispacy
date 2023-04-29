@@ -7,7 +7,7 @@ In particular, there is a custom tokenizer that adds tokenization rules on top o
 rule-based tokenizer, a POS tagger and syntactic parser trained on biomedical data and
 an entity span detection model. Separately, there are also NER models for more specific tasks.
 
-**Just looking to test out the models on your data? Check out our [demo](https://scispacy.apps.allenai.org)**.
+**Just looking to test out the models on your data? Check out our [demo](https://scispacy.apps.allenai.org)** (Note: this demo is running an older version of scispaCy and may produce different results than the latest version).
 
 
 ## Installation
