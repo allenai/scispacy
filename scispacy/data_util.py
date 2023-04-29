@@ -1,4 +1,4 @@
-from typing import NamedTuple, List, Iterator, Dict, Tuple
+from typing import Optional, NamedTuple, List, Iterator, Dict, Tuple
 import tarfile
 import atexit
 import os
@@ -148,7 +148,7 @@ def remove_overlapping_entities(
 
 def read_full_med_mentions(
     directory_path: str,
-    label_mapping: Dict[str, str] = None,
+    label_mapping: Optional[Dict[str, str]] = None,
     span_only: bool = False,
     spacy_format: bool = True,
     use_umls_ids: bool = False,

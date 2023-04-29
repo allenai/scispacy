@@ -52,7 +52,7 @@ class KnowledgeBase:
 
     def __init__(
         self,
-        file_path: str = None,
+        file_path: Optional[str] = None,
     ):
         if file_path is None:
             raise ValueError(

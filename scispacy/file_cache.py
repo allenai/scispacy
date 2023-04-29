@@ -8,7 +8,7 @@ import tempfile
 import json
 from urllib.parse import urlparse
 from pathlib import Path
-from typing import Tuple, Union, IO
+from typing import Optional, Tuple, Union, IO
 from hashlib import sha256
 
 import requests
@@ -17,7 +17,7 @@ CACHE_ROOT = Path(os.getenv("SCISPACY_CACHE", str(Path.home() / ".scispacy")))
 DATASET_CACHE = str(CACHE_ROOT / "datasets")
 
 
-def cached_path(url_or_filename: Union[str, Path], cache_dir: str = None) -> str:
+def cached_path(url_or_filename: Union[str, Path], cache_dir: Optional[str] = None) -> str:
     """
     Given something that might be a URL (or might be a local path),
     determine which. If it's a URL, download the file and cache it, and
@@ -47,7 +47,7 @@ def cached_path(url_or_filename: Union[str, Path], cache_dir: str = None) -> str
         )
 
 
-def url_to_filename(url: str, etag: str = None) -> str:
+def url_to_filename(url: str, etag: Optional[str] = None) -> str:
     """
     Convert `url` into a hashed filename in a repeatable way.
     If `etag` is specified, append its hash to the url's, delimited
@@ -68,7 +68,7 @@ def url_to_filename(url: str, etag: str = None) -> str:
     return filename
 
 
-def filename_to_url(filename: str, cache_dir: str = None) -> Tuple[str, str]:
+def filename_to_url(filename: str, cache_dir: Optional[str] = None) -> Tuple[str, str]:
     """
     Return the url and etag (which may be ``None``) stored for `filename`.
     Raise ``FileNotFoundError`` if `filename` or its stored metadata do not exist.
@@ -99,7 +99,7 @@ def http_get(url: str, temp_file: IO) -> None:
             temp_file.write(chunk)
 
 
-def get_from_cache(url: str, cache_dir: str = None) -> str:
+def get_from_cache(url: str, cache_dir: Optional[str] = None) -> str:
     """
     Given a URL, look for the corresponding dataset in the local cache.
     If it's not there, download it. Then return the path to the cached file.

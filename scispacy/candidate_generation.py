@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, NamedTuple, Type
+from typing import Optional, List, Dict, Tuple, NamedTuple, Type
 import json
 import datetime
 from collections import defaultdict
@@ -196,13 +196,13 @@ class CandidateGenerator:
 
     def __init__(
         self,
-        ann_index: FloatIndex = None,
-        tfidf_vectorizer: TfidfVectorizer = None,
-        ann_concept_aliases_list: List[str] = None,
-        kb: KnowledgeBase = None,
+        ann_index: Optional[FloatIndex] = None,
+        tfidf_vectorizer: Optional[TfidfVectorizer] = None,
+        ann_concept_aliases_list: Optional[List[str]] = None,
+        kb: Optional[KnowledgeBase] = None,
         verbose: bool = False,
         ef_search: int = 200,
-        name: str = None,
+        name: Optional[str] = None,
     ) -> None:
         if name is not None and any(
             [ann_index, tfidf_vectorizer, ann_concept_aliases_list, kb]
@@ -362,7 +362,7 @@ class CandidateGenerator:
 
 
 def create_tfidf_ann_index(
-    out_path: str, kb: KnowledgeBase = None
+    out_path: str, kb: Optional[KnowledgeBase] = None
 ) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
     """
     Build tfidf vectorizer and ann index.
