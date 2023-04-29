@@ -17,7 +17,9 @@ CACHE_ROOT = Path(os.getenv("SCISPACY_CACHE", str(Path.home() / ".scispacy")))
 DATASET_CACHE = str(CACHE_ROOT / "datasets")
 
 
-def cached_path(url_or_filename: Union[str, Path], cache_dir: Optional[str] = None) -> str:
+def cached_path(
+    url_or_filename: Union[str, Path], cache_dir: Optional[str] = None
+) -> str:
     """
     Given something that might be a URL (or might be a local path),
     determine which. If it's a URL, download the file and cache it, and

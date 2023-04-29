@@ -37,7 +37,9 @@ def read_umls_file_headers(meta_path: str, filename: str) -> List[str]:
     return None
 
 
-def read_umls_concepts(meta_path: str, concept_details: Dict, source: Optional[str] = None):
+def read_umls_concepts(
+    meta_path: str, concept_details: Dict, source: Optional[str] = None
+):
     """
     Read the concepts file MRCONSO.RRF from a UMLS release and store it in
     concept_details dictionary. Each concept is represented with
