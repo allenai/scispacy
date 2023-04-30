@@ -18,6 +18,8 @@ flake8
 black
 mypy
 types-requests
+types-setuptools
+types-tabulate
 
 # Required for releases.
 twine

@@ -82,6 +82,20 @@ def find_abbreviation(
     return short_form_candidate, long_form_candidate[starting_index:]
 
 
+def span_contains_unbalanced_parentheses(span: Span) -> bool:
+    stack_counter = 0
+    for token in span:
+        if token.text == "(":
+            stack_counter += 1
+        elif token.text == ")":
+            if stack_counter > 0:
+                stack_counter -= 1
+            else:
+                return True
+
+    return stack_counter != 0
+
+
 def filter_matches(
     matcher_output: List[Tuple[int, int, int]], doc: Doc
 ) -> List[Tuple[Span, Span]]:
@@ -100,6 +114,10 @@ def filter_matches(
             # Take one word before.
             short_form_candidate = doc[start - 2 : start - 1]
             long_form_candidate = doc[start:end]
+
+            # make sure any parentheses inside long form are balanced
+            if span_contains_unbalanced_parentheses(long_form_candidate):
+                continue
         else:
             # Normal case.
             # Short form is inside the parens.
@@ -190,7 +208,7 @@ class AbbreviationDetector:
         filtered = filter_matches(matches_no_brackets, doc)
         occurences = self.find_matches_for(filtered, doc)
 
-        for (long_form, short_forms) in occurences:
+        for long_form, short_forms in occurences:
             for short in short_forms:
                 short._.long_form = long_form
                 doc._.abbreviations.append(short)
@@ -209,7 +227,7 @@ class AbbreviationDetector:
         all_occurences: Dict[Span, Set[Span]] = defaultdict(set)
         already_seen_long: Set[str] = set()
         already_seen_short: Set[str] = set()
-        for (long_candidate, short_candidate) in filtered:
+        for long_candidate, short_candidate in filtered:
             short, long = find_abbreviation(long_candidate, short_candidate)
             # We need the long and short form definitions to be unique, because we need
             # to store them so we can look them up later. This is a bit of a

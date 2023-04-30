@@ -5,7 +5,6 @@ from scispacy.file_cache import cached_path
 
 
 class SemanticTypeNode(NamedTuple):
-
     type_id: str
     full_name: str
     children: List[Any]  # Mypy does not support nested types yet :(
@@ -81,7 +80,6 @@ class UmlsSemanticTypeTree:
 
 
 def construct_umls_tree_from_tsv(filepath: str) -> UmlsSemanticTypeTree:
-
     """
     Reads in a tsv file which is formatted as a depth first traversal of
     a hierarchy tree, where nodes are of the format:

@@ -3,6 +3,7 @@ from spacy.tokens import Span
 from spacy.language import Language
 
 from scispacy.candidate_generation import CandidateGenerator
+from typing import Optional
 
 
 @Language.factory("scispacy_linker")
@@ -68,16 +69,16 @@ class EntityLinker:
 
     def __init__(
         self,
-        nlp: Language = None,
+        nlp: Optional[Language] = None,
         name: str = "scispacy_linker",
-        candidate_generator: CandidateGenerator = None,
+        candidate_generator: Optional[CandidateGenerator] = None,
         resolve_abbreviations: bool = True,
         k: int = 30,
         threshold: float = 0.7,
         no_definition_threshold: float = 0.95,
         filter_for_definitions: bool = True,
         max_entities_per_mention: int = 5,
-        linker_name: str = None,
+        linker_name: Optional[str] = None,
     ):
         # TODO(Mark): Remove in scispacy v1.0.
         Span.set_extension("umls_ents", default=[], force=True)
