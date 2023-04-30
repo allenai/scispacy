@@ -12,10 +12,12 @@ class EntityLinker:
     A spacy pipeline component which identifies entities in text which appear
     in a knowledge base.
 
-    Currently, there are two defaults: the Unified Medical Language System (UMLS) and
-    the Medical Subject Headings (MESH) dictionary.
+    Currently, there are five defaults: the Unified Medical Language System (UMLS),
+    the Medical Subject Headings (MeSH) dictionary, the RxNorm ontology, the Gene
+    Ontology, and the Human Phenotype Ontology.
 
-    To use these configured default KBs, pass the `name` parameter, either 'umls' or 'mesh'.
+    To use these configured default KBs, pass the `name` parameter ('umls','mesh',
+    'rxnorm','go','hpo').
 
     Currently this implementation just compares string similarity, returning
     entities above a given threshold.
