@@ -107,9 +107,9 @@ if __name__ == "__main__":
         help="Whether to filter for a only a single UMLS source."
     )
     parser.add_argument(
-        '--non_supressed',
+        '--non_suppressed',
         default=True,
         help="Whether to include non supressed terms."
     )
     args = parser.parse_args()
-    main(args.meta_path, args.output_path, args.lang, args.source)
+    main(args.meta_path, args.output_path, args.lang, args.source, args.non_suppressed)
