@@ -5,7 +5,7 @@ from scispacy.candidate_generation import create_tfidf_ann_index
 from scispacy.linking_utils import KnowledgeBase
 
 
-def main(kb_path: str, output_path: str, n_grams: Tuple[int,int] = (3, 3)):
+def main(kb_path: str, output_path: str, n_grams: int):
 
     os.makedirs(output_path, exist_ok=True)
     kb = KnowledgeBase(kb_path)
@@ -25,7 +25,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '--n_grams',
         type=int,
-        help="Use n grams to build the index"
+        help="Use n grams to build the index",
+        default=(3,3),
     )
 
     args = parser.parse_args()
