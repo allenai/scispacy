@@ -7,7 +7,7 @@ import json
 import argparse
 from scispacy import umls_utils
 
-def main(meta_path: str, output_path: str, source: str = None):
+def main(meta_path: str, output_path: str, lang: str, source: str = None):
 
     concept_details = {}  # dictionary of concept_id -> {
                           #                 'concept_id': str,
@@ -18,7 +18,7 @@ def main(meta_path: str, output_path: str, source: str = None):
                           # }
 
     print('Reading concepts ... ')
-    umls_utils.read_umls_concepts(meta_path, concept_details, source)
+    umls_utils.read_umls_concepts(meta_path, concept_details, lang, source)
 
     print('Reading types ... ')
     umls_utils.read_umls_types(meta_path, concept_details)
@@ -96,10 +96,14 @@ if __name__ == "__main__":
         help="Path to the output jsonl file"
     )
     parser.add_argument(
+        '--lang',
+        help="Language subset of UMLS"
+    )
+    parser.add_argument(
         '--source',
         type=str,
         default=None,
         help="Whether to filter for a only a single UMLS source."
     )
     args = parser.parse_args()
-    main(args.meta_path, args.output_path, args.source)
+    main(args.meta_path, args.output_path, args.lang, args.source)
