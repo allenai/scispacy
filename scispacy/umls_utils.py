@@ -38,7 +38,7 @@ def read_umls_file_headers(meta_path: str, filename: str) -> List[str]:
 
 
 def read_umls_concepts(
-    meta_path: str, concept_details: Dict, source: str = None, lang: str = None, non_suppressed : bool= True
+    meta_path: str, concept_details: Dict, source: Optional[str] = None, lang: str = None, non_suppressed : bool= True
 ):
     """
     Read the concepts file MRCONSO.RRF from a UMLS release and store it in
