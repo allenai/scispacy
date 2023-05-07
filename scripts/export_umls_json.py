@@ -93,17 +93,23 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--output_path',
-        help="Path to the output jsonl file"
+        help="Path to the output jsonl file."
     )
     parser.add_argument(
         '--lang',
-        help="Language subset of UMLS"
+        default="ENG",
+        help="Language subset of UMLS."
     )
     parser.add_argument(
         '--source',
         type=str,
         default=None,
         help="Whether to filter for a only a single UMLS source."
+    )
+    parser.add_argument(
+        '--non_supressed',
+        default=True,
+        help="Whether to include non supressed terms."
     )
     args = parser.parse_args()
     main(args.meta_path, args.output_path, args.lang, args.source)
