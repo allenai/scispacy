@@ -7,7 +7,7 @@ import json
 import argparse
 from scispacy import umls_utils
 
-def main(meta_path: str, output_path: str, lang: str, source: str = None):
+def main(meta_path: str, output_path: str, lang: str = None, source: str = None):
 
     concept_details = {}  # dictionary of concept_id -> {
                           #                 'concept_id': str,
