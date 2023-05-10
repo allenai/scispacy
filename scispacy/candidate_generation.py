@@ -10,6 +10,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import nmslib
 from nmslib.dist import FloatIndex
 
+from annoy import AnnoyIndex
+
 from scispacy.file_cache import cached_path
 from scispacy.linking_utils import (
     KnowledgeBase,
@@ -265,14 +267,13 @@ class CandidateGenerator:
         # remove empty vectors before calling `ann_index.knnQueryBatch`
         vectors = vectors[empty_vectors_boolean_flags]
 
-        # call `knnQueryBatch` to get neighbors
-        original_neighbours = self.ann_index.knnQueryBatch(vectors, k=k)
 
-        neighbors, distances = zip(
-            *[(x[0].tolist(), x[1].tolist()) for x in original_neighbours]
-        )
-        neighbors = list(neighbors)
-        distances = list(distances)
+        # search_k is second adjustable parameter, but has sensible default
+        original_neighbours = [self.ann_index.get_nns_by_vector(v=v, n=k, include_distances=True) for v in vectors]
+
+        # zip function is not needed due to annoy producing slightly different data structure
+        neighbors = list(original_neighbours[0])
+        distances = list(original_neighbours[1])
 
         # neighbors need to be converted to an np.array of objects instead of ndarray of dimensions len(vectors)xk
         # Solution: add a row to `neighbors` with any length other than k. This way, calling np.array(neighbors)
@@ -454,14 +455,14 @@ def create_tfidf_ann_index(
 
     print(f"Fitting ann index on {len(concept_aliases)} aliases (takes 2 hours)")
     start_time = datetime.datetime.now()
-    ann_index = nmslib.init(
-        method="hnsw",
-        space="cosinesimil_sparse",
-        data_type=nmslib.DataType.SPARSE_VECTOR,
-    )
-    ann_index.addDataPointBatch(concept_alias_tfidfs)
-    ann_index.createIndex(index_params, print_progress=True)
-    ann_index.saveIndex(ann_index_path)
+    # docs say cosine supported (via euclidean?)
+    ann_index = AnnoyIndex(concept_alias_tfidfs.shape[1], "euclidean")
+    # cannot add batch so add one at a time 
+    for i, tfidf_vector in enumerate(concept_alias_tfidfs):
+        ann_index.add_item(i, tfidf_vector.toarray().flatten())
+    # this is adjustable and one of the only two major adjustable parameters 
+    ann_index.build(n_trees=10_000)
+    ann_index.save(ann_index_path)
     end_time = datetime.datetime.now()
     elapsed_time = end_time - start_time
     print(f"Fitting ann index took {elapsed_time.total_seconds()} seconds")
