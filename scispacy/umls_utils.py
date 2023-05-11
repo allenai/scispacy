@@ -42,7 +42,7 @@ def read_umls_concepts(
     concept_details: Dict,
     source: Optional[str] = None,
     lang: str = "ENG",
-    non_suppressed: bool = True
+    non_suppressed: bool = True,
 ):
     """
     Read the concepts file MRCONSO.RRF from a UMLS release and store it in
@@ -72,7 +72,9 @@ def read_umls_concepts(
             splits = line.strip().split("|")
             assert len(headers) == len(splits), (headers, splits)
             concept = dict(zip(headers, splits))
-            if (lang is not None and concept["LAT"] != lang) or (non_suppressed and concept["SUPPRESS"] != "N"):
+            if (lang is not None and concept["LAT"] != lang) or (
+                non_suppressed and concept["SUPPRESS"] != "N"
+            ):
                 continue  # Keep non-suppressed concepts in target language only
 
             if source is not None:
