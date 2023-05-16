@@ -7,7 +7,7 @@ import json
 import argparse
 from scispacy import umls_utils
 
-def main(meta_path: str, output_path: str, source: str = None):
+def main(meta_path: str, output_path: str, lang: str = None, source: str = None):
 
     concept_details = {}  # dictionary of concept_id -> {
                           #                 'concept_id': str,
@@ -18,7 +18,7 @@ def main(meta_path: str, output_path: str, source: str = None):
                           # }
 
     print('Reading concepts ... ')
-    umls_utils.read_umls_concepts(meta_path, concept_details, source)
+    umls_utils.read_umls_concepts(meta_path, concept_details, lang, source)
 
     print('Reading types ... ')
     umls_utils.read_umls_types(meta_path, concept_details)
@@ -93,7 +93,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--output_path',
-        help="Path to the output jsonl file"
+        help="Path to the output jsonl file."
+    )
+    parser.add_argument(
+        '--lang',
+        default="ENG",
+        help="Language subset of UMLS."
     )
     parser.add_argument(
         '--source',
@@ -101,5 +106,10 @@ if __name__ == "__main__":
         default=None,
         help="Whether to filter for a only a single UMLS source."
     )
+    parser.add_argument(
+        '--non_suppressed',
+        default=True,
+        help="Whether to include non supressed terms."
+    )
     args = parser.parse_args()
-    main(args.meta_path, args.output_path, args.source)
+    main(args.meta_path, args.output_path, args.lang, args.source, args.non_suppressed)
