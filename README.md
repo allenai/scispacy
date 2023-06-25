@@ -123,6 +123,10 @@ for abrv in doc._.abbreviations:
 >>> SBMA 	   	 (6, 7)     Spinal and bulbar muscular atrophy
 >>> AR   		 (29, 30)   androgen receptor
 ```
+
+> **Note**
+> If you want to be able to [serialize your `doc` objects](https://spacy.io/usage/saving-loading), load the abbreviation detector with `make_serializable=True`, e.g. `nlp.add_pipe("abbreviation_detector", config={"make_serializable": True})`
+
 ### EntityLinker
 
 The `EntityLinker` is a SpaCy component which performs linking to a knowledge base. The linker simply performs
