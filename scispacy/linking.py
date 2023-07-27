@@ -80,8 +80,6 @@ class EntityLinker:
         max_entities_per_mention: int = 5,
         linker_name: Optional[str] = None,
     ):
-        # TODO(Mark): Remove in scispacy v1.0.
-        Span.set_extension("umls_ents", default=[], force=True)
         Span.set_extension("kb_ents", default=[], force=True)
 
         self.candidate_generator = candidate_generator or CandidateGenerator(
@@ -94,9 +92,6 @@ class EntityLinker:
         self.kb = self.candidate_generator.kb
         self.filter_for_definitions = filter_for_definitions
         self.max_entities_per_mention = max_entities_per_mention
-
-        # TODO(Mark): Remove in scispacy v1.0. This is for backward compatability only.
-        self.umls = self.kb
 
     def __call__(self, doc: Doc) -> Doc:
         mention_strings = []
@@ -131,7 +126,6 @@ class EntityLinker:
                 if score > self.threshold:
                     predicted.append((cand.concept_id, score))
             sorted_predicted = sorted(predicted, reverse=True, key=lambda x: x[1])
-            mention._.umls_ents = sorted_predicted[: self.max_entities_per_mention]
             mention._.kb_ents = sorted_predicted[: self.max_entities_per_mention]
 
         return doc
