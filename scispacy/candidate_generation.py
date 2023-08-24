@@ -378,7 +378,7 @@ def create_tfidf_ann_index(
     tfidf_vectorizer_path = f"{out_path}/tfidf_vectorizer.joblib"
     ann_index_path = f"{out_path}/nmslib_index.bin"
     tfidf_vectors_path = f"{out_path}/tfidf_vectors_sparse.npz"
-    uml_concept_aliases_path = f"{out_path}/concept_aliases.json"
+    umls_concept_aliases_path = f"{out_path}/concept_aliases.json"
 
     kb = kb or UmlsKnowledgeBase()
 
@@ -445,9 +445,9 @@ def create_tfidf_ann_index(
     assert len(concept_aliases) == numpy.size(concept_alias_tfidfs, 0)
 
     print(
-        f"Saving list of concept ids and tfidfs vectors to {uml_concept_aliases_path} and {tfidf_vectors_path}"
+        f"Saving list of concept ids and tfidfs vectors to {umls_concept_aliases_path} and {tfidf_vectors_path}"
     )
-    json.dump(concept_aliases, open(uml_concept_aliases_path, "w"))
+    json.dump(concept_aliases, open(umls_concept_aliases_path, "w"))
     scipy.sparse.save_npz(
         tfidf_vectors_path, concept_alias_tfidfs.astype(numpy.float16)
     )
