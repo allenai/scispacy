@@ -383,7 +383,7 @@ def create_tfidf_ann_index(
     kb = kb or UmlsKnowledgeBase()
 
     # nmslib hyperparameters (very important)
-    # guide: https://github.com/nmslib/nmslib/blob/master/python_bindings/parameters.md
+    # guide: https://github.com/nmslib/nmslib/blob/master/manual/methods.md
     # Default values resulted in very low recall.
 
     # set to the maximum recommended value. Improves recall at the expense of longer indexing time.
