@@ -15,16 +15,11 @@ Update the version in version.py.
 
 #### Training new models
 
-For the release, new models should be trained using the `scripts/pipeline.sh` and `scripts/ner_pipeline.sh` scripts, for the small, medium and large models, and specialized NER models. Remember to export the `ONTONOTES_PATH` and `ONTONOTES_PERCENT` environment variables to mix in the ontonotes training data.
+The entire pipeline can be run using `spacy project run all`. This will train and package all the models.
 
-```
-bash scripts/pipeline.sh small
-bash scripts/pipeline.sh medium
-bash scripts/pipeline.sh large
-bash scripts/ner_pipeline.sh <path to medium base model>
-```
+The packages should then be uploaded to the `https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/{VERSION}` S3 bucket, and references to previous models (e.g in the readme and in the docs) should be updated. You can find all these places using `git grep <previous version>`.
 
-these should then be uploaded to the `https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/{VERSION}` S3 bucket, and references to previous models (e.g in the readme and in the docs) should be updated. You can find all these places using `git grep <previous version>`.
+The scripts `install_local_packages.py`, `instal_remote_packages.py`, `print_out_metrics.py`, `smoke_test.py`, and `uninstall_local_packages.py` are useful for testing at each step of the process. Before uploading, `install_local_packages.py` and `smoke_test.py` can be used to make sure the packages are installable and do a quick check of output. `print_out_metrics.py` can then be used to easily get the metrics that need to be update in the README. Once the packages have been uploaded, `uninstall_local_packages.py`, `install_remote_packages.py`, and `smoke_test.py` can be used to ensure everything was uploaded correctly.
 
 #### Merge a PR with the above changes
 Merge a PR with the above changes, and publish a release with a tag corresponding to the commit from the merged PR. This should trigger the publish github action, which will create the `scispacy` package and publish it to pypi.

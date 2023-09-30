@@ -2,7 +2,7 @@ title: "scispaCy pipeline"
 description: "All the steps needed in the scispaCy pipeline"
 
 vars:
-  version_string: "0.5.2"
+  version_string: "0.5.3"
   gpu_id: 0
   freqs_loc_s3: "s3://ai2-s2-scispacy/data/gorc_subset.freqs"
   freqs_loc_local: "assets/gorc_subset.freqs"
