@@ -23,7 +23,7 @@ with open("scispacy/version.py", "r") as version_file:
 setup(
     name="scispacy",
     version=VERSION["VERSION"],
-    url="https://allenai.github.io/SciSpaCy/",
+    url="https://github.com/allenai/scispacy",
     author="Allen Institute for Artificial Intelligence",
     author_email="ai2-info@allenai.org",
     description="A full SpaCy pipeline and models for scientific/biomedical documents.",
