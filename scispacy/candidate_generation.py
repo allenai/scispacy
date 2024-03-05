@@ -271,14 +271,14 @@ class CandidateGenerator:
         neighbors, distances = zip(
             *[(x[0].tolist(), x[1].tolist()) for x in original_neighbours]
         )
-        neighbors = list(neighbors)
-        distances = list(distances)
+        neighbors = list(neighbors)  # type: ignore
+        distances = list(distances)  # type: ignore
 
         # neighbors need to be converted to an np.array of objects instead of ndarray of dimensions len(vectors)xk
         # Solution: add a row to `neighbors` with any length other than k. This way, calling np.array(neighbors)
         # returns an np.array of objects
-        neighbors.append([])
-        distances.append([])
+        neighbors.append([])  # type: ignore
+        distances.append([])  # type: ignore
         # interleave `neighbors` and Nones in `extended_neighbors`
         extended_neighbors[empty_vectors_boolean_flags] = numpy.array(
             neighbors, dtype=object
