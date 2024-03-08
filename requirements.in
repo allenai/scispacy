@@ -1,6 +1,6 @@
 numpy
 scipy<1.11
-spacy>=3.6.0,<3.7.0
+spacy>=3.7.0,<3.8.0
 spacy-lookups-data
 pandas
 requests>=2.0.0,<3.0.0
