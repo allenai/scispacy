@@ -4,7 +4,7 @@ from scispacy.version import VERSION
 
 
 def main():
-    s3_prefix = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.3/"
+    s3_prefix = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/"
     model_names = [
         "en_core_sci_sm",
         "en_core_sci_md",
