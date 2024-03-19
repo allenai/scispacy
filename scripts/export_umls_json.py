@@ -7,7 +7,13 @@ import json
 import argparse
 from scispacy import umls_utils
 
-def main(meta_path: str, output_path: str, lang: str = None, source: str = None):
+def main(
+        meta_path: str,
+        output_path: str,
+        lang: str = None,
+        source: str = None,
+        non_suppressed: bool = True,
+    ):
 
     concept_details = {}  # dictionary of concept_id -> {
                           #                 'concept_id': str,
@@ -18,7 +24,7 @@ def main(meta_path: str, output_path: str, lang: str = None, source: str = None)
                           # }
 
     print('Reading concepts ... ')
-    umls_utils.read_umls_concepts(meta_path, concept_details, lang, source)
+    umls_utils.read_umls_concepts(meta_path, concept_details, source, lang, non_suppressed)
 
     print('Reading types ... ')
     umls_utils.read_umls_types(meta_path, concept_details)
@@ -78,8 +84,7 @@ def main(meta_path: str, output_path: str, lang: str = None, source: str = None)
             del concept['is_from_preferred_source']
 
     print('Exporting to the a jsonl file {} ...'.format(output_path))
-    with open(output_path, 'w') as fout:
-
+    with open(output_path, 'w', encoding='utf-8') as fout:
         for value in concept_details.values():
             fout.write(json.dumps(value) + "\n")
     print('DONE.')
@@ -109,7 +114,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--non_suppressed',
         default=True,
-        help="Whether to include non supressed terms."
+        help="Whether to include non-suppressed terms."
     )
     args = parser.parse_args()
     main(args.meta_path, args.output_path, args.lang, args.source, args.non_suppressed)
