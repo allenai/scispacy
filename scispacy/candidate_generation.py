@@ -377,7 +377,9 @@ def create_tfidf_ann_index(
 
     """
     if not scipy_supports_sparse_float16():
-        raise RuntimeError("This function requires an older version of scipy.")
+        raise RuntimeError(
+            "This function requires scipy<1.11, which only runs on Python<3.11."
+        )
 
     tfidf_vectorizer_path = f"{out_path}/tfidf_vectorizer.joblib"
     ann_index_path = f"{out_path}/nmslib_index.bin"
