@@ -42,8 +42,7 @@ setup(
     license="Apache",
     install_requires=[
         "spacy>=3.7.0,<3.8.0",
-        "scipy<1.11; python_version < '3.11'",
-        "scipy; python_version >= '3.11'",
+        "scipy",
         "requests>=2.0.0,<3.0.0",
         "conllu",
         "numpy",

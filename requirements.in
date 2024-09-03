@@ -2,8 +2,7 @@ numpy
 # NOTE: scipy<1.11 is required when creating the linkers, so that's currently
 # only supported on Python<3.11
 # https://github.com/allenai/scispacy/issues/519#issuecomment-2229915999
-scipy<1.11; python_version < '3.11'
-scipy; python_version >= '3.11'
+scipy
 spacy>=3.7.0,<3.8.0
 spacy-lookups-data
 pandas
