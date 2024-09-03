@@ -21,7 +21,7 @@ def create_combined_rule_model() -> Language:
 
 def scipy_supports_sparse_float16() -> bool:
     # https://github.com/scipy/scipy/issues/7408
-    return Version(scipy.__version__) < Version('1.11')
+    return Version(scipy.__version__) < Version("1.11")
 
 
 class WhitespaceTokenizer:
