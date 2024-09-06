@@ -1,0 +1,18 @@
+name: CI (old scipy)
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Build and test with Docker using an older version of scipy
+        run: |
+          docker build --tag scispacy .
+          docker run --rm scispacy pip install scipy<1.11 \
+              && pytest tests/

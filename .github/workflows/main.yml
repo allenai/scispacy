@@ -19,9 +19,5 @@ jobs:
         docker run --rm scispacy flake8 scispacy
         docker run --rm scispacy black scispacy --check --line-length 88
         docker run --rm scispacy bash scripts/mypy.sh
-        # Test with newer versions of scipy
         docker run --rm scispacy pytest tests/ --cov scispacy --cov-fail-under=20
-        # Test older version of scipy, since some tests can't run on newer scipy
-        docker run --rm scispacy pip install scipy<1.11 \
-            && pytest tests/ --cov scispacy --cov-fail-under=20
 
