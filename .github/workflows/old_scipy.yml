@@ -14,5 +14,5 @@ jobs:
       - name: Build and test with Docker using an older version of scipy
         run: |
           docker build --tag scispacy .
-          docker run --rm scispacy pip install scipy<1.11 \
+          docker run --rm scispacy pip install 'scipy<1.11' \
               && pytest tests/
