@@ -48,7 +48,7 @@ setup(
         "numpy",
         "joblib",
         "nmslib>=1.7.3.6; python_version < '3.11'",
-        "nmslib-metabrainz>=2.1.3; python_version >= '3.11'",
+        "nmslib-metabrainz==2.1.3; python_version >= '3.11'",
         "scikit-learn>=0.20.3",
         "pysbd",
     ],
