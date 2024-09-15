@@ -1,4 +1,4 @@
-FROM python:3.8-buster
+FROM python:3.10-bullseye
 
 # install base packages
 RUN apt-get clean \
