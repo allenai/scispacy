@@ -15,4 +15,3 @@ jobs:
         run: |
           docker build --tag scispacy .
           docker run --rm scispacy bash -c "pip install 'scipy<1.11' && pytest tests/"
-              && pytest tests/
