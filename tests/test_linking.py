@@ -7,11 +7,16 @@ from scispacy.candidate_generation import CandidateGenerator, create_tfidf_ann_i
 from scispacy.linking import EntityLinker
 from scispacy.umls_utils import UmlsKnowledgeBase
 from scispacy.abbreviation import AbbreviationDetector
+from scispacy.util import scipy_supports_sparse_float16
 
 
 class TestLinker(unittest.TestCase):
     def setUp(self):
         super().setUp()
+        if not scipy_supports_sparse_float16():
+            # https://github.com/allenai/scispacy/issues/519#issuecomment-2229915999
+            self.skipTest("Candidate generation isn't supported for scipy>=1.11")
+
         self.nlp = spacy.load("en_core_web_sm")
 
         umls_fixture = UmlsKnowledgeBase("tests/fixtures/umls_test_fixture.json", "tests/fixtures/test_umls_tree.tsv")

@@ -20,3 +20,4 @@ jobs:
         docker run --rm scispacy black scispacy --check --line-length 88
         docker run --rm scispacy bash scripts/mypy.sh
         docker run --rm scispacy pytest tests/ --cov scispacy --cov-fail-under=20
+

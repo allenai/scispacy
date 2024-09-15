@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import nmslib
 from nmslib.dist import FloatIndex
 
+from scispacy.util import scipy_supports_sparse_float16
 from scispacy.file_cache import cached_path
 from scispacy.linking_utils import (
     KnowledgeBase,
@@ -375,6 +376,11 @@ def create_tfidf_ann_index(
         The kb items to generate the index and vectors for.
 
     """
+    if not scipy_supports_sparse_float16():
+        raise RuntimeError(
+            "This function requires scipy<1.11, which only runs on Python<3.11."
+        )
+
     tfidf_vectorizer_path = f"{out_path}/tfidf_vectorizer.joblib"
     ann_index_path = f"{out_path}/nmslib_index.bin"
     tfidf_vectors_path = f"{out_path}/tfidf_vectors_sparse.npz"

@@ -1,4 +1,6 @@
+from packaging.version import Version
 import spacy
+import scipy
 from spacy.language import Language
 from spacy.tokens import Doc
 
@@ -15,6 +17,11 @@ def create_combined_rule_model() -> Language:
     nlp.tokenizer = combined_rule_tokenizer(nlp)
     nlp.add_pipe(pysbd_sentencizer, first=True)
     return nlp
+
+
+def scipy_supports_sparse_float16() -> bool:
+    # https://github.com/scipy/scipy/issues/7408
+    return Version(scipy.__version__) < Version("1.11")
 
 
 class WhitespaceTokenizer:
