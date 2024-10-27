@@ -54,6 +54,7 @@ Over the years, installing nmslib has becomes quite difficult. There are a numbe
 Other methods mentioned in GitHub issues, but unconfirmed what versions they work for:
 - `CFLAGS="-mavx -DWARN(a)=(a)" pip install nmslib`
 - `pip install --no-binary :all: nmslib`
+- `pip install "nmslib @ git+https://github.com/nmslib/nmslib.git/#subdirectory=python_bindings"`
 - `pip install --upgrade pybind11` + `pip install --verbose 'nmslib @ git+https://github.com/nmslib/nmslib.git#egg=nmslib&subdirectory=python_bindings'`
 
 #### Setting up a virtual environment
