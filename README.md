@@ -33,7 +33,7 @@ Over the years, installing nmslib has becomes quite difficult. There are a numbe
 |               | Windows 11 | Windows Subsystem for Linux | Mac M1  | Mac M2  | Mac M3  | Intel Mac |
 |---------------|------------|----------------------------|---------|---------|---------|-----------|
 | Python 3.8    | ✅         | ✅                         | 💻      | ❓      | ❓      | ❓         |
-| Python 3.9    | ❌🐍       | ✅                         | 💻      | ❓      | ❓      | ❓         |
+| Python 3.9    | ❌🐍       | ✅                         | 💻      | ❌🔨     | ❓      | ❓         |
 | Python 3.10   | ❌🐍       | ✅                         | ❓      | ❓      | ❓      | ✅         |
 | Python 3.11   | ❌🐍       | ❌🐍                       | ❓      | ❓      | ❓      | ❌         |
 | Python 3.12   | ❌🐍       | ❌🐍🧠                     | ❓      | ❓      | ❓      | ❓         |
@@ -48,6 +48,8 @@ Over the years, installing nmslib has becomes quite difficult. There are a numbe
 💻 = can be installed with `CFLAGS="-mavx -DWARN(a)=(a)" pip install nmslib`
 
 🧠 = can be installed with `pip install nmslib-metabrainz`
+
+🔨 = can be installed with `conda install -c conda-forge nmslib`
 
 ❓ = unconfirmed
 
