@@ -1,7 +1,7 @@
 <p align="center"><img width="50%" src="docs/scispacy-logo.png" /></p>
 
 
-This repository contains custom pipes and models related to using spaCy for scientific documents.
+his repository contains custom pipes and models related to using spaCy for scientific documents.
 
 In particular, there is a custom tokenizer that adds tokenization rules on top of spaCy's
 rule-based tokenizer, a POS tagger and syntactic parser trained on biomedical data and
