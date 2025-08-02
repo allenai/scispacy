@@ -363,15 +363,16 @@ class CandidateGenerator:
 
 
 def create_tfidf_ann_index(
-    out_path: str, kb: Optional[KnowledgeBase] = None
+    out_path: str | None, kb: Optional[KnowledgeBase] = None
 ) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
     """
     Build tfidf vectorizer and ann index.
 
     Parameters
     ----------
-    out_path: str, required.
+    out_path:.
         The path where the various model pieces will be saved.
+        If not given, then the artifacts are not saved.
     kb : KnowledgeBase, optional.
         The kb items to generate the index and vectors for.
 
@@ -380,11 +381,6 @@ def create_tfidf_ann_index(
         raise RuntimeError(
             "This function requires scipy<1.11, which only runs on Python<3.11."
         )
-
-    tfidf_vectorizer_path = f"{out_path}/tfidf_vectorizer.joblib"
-    ann_index_path = f"{out_path}/nmslib_index.bin"
-    tfidf_vectors_path = f"{out_path}/tfidf_vectors_sparse.npz"
-    umls_concept_aliases_path = f"{out_path}/concept_aliases.json"
 
     kb = kb or UmlsKnowledgeBase()
 
@@ -410,9 +406,6 @@ def create_tfidf_ann_index(
         "post": 0,
     }
 
-    print(
-        f"No tfidf vectorizer on {tfidf_vectorizer_path} or ann index on {ann_index_path}"
-    )
     concept_aliases = list(kb.alias_to_cuis.keys())
 
     # NOTE: here we are creating the tf-idf vectorizer with float32 type, but we can serialize the
@@ -425,8 +418,10 @@ def create_tfidf_ann_index(
     )
     start_time = datetime.datetime.now()
     concept_alias_tfidfs = tfidf_vectorizer.fit_transform(concept_aliases)
-    print(f"Saving tfidf vectorizer to {tfidf_vectorizer_path}")
-    joblib.dump(tfidf_vectorizer, tfidf_vectorizer_path)
+    if out_path:
+        tfidf_vectorizer_path = f"{out_path}/tfidf_vectorizer.joblib"
+        print(f"Saving tfidf vectorizer to {tfidf_vectorizer_path}")
+        joblib.dump(tfidf_vectorizer, tfidf_vectorizer_path)
     end_time = datetime.datetime.now()
     total_time = end_time - start_time
     print(f"Fitting and saving vectorizer took {total_time.total_seconds()} seconds")
@@ -450,13 +445,16 @@ def create_tfidf_ann_index(
     concept_alias_tfidfs = concept_alias_tfidfs[empty_tfidfs_boolean_flags]
     assert len(concept_aliases) == numpy.size(concept_alias_tfidfs, 0)
 
-    print(
-        f"Saving list of concept ids and tfidfs vectors to {umls_concept_aliases_path} and {tfidf_vectors_path}"
-    )
-    json.dump(concept_aliases, open(umls_concept_aliases_path, "w"))
-    scipy.sparse.save_npz(
-        tfidf_vectors_path, concept_alias_tfidfs.astype(numpy.float16)
-    )
+    if out_path:
+        tfidf_vectors_path = f"{out_path}/tfidf_vectors_sparse.npz"
+        umls_concept_aliases_path = f"{out_path}/concept_aliases.json"
+        print(
+            f"Saving list of concept ids and tfidfs vectors to {umls_concept_aliases_path} and {tfidf_vectors_path}"
+        )
+        json.dump(concept_aliases, open(umls_concept_aliases_path, "w"))
+        scipy.sparse.save_npz(
+            tfidf_vectors_path, concept_alias_tfidfs.astype(numpy.float16)
+        )
 
     print(f"Fitting ann index on {len(concept_aliases)} aliases (takes 2 hours)")
     start_time = datetime.datetime.now()
@@ -467,7 +465,9 @@ def create_tfidf_ann_index(
     )
     ann_index.addDataPointBatch(concept_alias_tfidfs)
     ann_index.createIndex(index_params, print_progress=True)
-    ann_index.saveIndex(ann_index_path)
+    if out_path:
+        ann_index_path = f"{out_path}/nmslib_index.bin"
+        ann_index.saveIndex(ann_index_path)
     end_time = datetime.datetime.now()
     elapsed_time = end_time - start_time
     print(f"Fitting ann index took {elapsed_time.total_seconds()} seconds")
