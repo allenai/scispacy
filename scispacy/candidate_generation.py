@@ -419,7 +419,7 @@ def create_tfidf_ann_index(
     )
     start_time = datetime.datetime.now()
     concept_alias_tfidfs = tfidf_vectorizer.fit_transform(concept_aliases)
-    if out_path:
+    if out_path is not None:
         tfidf_vectorizer_path = os.path.join(out_path, "tfidf_vectorizer.joblib")
         print(f"Saving tfidf vectorizer to {tfidf_vectorizer_path}")
         joblib.dump(tfidf_vectorizer, tfidf_vectorizer_path)
@@ -446,7 +446,7 @@ def create_tfidf_ann_index(
     concept_alias_tfidfs = concept_alias_tfidfs[empty_tfidfs_boolean_flags]
     assert len(concept_aliases) == numpy.size(concept_alias_tfidfs, 0)
 
-    if out_path is not None:
+    if out_path is not None is not None:
         tfidf_vectors_path = os.path.join(out_path, "tfidf_vectors_sparse.npz")
         concept_aliases_path = os.path.join(out_path, "concept_aliases.json")
         print(
@@ -467,7 +467,7 @@ def create_tfidf_ann_index(
     )
     ann_index.addDataPointBatch(concept_alias_tfidfs)
     ann_index.createIndex(index_params, print_progress=True)
-    if out_path:
+    if out_path is not None:
         ann_index_path = os.path.join(out_path, "nmslib_index.bin")
         ann_index.saveIndex(ann_index_path)
     end_time = datetime.datetime.now()
