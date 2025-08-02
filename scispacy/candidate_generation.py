@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict, Tuple, NamedTuple, Type
 import json
 import datetime
+import os.path
 from collections import defaultdict
 
 import scipy
@@ -419,7 +420,7 @@ def create_tfidf_ann_index(
     start_time = datetime.datetime.now()
     concept_alias_tfidfs = tfidf_vectorizer.fit_transform(concept_aliases)
     if out_path:
-        tfidf_vectorizer_path = f"{out_path}/tfidf_vectorizer.joblib"
+        tfidf_vectorizer_path = os.path.join(out_path, "tfidf_vectorizer.joblib")
         print(f"Saving tfidf vectorizer to {tfidf_vectorizer_path}")
         joblib.dump(tfidf_vectorizer, tfidf_vectorizer_path)
     end_time = datetime.datetime.now()
@@ -445,13 +446,14 @@ def create_tfidf_ann_index(
     concept_alias_tfidfs = concept_alias_tfidfs[empty_tfidfs_boolean_flags]
     assert len(concept_aliases) == numpy.size(concept_alias_tfidfs, 0)
 
-    if out_path:
-        tfidf_vectors_path = f"{out_path}/tfidf_vectors_sparse.npz"
-        umls_concept_aliases_path = f"{out_path}/concept_aliases.json"
+    if out_path is not None:
+        tfidf_vectors_path = os.path.join(out_path, "tfidf_vectors_sparse.npz")
+        concept_aliases_path = os.path.join(out_path, "concept_aliases.json")
         print(
-            f"Saving list of concept ids and tfidfs vectors to {umls_concept_aliases_path} and {tfidf_vectors_path}"
+            f"Saving list of concept ids and tfidfs vectors to {concept_aliases_path} and {tfidf_vectors_path}"
         )
-        json.dump(concept_aliases, open(umls_concept_aliases_path, "w"))
+        with open(concept_aliases_path, "w") as file:
+            json.dump(concept_aliases, file)
         scipy.sparse.save_npz(
             tfidf_vectors_path, concept_alias_tfidfs.astype(numpy.float16)
         )
@@ -466,7 +468,7 @@ def create_tfidf_ann_index(
     ann_index.addDataPointBatch(concept_alias_tfidfs)
     ann_index.createIndex(index_params, print_progress=True)
     if out_path:
-        ann_index_path = f"{out_path}/nmslib_index.bin"
+        ann_index_path = os.path.join(out_path, "nmslib_index.bin")
         ann_index.saveIndex(ann_index_path)
     end_time = datetime.datetime.now()
     elapsed_time = end_time - start_time
