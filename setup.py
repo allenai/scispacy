@@ -51,6 +51,7 @@ setup(
         "nmslib-metabrainz==2.1.3; python_version >= '3.11'",
         "scikit-learn>=0.20.3",
         "pysbd",
+        "typing-extensions",
     ],
     tests_require=["pytest", "pytest-cov", "flake8", "black", "mypy"],
     python_requires=">=3.6.0",
