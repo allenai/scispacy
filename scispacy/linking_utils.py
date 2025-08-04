@@ -298,9 +298,11 @@ def entity_from_wikidata(record: Dict[str, Any], key: str) -> Optional[Entity]:
     return Entity(
         concept_id=record[key]["value"].removeprefix("http://www.wikidata.org/entity/"),
         canonical_name=label,
-        aliases=record[f"{key}AltLabel"]["value"].split(", ")
-        if f"{key}AltLabel" in record
-        else [],
+        aliases=(
+            record[f"{key}AltLabel"]["value"].split(", ")
+            if f"{key}AltLabel" in record
+            else []
+        ),
         definition=record[f"{key}Description"]["value"] or None,
     )
 
