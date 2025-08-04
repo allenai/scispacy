@@ -121,12 +121,20 @@ class EntityLinker:
     ) -> Self:
         """Construct a knowledge base, candidate generator, and linker from an ontology."""
         if directory is not None:
-            concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(directory, kb)
+            concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(
+                directory, kb
+            )
         else:
             with tempfile.TemporaryDirectory() as directory:
-                concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(directory, kb)
+                concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(
+                    directory, kb
+                )
         candidate_generator = CandidateGenerator(
-            ann_index, tfidf_vectorizer, concept_aliases, kb, **(candidate_generator_kwargs or {})
+            ann_index,
+            tfidf_vectorizer,
+            concept_aliases,
+            kb,
+            **(candidate_generator_kwargs or {}),
         )
         return cls(candidate_generator=candidate_generator, **entity_linker_kwargs)
 
