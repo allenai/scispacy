@@ -373,7 +373,7 @@ def create_tfidf_ann_index(
     ----------
     out_path:.
         The path where the various model pieces will be saved.
-        If not given, then the artifacts are not saved.
+        If None, then the artifacts are not saved.
     kb : KnowledgeBase, optional.
         The kb items to generate the index and vectors for.
 
