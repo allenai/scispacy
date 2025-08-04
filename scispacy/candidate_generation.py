@@ -446,7 +446,7 @@ def create_tfidf_ann_index(
     concept_alias_tfidfs = concept_alias_tfidfs[empty_tfidfs_boolean_flags]
     assert len(concept_aliases) == numpy.size(concept_alias_tfidfs, 0)
 
-    if out_path is not None is not None:
+    if out_path is not None:
         tfidf_vectors_path = os.path.join(out_path, "tfidf_vectors_sparse.npz")
         concept_aliases_path = os.path.join(out_path, "concept_aliases.json")
         print(
