@@ -371,7 +371,7 @@ def create_tfidf_ann_index(
 
     Parameters
     ----------
-    out_path:.
+    out_path: Union[str, None]
         The path where the various model pieces will be saved.
         If None, then the artifacts are not saved.
     kb : KnowledgeBase, optional.
