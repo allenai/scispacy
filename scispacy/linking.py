@@ -1,9 +1,13 @@
+import tempfile
+from typing import Any, Optional, Dict
+
 from spacy.tokens import Doc
 from spacy.tokens import Span
 from spacy.language import Language
+from typing_extensions import Self
 
-from scispacy.candidate_generation import CandidateGenerator
-from typing import Optional
+from scispacy.candidate_generation import CandidateGenerator, create_tfidf_ann_index
+from scispacy.linking_utils import KnowledgeBase
 
 
 @Language.factory("scispacy_linker")
@@ -19,7 +23,7 @@ class EntityLinker:
     To use these configured default KBs, pass the `name` parameter ('umls','mesh',
     'rxnorm','go','hpo').
 
-    Currently this implementation just compares string similarity, returning
+    Currently, this implementation just compares string similarity, returning
     entities above a given threshold.
 
     This class sets the `._.kb_ents` attribute on spacy Spans, which consists of a
@@ -36,6 +40,19 @@ class EntityLinker:
     default, we only link to entities which have definitions (typically they are more salient / cleaner),
     but this might not suit your use case. YMMV.
 
+    A linker can be constructed from an arbitrary ontology using :meth:`from_pyobo`
+    (which requires ``pip install pyobo``) like in:
+
+    .. code-block:: python
+
+        import spacy
+        from scispacy.linking import EntityLinker
+        from scispacy.linking_utils import UmlsKnowledgeBase
+
+        umls_kb = UmlsKnowledgeBase()
+        linker = EntityLinker.from_kb(umls_kb)
+        nlp = spacy.load("en_core_web_sm")
+        doc = linker(nlp(text))
 
     Parameters
     ----------
@@ -92,6 +109,26 @@ class EntityLinker:
         self.kb = self.candidate_generator.kb
         self.filter_for_definitions = filter_for_definitions
         self.max_entities_per_mention = max_entities_per_mention
+
+    @classmethod
+    def from_kb(
+        cls,
+        kb: KnowledgeBase,
+        *,
+        directory: Optional[str] = None,
+        candidate_generator_kwargs: Optional[Dict[str, Any]] = None,
+        **entity_linker_kwargs: Any,
+    ) -> Self:
+        """Construct a knowledge base, candidate generator, and linker from an ontology."""
+        if directory is not None:
+            concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(directory, kb)
+        else:
+            with tempfile.TemporaryDirectory() as directory:
+                concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(directory, kb)
+        candidate_generator = CandidateGenerator(
+            ann_index, tfidf_vectorizer, concept_aliases, kb, **(candidate_generator_kwargs or {})
+        )
+        return cls(candidate_generator=candidate_generator, **entity_linker_kwargs)
 
     def __call__(self, doc: Doc) -> Doc:
         mention_strings = []
