@@ -20,7 +20,10 @@ file containing dictionaries shaped the same way:
     from scispacy.linking_utils import KnowledgeBase
 
     # UMLS
-    kb = KnowledgeBase("https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/data/kbs/2023-04-23/umls_mesh_2022.jsonl")
+    kb = KnowledgeBase(
+        "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/"
+        "data/kbs/2023-04-23/umls_mesh_2022.jsonl"
+    )
 
 New, :class:`KnowledgeBase` subclasses can be defined based on
 :mod:`pyobo` (after running ``pip install pyobo``) like in the following:
@@ -100,7 +103,6 @@ from typing import (
     Set,
     Union,
     Iterable,
-    TYPE_CHECKING,
     Tuple,
     DefaultDict,
     Generator,
@@ -116,9 +118,6 @@ from scispacy.umls_semantic_type_tree import (
     UmlsSemanticTypeTree,
     construct_umls_tree_from_tsv,
 )
-
-if TYPE_CHECKING:
-    import pyobo
 
 __all__ = [
     "Entity",
