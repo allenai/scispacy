@@ -364,7 +364,7 @@ class CandidateGenerator:
 
 
 def create_tfidf_ann_index(
-    out_path: str | None, kb: Optional[KnowledgeBase] = None
+    out_path: Optional[str], kb: Optional[KnowledgeBase] = None
 ) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
     """
     Build tfidf vectorizer and ann index.
