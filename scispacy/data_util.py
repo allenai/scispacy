@@ -68,7 +68,7 @@ def med_mentions_example_iterator(filename: str) -> Iterator[MedMentionExample]:
 
 
 def select_subset_of_overlapping_chain(
-    chain: List[Tuple[int, int, str]]
+    chain: List[Tuple[int, int, str]],
 ) -> List[Tuple[int, int, str]]:
     """
     Select the subset of entities in an overlapping chain to return by greedily choosing the
@@ -97,7 +97,7 @@ def select_subset_of_overlapping_chain(
 
 
 def remove_overlapping_entities(
-    sorted_spacy_format_entities: List[Tuple[int, int, str]]
+    sorted_spacy_format_entities: List[Tuple[int, int, str]],
 ) -> List[Tuple[int, int, str]]:
     """
     Removes overlapping entities from the entity set, by greedilytaking the longest
