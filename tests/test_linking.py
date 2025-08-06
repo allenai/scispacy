@@ -1,10 +1,12 @@
 import unittest
 import tempfile
 
+import requests
 import spacy
 
 from scispacy.candidate_generation import CandidateGenerator, create_tfidf_ann_index
 from scispacy.linking import EntityLinker
+from scispacy.linking_utils import KnowledgeBase, entity_from_wikidata
 from scispacy.umls_utils import UmlsKnowledgeBase
 from scispacy.abbreviation import AbbreviationDetector
 from scispacy.util import scipy_supports_sparse_float16
@@ -73,3 +75,34 @@ class TestLinker(unittest.TestCase):
     def test_linker_has_types(self):
         # Just checking that the type tree is accessible from the linker
         assert len(self.linker.kb.semantic_type_tree.flat_nodes) == 6
+
+
+class TestKnowledgeBase(unittest.TestCase):
+    """Tests for knowledge base."""
+
+    def test_wikidata(self) -> None:
+        """Test constructing a knowledgebase of named cats."""
+        sparql = """\
+             SELECT ?item ?itemLabel ?itemDescription ?itemAltLabel
+             WHERE
+             {
+               ?item wdt:P31 wd:Q146. # Must be a cat
+               SERVICE wikibase:label {
+                 bd:serviceParam wikibase:language "[AUTO_LANGUAGE],mul,en".
+               }
+             }
+             LIMIT 5
+         """
+        res = requests.get(
+            "https://query.wikidata.org/bigdata/namespace/wdq/sparql",
+            params={"query": sparql, "format": "json"},
+        )
+        res.raise_for_status()
+        entities = [
+            entity
+            for record in res.json()["results"]["bindings"]
+            if (entity := entity_from_wikidata(record, "item"))
+        ]
+        self.assertEqual(5, len(entities))
+        kb = KnowledgeBase(entities)
+        self.assertEqual(5, len(kb.cui_to_entity))
