@@ -20,11 +20,7 @@ class TestLinker(unittest.TestCase):
         self.nlp = spacy.load("en_core_web_sm")
 
         umls_fixture = UmlsKnowledgeBase("tests/fixtures/umls_test_fixture.json", "tests/fixtures/test_umls_tree.tsv")
-        with tempfile.TemporaryDirectory() as dir_name:
-            umls_concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(dir_name, umls_fixture)
-        candidate_generator = CandidateGenerator(ann_index, tfidf_vectorizer, umls_concept_aliases, umls_fixture)
-
-        self.linker = EntityLinker(candidate_generator=candidate_generator, filter_for_definitions=False)
+        self.linker = EntityLinker.from_kb(umls_fixture, filter_for_definitions=False)
 
     def test_naive_entity_linking(self):
         text = "There was a lot of Dipalmitoylphosphatidylcholine."
