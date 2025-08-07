@@ -36,16 +36,17 @@ license-files = [
     "LICENSE",
 ]
 
-requires-python = ">=3.6"
+requires-python = ">=3.9,<3.13"
 dependencies = [
     "spacy>=3.7.0,<3.8.0",
     "scipy",
     "requests>=2.0.0,<3.0.0",
     "conllu",
-    "numpy",
+    # numpy needs to be constrained until spacy and nmslib are rebuilt
+    "numpy<2.0",
     "joblib",
-    "nmslib>=1.7.3.6; python_version < '3.11'",
-    "nmslib-metabrainz==2.1.3; python_version >= '3.11'",
+    "nmslib>=1.7.3.6; python_version < '3.10'",
+    "nmslib-metabrainz==2.1.3; python_version >= '3.10'",
     "scikit-learn>=0.20.3",
     "pysbd",
 ]
@@ -64,6 +65,7 @@ tests = [
     "flake8",
     "black",
     "mypy",
+    "types-requests",
 ]
 
 [tool.setuptools.packages.find]
