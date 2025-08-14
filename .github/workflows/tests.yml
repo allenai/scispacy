@@ -17,17 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install from APT
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-              git \
-              curl \
-              gcc \
-              g++ \
-              build-essential \
-              wget
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -59,17 +48,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install from APT
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-              git \
-              curl \
-              gcc \
-              g++ \
-              build-essential \
-              wget
 
       - name: Set up Python
         uses: actions/setup-python@v5
