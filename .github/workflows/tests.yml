@@ -69,5 +69,4 @@ jobs:
 
       - name: Test
         run: |
-          pytest tests/
           pytest tests/ --cov scispacy --cov-fail-under=20
