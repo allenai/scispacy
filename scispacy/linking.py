@@ -115,12 +115,14 @@ class EntityLinker:
         cls,
         kb: KnowledgeBase,
         *,
-        directory: Optional[str] = None,
+        ann_index_out_dir: Optional[str] = None,
         candidate_generator_kwargs: Optional[Dict[str, Any]] = None,
         **entity_linker_kwargs: Any,
     ) -> Self:
         """Construct a knowledge base, candidate generator, and linker from an ontology."""
-        concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(directory, kb)
+        concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(
+            ann_index_out_dir, kb
+        )
         candidate_generator = CandidateGenerator(
             ann_index,
             tfidf_vectorizer,
