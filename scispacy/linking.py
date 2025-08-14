@@ -40,8 +40,7 @@ class EntityLinker:
     default, we only link to entities which have definitions (typically they are more salient / cleaner),
     but this might not suit your use case. YMMV.
 
-    A linker can be constructed from an arbitrary ontology using :meth:`from_pyobo`
-    (which requires ``pip install pyobo``) like in:
+    A linker can be constructed from an arbitrary knowledgebase like in:
 
     .. code-block:: python
 
@@ -119,7 +118,40 @@ class EntityLinker:
         candidate_generator_kwargs: Optional[Dict[str, Any]] = None,
         **entity_linker_kwargs: Any,
     ) -> Self:
-        """Construct a knowledge base, candidate generator, and linker from an ontology."""
+        """Construct an entity linker directly from a knowledge base.
+
+        Parameters
+        ----------
+        kb:
+            a pre-constructed knowledge base
+        ann_index_out_dir:
+            an (optional) directory where to save the TF-IDF index.
+            If not given, creates an ephemeral index that is not saved
+        candidate_generator_kwargs:
+            (optional) keyword arguments to pass to :class:`CandidateGenerator`
+
+        Returns
+        -------
+        An entity linker object
+
+        Example
+        -------
+        In the following example, a UMLS knowledge base object is instantiated
+        then used to construct a linker. Then, it's applied following an NLP
+        pipeline.
+
+        .. code-block:: python
+
+            import spacy
+            from scispacy.linking import EntityLinker
+            from scispacy.linking_utils import UmlsKnowledgeBase
+
+            umls_kb = UmlsKnowledgeBase()
+            linker = EntityLinker.from_kb(umls_kb)
+
+            nlp = spacy.load("en_core_web_sm")
+            doc = linker(nlp(text))
+        """
         concept_aliases, tfidf_vectorizer, ann_index = create_tfidf_ann_index(
             ann_index_out_dir, kb
         )
