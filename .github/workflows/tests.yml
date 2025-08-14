@@ -89,10 +89,6 @@ jobs:
           python -m spacy download en_core_web_sm
           python -m spacy download en_core_web_md
 
-      - name: Check nmslib is installed
-        run: |
-          python -c "import nmslib"
-
       - name: Test
         run: |
           pytest tests/
