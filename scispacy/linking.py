@@ -1,4 +1,3 @@
-import tempfile
 from typing import Any, Optional, Dict
 
 from spacy.tokens import Doc
