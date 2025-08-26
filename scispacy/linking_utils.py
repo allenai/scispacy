@@ -1,12 +1,64 @@
-from typing import List, Dict, NamedTuple, Optional, Set
+"""
+This submodule contains a data structure for storing lexical
+indexes over various biomedical vocabularies.
+
+There are several built-in vocabularies, which can be imported
+and instantiated like in:
+
+.. code-block:: python
+
+    from scispacy.linking_utils import UmlsKnowledgeBase
+
+    kb = UmlsKnowledgeBase()
+
+In general, new :class:`KnowledgeBase` objects can be constructed
+from a list of :class:`Entity` objects, or a path to a JSON or JSONL
+file containing dictionaries shaped the same way:
+
+.. code-block:: python
+
+    from scispacy.linking_utils import KnowledgeBase
+
+    # UMLS
+    kb = KnowledgeBase(
+        "https://ai2-s2-scispacy.s3-us-west-2.amazonaws.com/"
+        "data/kbs/2023-04-23/umls_mesh_2022.jsonl"
+    )
+
+"""
+
 import json
 from collections import defaultdict
+from contextlib import contextmanager
+from pathlib import Path
+from typing import (
+    List,
+    Dict,
+    NamedTuple,
+    Optional,
+    Set,
+    Union,
+    Iterable,
+    Tuple,
+    DefaultDict,
+    Generator,
+)
 
 from scispacy.file_cache import cached_path
 from scispacy.umls_semantic_type_tree import (
     UmlsSemanticTypeTree,
     construct_umls_tree_from_tsv,
 )
+
+__all__ = [
+    "Entity",
+    "KnowledgeBase",
+    "UmlsKnowledgeBase",
+    "Mesh",
+    "GeneOntology",
+    "HumanPhenotypeOntology",
+    "RxNorm",
+]
 
 
 class Entity(NamedTuple):
@@ -38,6 +90,51 @@ DEFAULT_UMLS_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/kbs
 DEFAULT_UMLS_TYPES_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/data/umls_semantic_type_tree.tsv"
 
 
+@contextmanager
+def _iter_entities(
+    path_or_entities: Union[str, Path, Iterable[Entity]],
+) -> Generator[Iterable[Entity], None, None]:
+    """Iterate through entities from a JSON file, JSONL file, or pass through an existing iterable."""
+    if isinstance(path_or_entities, (str, Path)):
+        # normalize paths
+        path_or_entities = cached_path(path_or_entities)
+
+        with open(path_or_entities) as file:
+            if path_or_entities.endswith("jsonl"):
+                yield (Entity(**json.loads(line)) for line in file)
+            else:
+                yield (Entity(**record) for record in json.load(file))
+    else:
+        yield path_or_entities
+
+
+def _index_entities(
+    entities: Iterable[Entity],
+) -> Tuple[Dict[str, Entity], Dict[str, Set[str]]]:
+    """Create indexes over entities for use in a :class:`KnowledgeBase`.
+
+    Parameters
+    ----------
+    entities :
+        An iterable (e.g., a list) of entity objects
+
+    Returns
+    -------
+    A pair of indexes for:
+
+    1. A mapping from local unique identifiers (e.g., CUIs for UMLS) to entity objects
+    2. A mapping from aliases (e.g., canonical names, aliases) to local unique identifiers
+    """
+    cui_to_entity: Dict[str, Entity] = {}
+    alias_to_cuis: DefaultDict[str, Set[str]] = defaultdict(set)
+    for entity in entities:
+        alias_to_cuis[entity.canonical_name].add(entity.concept_id)
+        for alias in entity.aliases:
+            alias_to_cuis[alias].add(entity.concept_id)
+        cui_to_entity[entity.concept_id] = entity
+    return cui_to_entity, dict(alias_to_cuis)
+
+
 class KnowledgeBase:
     """
     A class representing two commonly needed views of a Knowledge Base:
@@ -50,37 +147,26 @@ class KnowledgeBase:
         The file path to the json/jsonl representation of the KB to load.
     """
 
+    cui_to_entity: Dict[str, Entity]
+    alias_to_cuis: Dict[str, Set[str]]
+
     def __init__(
         self,
-        file_path: Optional[str] = None,
+        file_path: Union[None, str, Path, Iterable[Entity]] = None,
     ):
         if file_path is None:
             raise ValueError(
                 "Do not use the default arguments to KnowledgeBase. "
                 "Instead, use a subclass (e.g UmlsKnowledgeBase) or pass a path to a kb."
             )
-        if file_path.endswith("jsonl"):
-            raw = (json.loads(line) for line in open(cached_path(file_path)))
-        else:
-            raw = json.load(open(cached_path(file_path)))
-
-        alias_to_cuis: Dict[str, Set[str]] = defaultdict(set)
-        self.cui_to_entity: Dict[str, Entity] = {}
-
-        for concept in raw:
-            unique_aliases = set(concept["aliases"])
-            unique_aliases.add(concept["canonical_name"])
-            for alias in unique_aliases:
-                alias_to_cuis[alias].add(concept["concept_id"])
-            self.cui_to_entity[concept["concept_id"]] = Entity(**concept)
-
-        self.alias_to_cuis: Dict[str, Set[str]] = {**alias_to_cuis}
+        with _iter_entities(file_path) as entities:
+            self.cui_to_entity, self.alias_to_cuis = _index_entities(entities)
 
 
 class UmlsKnowledgeBase(KnowledgeBase):
     def __init__(
         self,
-        file_path: str = DEFAULT_UMLS_PATH,
+        file_path: Union[str, Path, Iterable[Entity]] = DEFAULT_UMLS_PATH,
         types_file_path: str = DEFAULT_UMLS_TYPES_PATH,
     ):
         super().__init__(file_path)
