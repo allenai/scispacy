@@ -128,8 +128,7 @@ def _index_entities(
     cui_to_entity: Dict[str, Entity] = {}
     alias_to_cuis: DefaultDict[str, Set[str]] = defaultdict(set)
     for entity in entities:
-        alias_to_cuis[entity.canonical_name].add(entity.concept_id)
-        for alias in entity.aliases:
+        for alias in set(entity.aliases + [entity.canonical_name]):
             alias_to_cuis[alias].add(entity.concept_id)
         cui_to_entity[entity.concept_id] = entity
     return cui_to_entity, dict(alias_to_cuis)
