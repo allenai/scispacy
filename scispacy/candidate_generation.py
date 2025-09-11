@@ -1,8 +1,9 @@
-from typing import Optional, List, Dict, Tuple, NamedTuple, Type
+from typing import Optional, List, Dict, Tuple, NamedTuple, Type, Union
 import json
 import datetime
 import os.path
 from collections import defaultdict
+from pathlib import Path
 
 import scipy
 import numpy
@@ -10,6 +11,7 @@ import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
 import nmslib
 from nmslib.dist import FloatIndex
+from typing_extensions import Self
 
 from scispacy.util import scipy_supports_sparse_float16
 from scispacy.file_cache import cached_path
@@ -40,6 +42,38 @@ class LinkerPaths(NamedTuple):
     tfidf_vectorizer: str
     tfidf_vectors: str
     concept_aliases_list: str
+
+    @classmethod
+    def from_directory(cls, directory: Union[str, Path]) -> Self:
+        if not os.path.isdir(directory):
+            raise NotADirectoryError
+        return cls(
+            ann_index=os.path.join(directory, "nmslib_index.bin"),
+            tfidf_vectorizer=os.path.join(directory, "tfidf_vectorizer.joblib"),
+            tfidf_vectors=os.path.join(directory, "tfidf_vectors_sparse.npz"),
+            concept_aliases_list=os.path.join(directory, "concept_aliases.json"),
+        )
+
+    def is_locally_cached(self) -> bool:
+        return all(os.path.isfile(x) for x in self)
+
+    def get_concept_aliases(self) -> List[str]:
+        with open(cached_path(self.concept_aliases_list)) as file:
+            return json.load(file)
+
+    def get_tfidf_vectorizer(self) -> TfidfVectorizer:
+        return joblib.load(cached_path(self.tfidf_vectorizer))
+
+    def get_ann_index(self, *, ef_search: int = 200) -> FloatIndex:
+        return load_approximate_nearest_neighbours_index(self, ef_search=ef_search)
+
+    def load(
+        self, *, ef_search: int = 200
+    ) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
+        concept_aliases = self.get_concept_aliases()
+        tfidf_vectorizer = self.get_tfidf_vectorizer()
+        ann_index = self.get_ann_index(ef_search=ef_search)
+        return concept_aliases, tfidf_vectorizer, ann_index
 
 
 UmlsLinkerPaths = LinkerPaths(
@@ -220,14 +254,10 @@ class CandidateGenerator:
 
         linker_paths = DEFAULT_PATHS.get(name, UmlsLinkerPaths)
 
-        self.ann_index = ann_index or load_approximate_nearest_neighbours_index(
-            linker_paths=linker_paths, ef_search=ef_search
-        )
-        self.vectorizer = tfidf_vectorizer or joblib.load(
-            cached_path(linker_paths.tfidf_vectorizer)
-        )
-        self.ann_concept_aliases_list = ann_concept_aliases_list or json.load(
-            open(cached_path(linker_paths.concept_aliases_list))
+        self.ann_index = ann_index or linker_paths.get_ann_index(ef_search=ef_search)
+        self.vectorizer = tfidf_vectorizer or linker_paths.get_tfidf_vectorizer()
+        self.ann_concept_aliases_list = (
+            ann_concept_aliases_list or linker_paths.get_concept_aliases()
         )
 
         self.kb = kb or DEFAULT_KNOWLEDGE_BASES[name]()
@@ -364,7 +394,10 @@ class CandidateGenerator:
 
 
 def create_tfidf_ann_index(
-    out_path: Optional[str], kb: Optional[KnowledgeBase] = None
+    out_path: Optional[str],
+    kb: Optional[KnowledgeBase] = None,
+    *,
+    ef_search: int = 200,
 ) -> Tuple[List[str], TfidfVectorizer, FloatIndex]:
     """
     Build tfidf vectorizer and ann index.
@@ -378,6 +411,13 @@ def create_tfidf_ann_index(
         The kb items to generate the index and vectors for.
 
     """
+    if out_path is None:
+        linker_paths = None
+    else:
+        linker_paths = LinkerPaths.from_directory(out_path)
+        if linker_paths.is_locally_cached():
+            return linker_paths.load(ef_search=ef_search)
+
     if not scipy_supports_sparse_float16():
         raise RuntimeError(
             "This function requires scipy<1.11, which only runs on Python<3.11."
@@ -419,8 +459,8 @@ def create_tfidf_ann_index(
     )
     start_time = datetime.datetime.now()
     concept_alias_tfidfs = tfidf_vectorizer.fit_transform(concept_aliases)
-    if out_path is not None:
-        tfidf_vectorizer_path = os.path.join(out_path, "tfidf_vectorizer.joblib")
+    if linker_paths is not None:
+        tfidf_vectorizer_path = linker_paths.tfidf_vectorizer
         print(f"Saving tfidf vectorizer to {tfidf_vectorizer_path}")
         joblib.dump(tfidf_vectorizer, tfidf_vectorizer_path)
     end_time = datetime.datetime.now()
@@ -446,9 +486,9 @@ def create_tfidf_ann_index(
     concept_alias_tfidfs = concept_alias_tfidfs[empty_tfidfs_boolean_flags]
     assert len(concept_aliases) == numpy.size(concept_alias_tfidfs, 0)
 
-    if out_path is not None:
-        tfidf_vectors_path = os.path.join(out_path, "tfidf_vectors_sparse.npz")
-        concept_aliases_path = os.path.join(out_path, "concept_aliases.json")
+    if linker_paths is not None:
+        tfidf_vectors_path = linker_paths.tfidf_vectors
+        concept_aliases_path = linker_paths.concept_aliases_list
         print(
             f"Saving list of concept ids and tfidfs vectors to {concept_aliases_path} and {tfidf_vectors_path}"
         )
@@ -467,8 +507,8 @@ def create_tfidf_ann_index(
     )
     ann_index.addDataPointBatch(concept_alias_tfidfs)
     ann_index.createIndex(index_params, print_progress=True)
-    if out_path is not None:
-        ann_index_path = os.path.join(out_path, "nmslib_index.bin")
+    if linker_paths is not None:
+        ann_index_path = linker_paths.ann_index
         ann_index.saveIndex(ann_index_path)
     end_time = datetime.datetime.now()
     elapsed_time = end_time - start_time
