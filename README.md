@@ -290,11 +290,12 @@ print(doc._.hearst_patterns)
 >>> [('such_as', Keystone plant species, fig trees)]
 ```
 
-#### PyOBO Integration
+## Extending scispaCy to new databases and ontologies
 
-Arbitrary databases and ontologies can be loaded into SciSpacy using the
-external integration with [pyobo](https://github.com/biopragmatics/pyobo) after
-`pip install "pyobo>=0.12.9"`.
+Arbitrary databases and ontologies can be loaded into scispaCy using the
+external integration with [pyobo](https://github.com/biopragmatics/pyobo) following
+`pip install "pyobo>=0.12.9"`. In the following example, the HGNC database
+is loaded used to link genes to standard identifiers.
 
 ```python
 import pyobo
@@ -318,17 +319,17 @@ rows = [
         span,
         span.start_char,
         span.end_char,
-        f"`{curie} <https://bioregistry.io/{curie}>`_",
+        f"`{identifier} <https://bioregistry.io/{identifier}>`_",
         score,
     )
     for span in doc.ents
-    for curie, score in span._.kb_ents
+    for identifier, score in span._.kb_ents
 ]
 print(tabulate(rows, headers=["text", "start", "end", "prefix", "identifier"], tablefmt="github"))
 ```
 
-| text | start | end | curie                                       |    score |
-| ---- | ----- | --- | ------------------------------------------- | -------: |
+| text | start | end | identifier                                  |    score |
+| ---- | ----- | --- |---------------------------------------------| -------: |
 | AKT1 | 100   | 104 | [hgnc:391](https://bioregistry.io/hgnc:391) |        1 |
 | AKT1 | 100   | 104 | [hgnc:392](https://bioregistry.io/hgnc:392) | 0.776504 |
 | AKT1 | 100   | 104 | [hgnc:393](https://bioregistry.io/hgnc:393) | 0.764049 |
