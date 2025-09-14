@@ -319,7 +319,7 @@ rows = [
         span,
         span.start_char,
         span.end_char,
-        f"`{identifier} <https://bioregistry.io/{identifier}>`_",
+        f"[{identifier}](https://bioregistry.io/{identifier})",
         score,
     )
     for span in doc.ents
