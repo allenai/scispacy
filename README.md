@@ -290,6 +290,12 @@ print(doc._.hearst_patterns)
 >>> [('such_as', Keystone plant species, fig trees)]
 ```
 
+#### PyOBO Integration
+
+Arbitrary databases and ontologies can be loaded into SciSpacy using the
+external integration with [pyobo](https://github.com/biopragmatics/pyobo).
+See [the tutorial](https://pyobo.readthedocs.io/en/latest/scispacy.html).
+
 
 ## Citing
 
