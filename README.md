@@ -293,8 +293,48 @@ print(doc._.hearst_patterns)
 #### PyOBO Integration
 
 Arbitrary databases and ontologies can be loaded into SciSpacy using the
-external integration with [pyobo](https://github.com/biopragmatics/pyobo).
-See [the tutorial](https://pyobo.readthedocs.io/en/latest/scispacy.html).
+external integration with [pyobo](https://github.com/biopragmatics/pyobo) after
+`pip install "pyobo>=0.12.9"`.
+
+```python
+import pyobo
+import spacy
+from scispacy.linking import EntityLinker
+from tabulate import tabulate
+
+linker: EntityLinker = pyobo.get_scispacy_entity_linker("hgnc", filter_for_definitions=False)
+
+# now, put it all together with a NER model
+nlp = spacy.load("en_core_web_sm")
+
+text = (
+    "RAC(Rho family)-alpha serine/threonine-protein kinase "
+    "is an enzyme that in humans is encoded by the AKT1 gene."
+)
+doc = linker(nlp(text))
+
+rows = [
+    (
+        span,
+        span.start_char,
+        span.end_char,
+        f"`{curie} <https://bioregistry.io/{curie}>`_",
+        score,
+    )
+    for span in doc.ents
+    for curie, score in span._.kb_ents
+]
+print(tabulate(rows, headers=["text", "start", "end", "prefix", "identifier"], tablefmt="github"))
+```
+
+| text | start | end | curie                                       |    score |
+| ---- | ----- | --- | ------------------------------------------- | -------: |
+| AKT1 | 100   | 104 | [hgnc:391](https://bioregistry.io/hgnc:391) |        1 |
+| AKT1 | 100   | 104 | [hgnc:392](https://bioregistry.io/hgnc:392) | 0.776504 |
+| AKT1 | 100   | 104 | [hgnc:393](https://bioregistry.io/hgnc:393) | 0.764049 |
+
+For more information, see
+[the tutorial](https://pyobo.readthedocs.io/en/latest/scispacy.html).
 
 
 ## Citing
