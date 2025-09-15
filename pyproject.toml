@@ -38,7 +38,7 @@ license-files = [
 
 requires-python = ">=3.9,<3.13"
 dependencies = [
-    "spacy>=3.7.0,<3.8.0",
+    "spacy>=3.7.0,<3.9.0",
     "scipy",
     "requests>=2.0.0,<3.0.0",
     "conllu",
