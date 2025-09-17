@@ -290,6 +290,53 @@ print(doc._.hearst_patterns)
 >>> [('such_as', Keystone plant species, fig trees)]
 ```
 
+## Extending scispaCy to new databases and ontologies
+
+Arbitrary databases and ontologies can be loaded into scispaCy using the
+external integration with [pyobo](https://github.com/biopragmatics/pyobo) following
+`pip install "pyobo>=0.12.9"`. In the following example, the HGNC database
+is used to link genes to standard identifiers.
+
+```python
+import pyobo
+import spacy
+from scispacy.linking import EntityLinker
+from tabulate import tabulate
+
+linker: EntityLinker = pyobo.get_scispacy_entity_linker("hgnc", filter_for_definitions=False)
+
+# now, put it all together with a NER model
+nlp = spacy.load("en_core_web_sm")
+
+text = (
+    "RAC(Rho family)-alpha serine/threonine-protein kinase "
+    "is an enzyme that in humans is encoded by the AKT1 gene."
+)
+doc = linker(nlp(text))
+
+rows = [
+    (
+        span,
+        span.start_char,
+        span.end_char,
+        f"[{identifier}](https://bioregistry.io/{identifier})",
+        score,
+    )
+    for span in doc.ents
+    for identifier, score in span._.kb_ents
+]
+print(tabulate(rows, headers=["text", "start", "end", "prefix", "identifier"], tablefmt="github"))
+```
+
+| text | start | end | identifier                                  |    score |
+| ---- | ----- | --- |---------------------------------------------| -------: |
+| AKT1 | 100   | 104 | [hgnc:391](https://bioregistry.io/hgnc:391) |        1 |
+| AKT1 | 100   | 104 | [hgnc:392](https://bioregistry.io/hgnc:392) | 0.776504 |
+| AKT1 | 100   | 104 | [hgnc:393](https://bioregistry.io/hgnc:393) | 0.764049 |
+
+For more information, see
+[the tutorial](https://pyobo.readthedocs.io/en/latest/scispacy.html).
+
 
 ## Citing
 
