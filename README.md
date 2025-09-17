@@ -295,7 +295,7 @@ print(doc._.hearst_patterns)
 Arbitrary databases and ontologies can be loaded into scispaCy using the
 external integration with [pyobo](https://github.com/biopragmatics/pyobo) following
 `pip install "pyobo>=0.12.9"`. In the following example, the HGNC database
-is loaded used to link genes to standard identifiers.
+is used to link genes to standard identifiers.
 
 ```python
 import pyobo
