@@ -8,7 +8,6 @@ from scispacy.linking import EntityLinker
 from scispacy.linking_utils import Entity, KnowledgeBase, _iter_entities
 from scispacy.umls_utils import UmlsKnowledgeBase
 from scispacy.abbreviation import AbbreviationDetector
-from scispacy.util import scipy_supports_sparse_float16
 
 
 class TestLinker(unittest.TestCase):
