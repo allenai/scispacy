@@ -14,9 +14,6 @@ from scispacy.util import scipy_supports_sparse_float16
 class TestLinker(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        if not scipy_supports_sparse_float16():
-            # https://github.com/allenai/scispacy/issues/519#issuecomment-2229915999
-            self.skipTest("Candidate generation isn't supported for scipy>=1.11")
 
         self.nlp = spacy.load("en_core_web_sm")
 
