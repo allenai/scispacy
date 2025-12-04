@@ -489,7 +489,9 @@ def create_tfidf_ann_index(
         )
         with open(concept_aliases_path, "w") as file:
             json.dump(concept_aliases, file)
-        on_disk_data_type = numpy.float32 if not scipy_supports_sparse_float16() else numpy.float16
+        on_disk_data_type = (
+            numpy.float32 if not scipy_supports_sparse_float16() else numpy.float16
+        )
         scipy.sparse.save_npz(
             tfidf_vectors_path, concept_alias_tfidfs.astype(on_disk_data_type)
         )
