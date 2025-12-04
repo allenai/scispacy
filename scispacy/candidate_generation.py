@@ -418,11 +418,6 @@ def create_tfidf_ann_index(
         if linker_paths.is_locally_cached():
             return linker_paths.load(ef_search=ef_search)
 
-    if not scipy_supports_sparse_float16():
-        raise RuntimeError(
-            "This function requires scipy<1.11, which only runs on Python<3.11."
-        )
-
     kb = kb or UmlsKnowledgeBase()
 
     # nmslib hyperparameters (very important)
@@ -494,8 +489,11 @@ def create_tfidf_ann_index(
         )
         with open(concept_aliases_path, "w") as file:
             json.dump(concept_aliases, file)
+        on_disk_data_type = (
+            numpy.float32 if not scipy_supports_sparse_float16() else numpy.float16
+        )
         scipy.sparse.save_npz(
-            tfidf_vectors_path, concept_alias_tfidfs.astype(numpy.float16)
+            tfidf_vectors_path, concept_alias_tfidfs.astype(on_disk_data_type)
         )
 
     print(f"Fitting ann index on {len(concept_aliases)} aliases (takes 2 hours)")
