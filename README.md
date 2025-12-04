@@ -27,38 +27,6 @@ Take a look below in the "Setting up a virtual environment" section if you need 
 Additionally, scispacy uses modern features of Python and as such is only available for **Python 3.6 or greater**.
 
 
-### Installation note: nmslib
-Over the years, installing nmslib has becomes quite difficult. There are a number of GitHub issues on scispaCy and the nmslib repo itself about this. This matrix is an attempt to help users install nmslib in whatever environment they have. I don't have access to every type of environment, so if you are able to test something out, please open an issue or pull request!
-
-|               | Windows 11 | Windows Subsystem for Linux | Mac M1  | Mac M2  | Mac M3  | Mac M4  | Intel Mac |
-|---------------|------------|----------------------------|---------|---------|---------|---------|-----------|
-| Python 3.8    | ✅         | ✅                         | 💻      | ❓      | ❓      | ❌🔨      | ❓         |
-| Python 3.9    | ❌🐍       | ✅                         | 💻      | ❌🔨     | ❓      | ❌🔨      | ❓         |
-| Python 3.10   | ❌🐍       | ✅                         | ❓      | ❓      | ❓      | ❌🔨      | ✅         |
-| Python 3.11   | ❌🐍       | ❌🐍                       | ❓      | ❓      | ❓      | ❌🔨      | ❌         |
-| Python 3.12   | ❌🐍       | ❌🐍🧠                     | ❓      | ❓      | ❓      | ❌🧠      | ❓         |
-
-
-✅ = works normally with pip install of scispacy
-
-❌ = does not work normally with pip install of scispacy
-
-🐍 = can be installed with `mamba install nmslib`
-
-💻 = can be installed with `CFLAGS="-mavx -DWARN(a)=(a)" pip install nmslib`
-
-🧠 = can be installed with `pip install nmslib-metabrainz`
-
-🔨 = can be installed with `conda install -c conda-forge nmslib`
-
-❓ = unconfirmed
-
-Other methods mentioned in GitHub issues, but unconfirmed what versions they work for:
-- `CFLAGS="-mavx -DWARN(a)=(a)" pip install nmslib`
-- `pip install --no-binary :all: nmslib`
-- `pip install "nmslib @ git+https://github.com/nmslib/nmslib.git/#subdirectory=python_bindings"`
-- `pip install --upgrade pybind11` + `pip install --verbose 'nmslib @ git+https://github.com/nmslib/nmslib.git#egg=nmslib&subdirectory=python_bindings'`
-
 #### Setting up a virtual environment
 
 [Mamba](https://mamba.readthedocs.io/en/latest/) can be used set up a virtual environment with the
