@@ -25,6 +25,25 @@ file containing dictionaries shaped the same way:
         "data/kbs/2023-04-23/umls_mesh_2022.jsonl"
     )
 
+Here's a recipe for using a SPARQL query on Wikidata to generate
+a KnowledgeBase object (see discussion at https://github.com/allenai/scispacy/issues/346):
+
+.. code-block:: python
+
+    from scispacy.linking_utils import KnowledgeBase
+
+    # this SPARQL query gets named cats
+    sparql = '''\
+        SELECT ?item ?itemLabel ?itemDescription ?itemAltLabel
+        WHERE
+        {
+          ?item wdt:P31 wd:Q146. # Must be a cat
+          SERVICE wikibase:label {
+            bd:serviceParam wikibase:language "[AUTO_LANGUAGE],mul,en".
+          }
+        }
+    '''
+    kb = KnowledgeBase.from_wikidata(sparql, "item")
 """
 
 import json
@@ -42,7 +61,11 @@ from typing import (
     Tuple,
     DefaultDict,
     Generator,
+    Any,
+    Mapping,
 )
+
+from typing_extensions import Self
 
 from scispacy.file_cache import cached_path
 from scispacy.umls_semantic_type_tree import (
@@ -160,6 +183,87 @@ class KnowledgeBase:
             )
         with _iter_entities(file_path) as entities:
             self.cui_to_entity, self.alias_to_cuis = _index_entities(entities)
+
+    @classmethod
+    def from_wikidata(cls, sparql: str, key: str) -> Self:
+        """Construct a knowledge base from a SPARQL query over Wikidata.
+
+        :param sparql:
+            A SPARQL query over Wikidata. For example:
+
+            .. code-block::
+
+                SELECT ?item ?itemLabel ?itemDescription ?itemAltLabel
+                WHERE
+                {
+                    ?item wdt:P31 wd:Q146. # Must be a cat
+                    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],mul,en". }
+                }
+
+        :param key:
+            If the select line in your SPARQL looks like ``SELECT ?item ?itemLabel ?itemDescription ?itemAltLabel``,
+            then give ``item`` for this
+        :return: A knowledge base object
+
+        .. note::
+
+            This function wraps :func:`entities_from_wikidata` and therefore
+            requires ``pip install wikidata-client``
+        """
+        return cls(entities_from_wikidata(sparql, key))
+
+
+def entities_from_wikidata(sparql: str, key: str) -> List[Entity]:
+    """Query Wikidata with SPARQL and return entities.
+
+    :param sparql:
+        A SPARQL query over Wikidata. For example:
+
+        .. code-block::
+
+            SELECT ?item ?itemLabel ?itemDescription ?itemAltLabel
+            WHERE
+            {
+                ?item wdt:P31 wd:Q146. # Must be a cat
+                SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],mul,en". }
+            }
+
+    :param key:
+        If the select line in your SPARQL looks like ``SELECT ?item ?itemLabel ?itemDescription ?itemAltLabel``,
+        then give ``item`` for this
+    :return: A list of entities extracted from Wikidata
+
+    .. note:: This function requires ``pip install wikidata-client``
+    """
+    import wikidata_client
+
+    return [
+        entity
+        for record in wikidata_client.query(sparql)
+        if (entity := _entity_from_wikidata(record, key))
+    ]
+
+
+def _entity_from_wikidata(record: Mapping[str, Any], key: str) -> Optional[Entity]:
+    """Construct an entity from a Wikidata record.
+
+    :param record: The wikidata record
+    :param key: The name of the variable that is autofilled with a label, description, and alts
+    :return: An entity, or none if there is no label available
+    """
+    label = record[f"{key}Label"]["value"]
+    if not label:
+        return None
+    return Entity(
+        concept_id=record[key]["value"].removeprefix("http://www.wikidata.org/entity/"),
+        canonical_name=label,
+        aliases=(
+            record[f"{key}AltLabel"]["value"].split(", ")
+            if f"{key}AltLabel" in record
+            else []
+        ),
+        definition=record[f"{key}Description"]["value"] or None,
+    )
 
 
 class UmlsKnowledgeBase(KnowledgeBase):
